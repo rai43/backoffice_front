@@ -1,25 +1,79 @@
-import logo from './logo.svg';
+import { lazy, useEffect } from 'react';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
+import { themeChange } from 'theme-change';
+
 import './App.css';
+import auth from './app/auth';
+import initializeApp from './app/init';
+import AuthenticatedRoute from './utils/containers/AuthenticatedRoute';
+
+import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
+import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
+
+// Importing pages
+const Login = lazy(() => import('./pages/Login'));
+const Layout = lazy(() => import('./containers/Layout'));
+
+// Initializing different libraries
+initializeApp();
+
+// Check for login and initialize axios
+const token = auth.checkAuth();
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	useEffect(() => {
+		// daisy UI themes initialization
+		themeChange(false);
+	}, []);
+
+	return (
+		<>
+			<>
+				<Router>
+					<Routes>
+						{/* IMPORTANT! Do not modify the following routes */}
+						<Route
+							path='/login'
+							element={<Login />}
+						/>
+						<Route
+							path='/forgot-password'
+							element={<p>ForgotPassword </p>}
+						/>
+						<Route
+							path='/register'
+							element={<p>Register </p>}
+						/>
+						{/* IMPORTANT! Do not modify the above routes */}
+
+						{/* Place new routes over this */}
+						{/* VERY IMPORTANT! All new routes should be place bellow /app/... */}
+						<Route
+							path='/app/*'
+							element={
+								<AuthenticatedRoute>
+									<Layout />
+								</AuthenticatedRoute>
+							}
+						/>
+
+						{/* Redirect in case no route matches */}
+						{/* Case 1: the token exists then redirect to /app/dashboard */}
+						{/* Case 2: the token does not exist, so redirect to /login */}
+						<Route
+							path='*'
+							element={
+								<Navigate
+									to={token ? '/app/dashboard' : '/login'}
+									replace
+								/>
+							}
+						/>
+					</Routes>
+				</Router>
+			</>
+		</>
+	);
 }
 
 export default App;
