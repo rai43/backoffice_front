@@ -10,7 +10,12 @@ const Transactions = lazy(() => import('../pages/authenticated/Transactions'));
 const Orders = lazy(() => import('../pages/authenticated/Orders'));
 const MerchantMenu = lazy(() => import('../pages/authenticated/MerchantMenu'));
 const MerchantSettings = lazy(() => import('../pages/authenticated/MerchantSettings'));
+const DynamicAssignment = lazy(() => import('../pages/authenticated/DynamicAssignment'));
 const Users = lazy(() => import('../pages/authenticated/Users'));
+const DiscountManagement = lazy(() => import('../pages/authenticated/DiscountManagement'));
+const SmsProvider = lazy(() => import('../pages/authenticated/SmsProvider'));
+const Subscriptions = lazy(() => import('../pages/authenticated/Subscriptions'));
+const Invitations = lazy(() => import('../pages/authenticated/Invitations'));
 
 const routes = [
 	{
@@ -44,6 +49,26 @@ const routes = [
 	{
 		path: '/menu-and-ordering/settings',
 		component: MerchantSettings,
+	},
+	{
+		path: '/menu-and-ordering/dynamic-assignment',
+		component: DynamicAssignment,
+	},
+	{
+		path: 'general-management/discount-management',
+		component: DiscountManagement,
+	},
+	{
+		path: 'general-management/subscriptions',
+		component: Subscriptions,
+	},
+	{
+		path: 'general-management/invitations',
+		component: Invitations,
+	},
+	{
+		path: 'settings/sms-provider',
+		component: SmsProvider,
 	},
 ];
 

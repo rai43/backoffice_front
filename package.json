@@ -23,14 +23,18 @@
 		"daisyui": "^2.52.0",
 		"datatables.net-dt": "^1.13.6",
 		"dayjs": "^1.11.9",
+		"flatpickr": "^4.6.13",
 		"formik": "^2.4.3",
 		"js-cookie": "^3.0.5",
+		"leaflet": "^1.9.4",
 		"lodash": "^4.17.21",
 		"moment": "^2.29.4",
 		"react": "^18.2.0",
 		"react-chartjs-2": "^5.2.0",
 		"react-dom": "^18.2.0",
+		"react-flatpickr": "^3.10.13",
 		"react-icons": "^4.10.1",
+		"react-leaflet": "^4.2.1",
 		"react-notifications": "^1.7.4",
 		"react-phone-number-input": "^3.3.2",
 		"react-redux": "^8.1.2",
@@ -69,6 +73,7 @@
 		]
 	},
 	"devDependencies": {
+		"@babel/plugin-proposal-private-property-in-object": "^7.21.11",
 		"@tailwindcss/typography": "^0.5.9",
 		"autoprefixer": "^10.4.15",
 		"postcss": "^8.4.27"

@@ -9,6 +9,7 @@ export const getLivreursContent = createAsyncThunk('/livreurs/content', async (p
 	const direction = params.direction || 'DESC';
 	const limit = params.limit || 1000;
 	const searchPattern = params.searchPattern || '';
+	const livreurInfo = params.livreurInfo || '';
 
 	const status =
 		active && deleted
@@ -25,6 +26,7 @@ export const getLivreursContent = createAsyncThunk('/livreurs/content', async (p
 		params: {
 			status: status,
 			searchPattern: searchPattern,
+			livreurInfo: livreurInfo,
 			direction: direction,
 			skip: skip,
 			limit: limit,
@@ -72,6 +74,17 @@ export const livreurSlice = createSlice({
 			state.skip = 0;
 			state.livreurs = [];
 			state.noMoreQuery = false;
+		},
+
+		replaceLivreurObjectByUpdatedOne: (state, action) => {
+			console.log('action.payload?.livreur?.livreurs[0]?.id', action.payload?.livreur);
+			const indexToRemoved = state.livreurs.findIndex((liv) => liv.id === action.payload?.livreur?.id);
+			console.log('indexToRemoved: ', indexToRemoved);
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.livreurs[indexToRemoved] = action.payload?.livreur;
+			}
+			state.isLoading = false;
 		},
 	},
 
@@ -129,6 +142,6 @@ export const livreurSlice = createSlice({
 	},
 });
 
-export const { resetFrom } = livreurSlice.actions;
+export const { resetFrom, replaceLivreurObjectByUpdatedOne } = livreurSlice.actions;
 
 export default livreurSlice.reducer;

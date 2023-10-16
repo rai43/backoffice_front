@@ -29,13 +29,13 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 	}, []);
 
 	// Opening right sidebar for user details
-	const openMerchantDetails = (merchant) => {
+	const openMerchantDetails = (menu) => {
 		dispatch(
 			openModal({
-				title: `Details View - ${merchant?.name} (${merchant?.whatsapp})`,
+				title: `Menu Details View - ${menu?.id}`,
 				size: 'lg',
 				bodyType: MODAL_BODY_TYPES.MERCHANT_DETAILS,
-				extraObject: merchant,
+				extraObject: menu,
 			})
 		);
 	};
@@ -158,11 +158,11 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 			width: 130,
 			filter: 'agDateColumnFilter',
 			onCellClicked: (params) => openMerchantDetails(params.data),
-			cellRenderer: (value) => {
+			cellRenderer: ({ value }) => {
 				let formattedValue = value ? value : 'N/A';
 
 				if (formattedValue !== 'N/A') {
-					formattedValue = moment(value).format('DD/MM/YYY');
+					formattedValue = moment(value).format('DD/MM/YYYY');
 				}
 
 				return (
@@ -170,13 +170,13 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 						<p>
 							<span className=' text-sm mr-2'>{formattedValue}</span>
 						</p>
-						<span className=' text-sm'>{moment(value).format('LT')}</span>
+						<span className=' text-sm'>{moment(value).format('HH:mm')}</span>
 					</div>
 				);
 			},
 		},
 		{
-			field: 'media.0.url',
+			field: 'image',
 			headerName: 'Image',
 			width: 90,
 			pinned: 'right',
@@ -196,81 +196,6 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 			},
 		},
 	]);
-
-	const columns = React.useMemo(
-		() => [
-			// {
-			// 	id: 'selection',
-			// 	Header: ({ getToggleAllRowsSelectedProps }) => (
-			// 		<div>
-			// 			<IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
-			// 		</div>
-			// 	),
-			// 	Cell: ({ row }) => (
-			// 		<div>
-			// 			<IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-			// 		</div>
-			// 	),
-			// },
-
-			{
-				Header: 'Merchant',
-				accessor: 'client.phone_number',
-				Cell: (props) => (
-					<AvatarCellForMerchant
-						{...props}
-						onDetailsClicked={openMerchantDetails}
-					/>
-				),
-				nameAccessor: 'name',
-				merchantNameAccessor: 'merchant_name',
-				imgAccessor: 'logo',
-				clientTypeAccessor: 'client_type.libelle',
-			},
-			{
-				Header: 'Articles Count',
-				accessor: 'articles',
-				Cell: (props) => (
-					<MerchantArticlesAndAccompagnementPill
-						{...props}
-						type='article'
-					/>
-				),
-			},
-			{
-				Header: 'Accompagnements Count',
-				accessor: 'accompagnements',
-				Cell: (props) => (
-					<MerchantArticlesAndAccompagnementPill
-						{...props}
-						type='accompagnement'
-					/>
-				),
-			},
-			// {
-			// 	accessorObj: 'wallets',
-			// 	Header: 'Wallets (Balance)',
-			// 	// accessor: "wallets.0.id",
-			// 	// Filter: SelectColumnFilter,
-			// 	// filter: "includes",
-			// 	Cell: WalletCellBalance,
-			// },
-			// {
-			// 	accessorObj: 'wallets',
-			// 	Header: 'Wallets (Bonus)',
-			// 	// accessor: "wallets.0.id",
-			// 	// Filter: SelectColumnFilter,
-			// 	// filter: "includes",
-			// 	Cell: WalletCellBonus,
-			// },
-			{
-				Header: 'Registration Date',
-				accessor: 'created_at',
-				Cell: DateCell,
-			},
-		],
-		[]
-	);
 
 	return (
 		<div className='overflow-hidden mt-2'>

@@ -8,6 +8,12 @@ export const getOrders = createAsyncThunk('/orders/get-all', async (params) => {
 	const searchPatternId = params?.searchPatternId || '';
 	const minAmount = params.minAmount;
 	const maxAmount = params.maxAmount;
+
+	const cmdId = params.cmdId;
+	const clientPhone = params.clientPhone;
+	const merchantName = params.merchantName;
+	const merchantPhone = params.merchantPhone;
+
 	const from = params?.from;
 	const to = params?.to;
 	const skip = params?.skip;
@@ -20,6 +26,12 @@ export const getOrders = createAsyncThunk('/orders/get-all', async (params) => {
 			searchPatternId,
 			minAmount,
 			maxAmount,
+
+			cmdId,
+			clientPhone,
+			merchantName,
+			merchantPhone,
+
 			to,
 			from,
 			skip,
@@ -49,6 +61,16 @@ export const setOrderStatus = createAsyncThunk('/orders/set-status', async (para
 	return response.data;
 });
 
+export const setOrderStatusNoCheck = createAsyncThunk('/orders/set-status-no-check', async (params) => {
+	const commandId = params?.commandId;
+	const status = params.status;
+
+	const response = await axios.patch(`/api/order/set-order-status-no-check/${commandId}/${status}`, {});
+
+	console.log(response.data);
+	return response.data;
+});
+
 export const generateStatistics = createAsyncThunk('/transactions/statistics', async (params) => {
 	const { data } = params;
 	const stats = {
@@ -68,31 +90,31 @@ export const generateStatistics = createAsyncThunk('/transactions/statistics', a
 	};
 	console.log('data', data);
 
-	data.map((transaction) => {
-		stats.totalPaid += parseFloat(transaction?.total) || 0;
-		stats.totalDiscount += parseFloat(transaction?.total_discount) || 0;
-		stats.totalDeliveryAmount += parseFloat(transaction?.delivery_fee) || 0;
+	data.map((order) => {
+		stats.totalPaid += parseFloat(order?.total) || 0;
+		stats.totalDiscount += parseFloat(order?.total_discount) || 0;
+		stats.totalDeliveryAmount += parseFloat(order?.delivery_fee) || 0;
 		// console.log(transaction?.delivery_status);
-		if (transaction?.payment_method === 'STREET') {
+		if (order?.payment_method === 'STREET') {
 			stats.street += 1;
-		} else if (transaction?.payment_method === 'CASH') {
+		} else if (order?.payment_method === 'CASH') {
 			stats.cash += 1;
 		}
 
-		if (transaction?.delivery_status === 'INPROGRESS') {
+		if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'INPROGRESS') {
 			stats.InProgressState += 1;
 		}
-		if (transaction?.delivery_status === 'PENDING') {
+		if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'PENDING') {
 			stats.InPendingState += 1;
-		} else if (transaction?.delivery_status === 'REGISTERED') {
+		} else if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'REGISTERED') {
 			stats.InRegisteredState += 1;
-		} else if (transaction?.delivery_status === 'INDELIVERY') {
+		} else if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'INDELIVERY') {
 			stats.InInDeliveryState += 1;
-		} else if (transaction?.delivery_status === 'DELIVERED') {
+		} else if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'DELIVERED') {
 			stats.InDeliveredState += 1;
-		} else if (transaction?.delivery_status === 'CANCELED') {
+		} else if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'CANCELED') {
 			stats.InCanceledState += 1;
-		} else if (transaction?.delivery_status === 'INPROCESS') {
+		} else if (order?.commande_commande_statuses[order?.commande_commande_statuses?.length - 1]?.commande_status?.code === 'INPROCESS') {
 			stats.InInProcessState += 1;
 		}
 	});
@@ -151,6 +173,22 @@ export const orderSlice = createSlice({
 			state.isLoading = false;
 		},
 		[setOrderStatus.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[setOrderStatusNoCheck.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[setOrderStatusNoCheck.fulfilled]: (state, action) => {
+			const indexToRemoved = state.orders.findIndex((order) => order.id === action.payload?.order?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.orders[indexToRemoved] = action.payload?.order;
+			}
+			state.isLoading = false;
+		},
+		[setOrderStatusNoCheck.rejected]: (state) => {
 			state.isLoading = false;
 		},
 	},

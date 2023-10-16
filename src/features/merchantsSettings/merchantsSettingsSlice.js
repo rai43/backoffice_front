@@ -9,6 +9,8 @@ export const getMerchantsContent = createAsyncThunk('/merchants/content', async 
 	const direction = params.direction || 'DESC';
 	const limit = params.limit || 1000;
 	const searchPattern = params.searchPattern || '';
+	const merchantId = params.merchantId || 0;
+	const merchantName = params.merchantName || '';
 
 	const status =
 		active && deleted
@@ -26,6 +28,8 @@ export const getMerchantsContent = createAsyncThunk('/merchants/content', async 
 			direction: direction,
 			skip: skip,
 			limit: limit,
+			merchantId,
+			merchantName,
 		},
 	});
 	// const response = await axios.get(`/api/merchants-ordering/get-merchants`, {
@@ -78,6 +82,14 @@ export const deleteMerchantsAccompagnement = createAsyncThunk('/merchants/delete
 	return response.data;
 });
 
+export const switchArticlePublishFromSettings = createAsyncThunk('/merchants/settings/switch-article-publish', async (params) => {
+	const articleId = params.articleId || '';
+	const status = params.status;
+
+	const response = await axios.patch(`/api/articles/switch-article-published/${articleId}/${status}`, {});
+	return response.data;
+});
+
 export const saveMerchantsArticle = createAsyncThunk('/merchants/save-article', async (params) => {
 	try {
 		const formData = new FormData();
@@ -113,6 +125,61 @@ export const saveMerchantsArticle = createAsyncThunk('/merchants/save-article', 
 	}
 });
 
+export const updateMerchantsArticle = createAsyncThunk('/merchants/update-article', async (params) => {
+	try {
+		let response;
+		if (!params?.image?.size && params?.image?.includes('https://res.cloudinary.com/')) {
+			console.log(params);
+			const title = params.title;
+			const price = params.price;
+			const description = params.description;
+			const merchant_id = params.merchant_id;
+			const article_id = params.article_id;
+
+			const accompagnements = Object.keys(params?.accs).map((accKey) => {
+				if (params?.accs[accKey]) return accKey;
+			});
+			const supplements = Object.keys(params?.supps).map((suppKey) => {
+				const dataObj = params?.supps[suppKey];
+				if (dataObj?.status && parseInt(dataObj?.price) > 0) return { accompagnement_id: parseInt(suppKey), accompagnement_price: parseInt(dataObj?.price) };
+			});
+			const payload = JSON.stringify({ title, price, description, merchant_id, accompagnements, supplements: supplements });
+			console.log(payload);
+
+			response = await axios.post(`/api/articles/update-article/${article_id}`, payload);
+		} else {
+			const formData = new FormData();
+			formData.append('title', JSON.stringify(params.title.trim()));
+			formData.append('price', JSON.stringify(parseInt(params.price)));
+			formData.append('description', JSON.stringify(params.description.trim()));
+			formData.append('image', params.image);
+			formData.append('merchant_id', JSON.stringify(params.merchant_id));
+			formData.append('article_id', JSON.stringify(params.article_id));
+
+			const accompagnements = Object.keys(params?.accs).map((accKey) => {
+				if (params?.accs[accKey]) return accKey;
+			});
+			const supplements = Object.keys(params?.supps).map((suppKey) => {
+				const dataObj = params?.supps[suppKey];
+				if (dataObj?.status && parseInt(dataObj?.price) > 0) return { accompagnement_id: parseInt(suppKey), accompagnement_price: parseInt(dataObj?.price) };
+			});
+
+			formData.append('accompagnements', JSON.stringify(accompagnements));
+			formData.append('supplements', JSON.stringify(supplements));
+
+			response = await axios.post(`/api/articles/update-article-with-image/${params?.article_id}`, formData, {
+				headers: {
+					'Content-type': 'multipart/form-data',
+				},
+			});
+		}
+		console.log(response);
+		return response.data;
+	} catch (e) {
+		throw new Error(e.statusText);
+	}
+});
+
 export const merchantsSettingsSlice = createSlice({
 	name: 'merchants',
 	initialState: {
@@ -136,7 +203,8 @@ export const merchantsSettingsSlice = createSlice({
 		},
 		[getMerchantsContent.fulfilled]: (state, action) => {
 			// Append the newly fetched users to the list
-			state.merchants = [...state.merchants, ...(action.payload.merchants || [])];
+			// state.merchants = [...state.merchants, ...(action.payload.merchants || [])];
+			state.merchants = [...(action.payload.merchants || [])];
 			if (state.totalCount !== action.payload.totalCount) {
 				state.totalCount = action.payload.totalCount;
 			}
@@ -181,10 +249,7 @@ export const merchantsSettingsSlice = createSlice({
 				const newMerchantObj = state.merchants[indexToReplaced];
 				const accIndexToReplaced = newMerchantObj?.accompagnements?.findIndex((acc) => acc.id === action.payload?.accompagnement?.id);
 				if (accIndexToReplaced !== -1) {
-					console.log(action.payload?.accompagnement);
-					console.log(newMerchantObj.accompagnements);
 					newMerchantObj.accompagnements[accIndexToReplaced] = action.payload?.accompagnement;
-					console.log(newMerchantObj.accompagnements);
 				}
 
 				state.merchants[indexToReplaced] = newMerchantObj;
@@ -236,6 +301,52 @@ export const merchantsSettingsSlice = createSlice({
 			state.isLoading = false;
 		},
 		[saveMerchantsArticle.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[updateMerchantsArticle.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[updateMerchantsArticle.fulfilled]: (state, action) => {
+			const indexToReplaced = state.merchants.findIndex((merch) => merch.id === action.payload?.article?.merchant_id);
+			// If the object is found, replace it with the new object
+			if (indexToReplaced !== -1) {
+				const newMerchantObj = state.merchants[indexToReplaced];
+
+				const articleIndexToReplaced = newMerchantObj?.articles.findIndex((article) => article.id === action.payload?.article?.id);
+				if (articleIndexToReplaced !== -1) {
+					newMerchantObj.articles[articleIndexToReplaced] = action.payload?.article;
+				}
+				state.merchants[indexToReplaced] = newMerchantObj;
+			}
+
+			state.isLoading = false;
+		},
+		[updateMerchantsArticle.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[switchArticlePublishFromSettings.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[switchArticlePublishFromSettings.fulfilled]: (state, action) => {
+			console.log(action.payload);
+			const indexToReplaced = state.merchants.findIndex((merch) => merch.id === action.payload?.article?.merchant_id);
+			// If the object is found, replace it with the new object
+			if (indexToReplaced !== -1) {
+				const newMerchantObj = state.merchants[indexToReplaced];
+				const artIndexToReplaced = newMerchantObj?.articles?.findIndex((article) => article.id === action.payload?.article?.id);
+				if (artIndexToReplaced !== -1) {
+					newMerchantObj.articles[artIndexToReplaced] = action.payload?.article;
+				}
+
+				state.merchants[indexToReplaced] = newMerchantObj;
+				// state.clients.splice(indexToReplaced, 1);
+			}
+
+			state.isLoading = false;
+		},
+		[switchArticlePublishFromSettings.rejected]: (state) => {
 			state.isLoading = false;
 		},
 	},

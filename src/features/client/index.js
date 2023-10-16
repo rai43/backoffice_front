@@ -3,20 +3,14 @@ import { useFormik } from 'formik';
 import * as _ from 'lodash';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import TitleCard from '../../components/Cards/TitleCard';
-import FilterLg from '../../components/Filters/FilterLg';
-import FilterSm from '../../components/Filters/FilterSm';
 import InputCheckbox from '../../components/Input/InputCheckbox';
-import Search from '../../components/Input/Search';
 import InfoText from '../../components/Typography/InfoText';
-import Subtitle from '../../components/Typography/Subtitle';
 import { CONFIRMATION_MODAL_CLOSE_TYPES, MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
 import { openModal } from '../common/modalSlice';
-import User from '../user/components/User';
 import { getClientsContent, resetFrom } from './clientSlice';
 import Clients from './components/Clients';
-import ClientsTable from './components/ClientsTable';
 import SelectBox from '../../components/Input/SelectBox';
+import InputText from '../../components/Input/InputText';
 
 const INITIAL_CUSTOMER_FILTER_OBJ = {
 	personal: true,
@@ -26,6 +20,9 @@ const INITIAL_CUSTOMER_FILTER_OBJ = {
 	direction: 'DESC',
 	limit: '500',
 	searchPattern: '',
+	phoneNumber: '',
+	merchantId: '',
+	merchantName: '',
 };
 
 const orderOptions = [
@@ -49,7 +46,6 @@ const Customers = () => {
 		initialValues: INITIAL_CUSTOMER_FILTER_OBJ,
 	});
 
-	const [searchPattern, setSearchPattern] = useState('');
 	const [openFilter, setOpenFilter] = useState(false);
 
 	const TopSideButtons = ({ extraClasses, containerStyle }) => {
@@ -100,6 +96,9 @@ const Customers = () => {
 				limit: formik.values.limit,
 				direction: formik.values.direction,
 				searchPattern: formik.values.searchPattern,
+				merchantId: formik.values.merchantId,
+				merchantName: formik.values.merchantName,
+				phoneNumber: formik.values.phoneNumber,
 			};
 
 			await applyFilter(dispatchParams);
@@ -117,6 +116,9 @@ const Customers = () => {
 			limit: formik.values.limit,
 			direction: formik.values.direction,
 			searchPattern: formik.values.searchPattern,
+			merchantId: formik.values.merchantId,
+			merchantName: formik.values.merchantName,
+			phoneNumber: formik.values.phoneNumber,
 		};
 		applyFilter(dispatchParams);
 	};
@@ -153,22 +155,6 @@ const Customers = () => {
 	const handleClientDelete = (client) => {
 		console.log(client);
 	};
-
-	// const getUpdateFormValue = async (value) => {
-	// 	setSearchPattern(value);
-	// 	dispatch(resetFrom());
-	// 	const dispatchParams = {
-	// 		skip: 0,
-	// 		personal: formik.values.personal,
-	// 		merchant: formik.values.merchant,
-	// 		active: formik.values.active,
-	// 		deleted: formik.values.deleted,
-	// 		searchPattern: value,
-	// 	};
-
-	// 	await applyFilter(dispatchParams);
-	// 	// }
-	// };
 
 	// const setScrollPosition = (newPosition) => {
 	// 	setTimeout(() => {
@@ -209,38 +195,37 @@ const Customers = () => {
 							Filters
 						</div>
 						<div className='collapse-content'>
+							<div className='sm:col-span-2 md:col-span-4 divider my-1'>General Filters</div>
 							<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 lg:gap-x-5 lg:gap-y-3'>
 								<div className=''>
 									<p className='inline-block'>Account Type</p>
-									<div className='divider m-0'></div>
 									<div className='grid grid-cols-1 md:grid-cols-3 gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<InputCheckbox
 											defaultValue={formik.values.personal}
 											updateType='personal'
 											containerStyle='md:col-span-2 mt-1'
-											inputStyle='checkbox-sm'
-											labelTitle='PERSONAL'
+											inputStyle='checkbox-sm checkbox-secondary'
+											labelTitle=' PERSONAL'
 											updateFormValue={updateFormValue}
 										/>
 										<InputCheckbox
 											defaultValue={formik.values.merchant}
 											updateType='merchant'
 											containerStyle='md:col-span-2 mt-1'
-											inputStyle='checkbox-sm'
-											labelTitle='MERCHANT'
+											inputStyle='checkbox-sm checkbox-secondary '
+											labelTitle=' MERCHANT'
 											updateFormValue={updateFormValue}
 										/>
 									</div>
 								</div>
 								<div>
 									<p className={'inline-block'}>Account Status</p>
-									<div className='divider m-0'></div>
 									<div className='grid grid-cols-1 md:grid-cols-3 gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<InputCheckbox
 											defaultValue={formik.values.active}
 											updateType='active'
 											containerStyle='md:col-span-2 mt-1'
-											inputStyle='checkbox-sm'
+											inputStyle='checkbox-sm checkbox-secondary '
 											labelTitle='ACTIVE'
 											updateFormValue={updateFormValue}
 										/>
@@ -248,7 +233,7 @@ const Customers = () => {
 											defaultValue={formik.values.deleted}
 											updateType='deleted'
 											containerStyle='md:col-span-2 mt-1'
-											inputStyle='checkbox-sm'
+											inputStyle='checkbox-sm checkbox-secondary '
 											labelTitle='DELETED'
 											updateFormValue={updateFormValue}
 										/>
@@ -256,8 +241,7 @@ const Customers = () => {
 								</div>
 								<div>
 									<p className={'inline-block'}>Direction</p>
-									<div className='divider m-0'></div>
-									<div className='grid grid-cols-1  gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
+									<div className='grid grid-cols-1 gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<SelectBox
 											options={orderOptions}
 											labelTitle='Period'
@@ -266,12 +250,12 @@ const Customers = () => {
 											labelStyle='hidden'
 											defaultValue={formik.values.direction}
 											updateFormValue={updateFormValue}
+											selectStyle={'select-sm mt-1'}
 										/>
 									</div>
 								</div>
 								<div>
 									<p className={'inline-block'}>Fetch Limit</p>
-									<div className='divider m-0'></div>
 									<div className='grid grid-cols-1  gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<SelectBox
 											options={fetchLimitOptions}
@@ -281,12 +265,44 @@ const Customers = () => {
 											labelStyle='hidden'
 											defaultValue={formik.values.limit}
 											updateFormValue={updateFormValue}
+											selectStyle={'select-sm mt-1'}
 										/>
 									</div>
 								</div>
+								<div className='sm:col-span-2 md:col-span-4 divider my-1'>Extra Filters</div>
+								<div className='sm:col-span-2 md:col-span-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 lg:gap-x-5 lg:gap-y-3 '>
+									<InputText
+										type='text'
+										defaultValue={formik.values.phoneNumber}
+										updateType='phoneNumber'
+										containerStyle=''
+										inputStyle='input-sm'
+										labelTitle='Customer Phone Number'
+										updateFormValue={updateFormValue}
+									/>
+									<InputText
+										type='number'
+										defaultValue={formik.values.merchantId}
+										updateType='merchantId'
+										containerStyle=''
+										inputStyle='input-sm'
+										labelTitle='Merchant ID'
+										updateFormValue={updateFormValue}
+									/>
+									<InputText
+										type='text'
+										defaultValue={formik.values.merchantName}
+										updateType='merchantName'
+										containerStyle=''
+										inputStyle='input-sm'
+										labelTitle='Merchant Name'
+										updateFormValue={updateFormValue}
+									/>
+								</div>
+
 								<button
 									onClick={() => onFetchClients()}
-									className='btn btn-outline btn-primary w-full sm:col-span-2 md:col-start-2 my-2'
+									className='btn btn-sm btn-outline btn-secondary w-full sm:col-span-2 md:col-start-2 my-2'
 								>
 									Apply Filters
 								</button>
@@ -294,10 +310,10 @@ const Customers = () => {
 						</div>
 					</div>
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-x-5 lg:gap-y-3 my-4'>
-						<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-							<div className='w-full flex items-center justify-center'>
-								<TopSideButtons extraClasses='btn-sm' />
-							</div>
+						<div className='grid grid-cols-1 gap-3'>
+							{/* <div className='w-full flex items-center justify-center'> */}
+							<TopSideButtons extraClasses='btn-sm' />
+							{/* </div> */}
 						</div>
 						<div className='md:col-end-3'></div>
 					</div>

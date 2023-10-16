@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { replaceClientObjectByUpdatedOne } from '../client/clientSlice';
+import { useDispatch } from 'react-redux';
 
 export const getClientTransactions = createAsyncThunk('/transactions/client', async (params) => {
 	const wallet = params.wallet;
@@ -48,10 +50,10 @@ export const getClientsTransactions = createAsyncThunk('/transactions/clients', 
 });
 
 export const creditAccountToServer = createAsyncThunk('/transaction/credit-account', async (payload) => {
-	const { wallet, amount } = payload;
-	console.log('wallet, amount', wallet, amount);
+	const { wallet, amount, accountType } = payload;
+
 	try {
-		const response = await axios.post(`/api/wallet/actions/credit/${wallet}`, {
+		const response = await axios.post(`/api/wallet/actions/credit/${accountType}/${wallet}`, {
 			amount,
 		});
 		console.log('response', response);
@@ -62,10 +64,10 @@ export const creditAccountToServer = createAsyncThunk('/transaction/credit-accou
 });
 
 export const debitAccountToServer = createAsyncThunk('/transaction/debit-account', async (payload) => {
-	const { wallet, amount } = payload;
+	const { wallet, amount, accountType } = payload;
 
 	try {
-		const response = await axios.post(`/api/wallet/actions/debit/${wallet}`, {
+		const response = await axios.post(`/api/wallet/actions/debit/${accountType}/${wallet}`, {
 			amount,
 		});
 		console.log('response', response);

@@ -2,16 +2,26 @@ import moment from 'moment';
 import streetLogo from '../../assets/street_logo.jpeg';
 import clientCard from '../../assets/client_card.png';
 import merchantCard from '../../assets/merchant_card.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
+	const { clients, from, isLoading, noMoreQuery } = useSelector((state) => state.client);
+	useEffect(() => console.log(clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)), []);
+
 	return (
 		<div
 			className='hover:cursor-pointer  sm:w-96 sm:h-56 m-auto bg-red-100 rounded-xl relative text-white shadow-2xl transition-transform transform hover:scale-110'
-			onClick={() => onWalletClicked(client, wallet)}
+			onClick={() =>
+				onWalletClicked(
+					client,
+					clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
+				)
+			}
 		>
 			<img
 				className='relative object-cover w-full h-full rounded-xl'
-				src={wallet?.wallet_type?.code !== 'MARCH' ? clientCard : merchantCard}
+				src={clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_type?.code !== 'MARCH' ? clientCard : merchantCard}
 				alt=''
 			/>
 
@@ -20,10 +30,10 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
 					<div className=''>
 						<p className='font-light'>Wallet Info</p>
 						<p className='font-medium tracking-widest'>
-							{wallet?.wallet_type?.libelle}
+							{clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_type?.libelle}
 							<span
 								className={`mx-2 inline-grid rounded-lg w-3 h-3 justify-items-center self-center items-center ${
-									wallet?.wallet_status?.code === 'ACTIVATED' ? 'bg-success' : 'bg-red-900'
+									clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_status?.code === 'ACTIVATED' ? 'bg-success' : 'bg-red-900'
 								}`}
 							></span>
 						</p>
@@ -47,16 +57,18 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
 					<div className='flex justify-between'>
 						<div className=''>
 							<p className='font-light text-xs'>Balance</p>
-							<p className='font-medium tracking-wider text-sm'>{wallet?.balance} CFA</p>
+							<p className='font-medium tracking-wider text-sm'>{clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)?.balance} CFA</p>
 						</div>
 						<div className=''>
 							<p className='font-light text-xs'>Bonus</p>
-							<p className='font-medium tracking-wider text-sm'>{wallet?.bonus} CFA</p>
+							<p className='font-medium tracking-wider text-sm'>{clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)?.bonus} CFA</p>
 						</div>
 
 						<div className=''>
 							<p className='font-light text-xs'>Created On</p>
-							<p className='font-bold tracking-more-wider text-sm'>{moment(wallet?.created_at).format('ll')}</p>
+							<p className='font-bold tracking-more-wider text-sm'>
+								{moment(clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)?.created_at).format('ll')}
+							</p>
 						</div>
 					</div>
 				</div>

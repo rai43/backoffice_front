@@ -7,15 +7,17 @@ import Bars3Icon from '@heroicons/react/24/outline/Bars3Icon';
 import MoonIcon from '@heroicons/react/24/outline/MoonIcon';
 import SunIcon from '@heroicons/react/24/outline/SunIcon';
 import UserCircleIcon from '@heroicons/react/24/outline/UserCircleIcon';
+import { BsChevronCompactLeft, BsChevronCompactRight } from 'react-icons/bs';
 import auth from '../app/auth';
 // import { openRightDrawer } from '../features/common/rightDrawerSlice';
 import { RIGHT_DRAWER_TYPES } from '../utils/globalConstantUtil';
 
 import { NavLink, Routes, Link, useLocation } from 'react-router-dom';
+import { toggleSideBarStatus } from '../features/common/headerSlice';
 
 function Header() {
 	const dispatch = useDispatch();
-	const { noOfNotifications, pageTitle } = useSelector((state) => state.header);
+	const { noOfNotifications, pageTitle, isSideBarOpened } = useSelector((state) => state.header);
 	const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('theme'));
 
 	useEffect(() => {
@@ -42,16 +44,36 @@ function Header() {
 		// );
 	};
 
+	const close = (e) => {
+		document.getElementById('left-sidebar-drawer').click();
+	};
+
 	return (
 		<>
-			<div className='navbar  flex justify-between bg-base-100  z-10 shadow-md '>
+			<div className='navbar  flex justify-between bg-base-100  z-10 shadow-md'>
 				{/* Menu toogle for mobile view or small screen */}
-				<div className=''>
+				<div className='lg:hidden'>
 					<label
 						htmlFor='left-sidebar-drawer'
-						className='btn btn-primary drawer-button lg:hidden'
+						className='btn btn-primary drawer-button'
+						onClick={() => {
+							dispatch(toggleSideBarStatus());
+						}}
 					>
 						<Bars3Icon className='h-5 inline-block w-5' />
+					</label>
+					<h1 className='text-2xl font-semibold ml-2'>{pageTitle}</h1>
+				</div>
+				<div className='hidden lg:inline-flex'>
+					<label
+						htmlFor='left-sidebar-drawer'
+						className='btn btn-ghost drawer-button'
+						onClick={() => {
+							dispatch(toggleSideBarStatus());
+							close();
+						}}
+					>
+						{isSideBarOpened ? <BsChevronCompactLeft className='h-5 inline-block w-5' /> : <BsChevronCompactRight className='h-5 inline-block w-5' />}
 					</label>
 					<h1 className='text-2xl font-semibold ml-2'>{pageTitle}</h1>
 				</div>

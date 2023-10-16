@@ -9,11 +9,13 @@ import InfoText from '../../../components/Typography/InfoText';
 import { useDispatch, useSelector } from 'react-redux';
 import { openRightDrawer } from '../../common/rightDrawerSlice';
 import { RIGHT_DRAWER_TYPES } from '../../../utils/globalConstantUtil';
-import { deleteMerchantsAccompagnement } from '../merchantsSettingsSlice';
+import { deleteMerchantsAccompagnement, switchArticlePublishFromSettings } from '../merchantsSettingsSlice';
 import { showNotification } from '../../common/headerSlice';
+import { switchArticlePublish } from '../../merchantsMenu/merchantsMenuSlice';
 
 const MerchantsSettingsDetailView = ({ extraObject }) => {
 	const dispatch = useDispatch();
+	const [filterStatus, setFilterStatus] = useState('ALL');
 	const [modalInfo, setModalInfo] = useState({ isOpened: false, name: '', id: '' });
 	const { merchants, skip, isLoading, noMoreQuery } = useSelector((state) => state.merchant);
 	console.log(extraObject);
@@ -75,10 +77,20 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
 				<div className='divider mt-0'></div>
 
 				{/* Basic Client Info */}
-				<UserBasicDetail {...extraObject.client} />
+				<UserBasicDetail
+					{...extraObject.client}
+					merchants={[extraObject]}
+				/>
 
 				{/* Info card */}
 				<div className='w-full stats stats-vertical lg:stats-horizontal shadow mb-4'>
+					<div className='stat'>
+						<div className='stat-title'>Merchant ID</div>
+						<div className={`stat-value text-[1.6rem] text-primary`}>{extraObject?.id || '0'}</div>
+						<div className='stat-desc'>
+							<span className='font-semibold'></span>
+						</div>
+					</div>
 					<div className='stat'>
 						<div className='stat-title'>Articles</div>
 						<div className={`stat-value text-[1.6rem] ${extraObject?.articles?.length > 0 ? 'text-primary' : ''}`}>{extraObject?.articles?.length || '0'}</div>
@@ -86,7 +98,6 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
 							<span className='font-semibold'>{`Article${extraObject?.articles?.length ? 's' : ''}`}</span>
 						</div>
 					</div>
-
 					<div className='stat'>
 						<div className='stat-title'>Accompagnements</div>
 						<div className={`stat-value text-[1.6rem] ${extraObject?.accompagnements?.length > 0 ? 'text-primary' : ''}`}>{extraObject?.accompagnements?.length || '0'}</div>
@@ -96,7 +107,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
 					</div>
 					<div className='stat'>
 						<div className='stat-title'>Creation Info</div>
-						<div className='stat-value text-[1.5rem]'>{moment(extraObject?.created_at).format('lll') || 'N/A'}</div>
+						<div className='stat-value text-[1.2rem]'>{moment(extraObject?.created_at).format('DD-MM-YYYY HH:mm') || 'N/A'}</div>
 						<div className='stat-desc'>
 							By: <span className='font-semibold'>{extraObject?.created_by || 'Backoffice'}</span>
 						</div>
@@ -137,13 +148,54 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
 				>
 					{merchants?.find((merch) => merch.id === extraObject.id)?.articles?.length ? (
 						<>
+							<div className='btn-group btn-group-vertical md:btn-group-horizontal w-full px-2'>
+								<button
+									className={`btn btn-sm btn-outline md:w-1/5 ${filterStatus === 'ALL' ? 'btn-active' : ''}`}
+									onClick={() => setFilterStatus('ALL')}
+								>
+									SHOW ALL
+								</button>
+								<button
+									className={`btn btn-sm btn-outline md:w-1/5 ${filterStatus === 'PUBLISHED' ? 'btn-active' : ''}`}
+									onClick={() => setFilterStatus('PUBLISHED')}
+								>
+									PUBLISHED
+								</button>
+								<button
+									className={`btn btn-sm btn-outline md:w-1/5 ${filterStatus === 'UNPUBLISHED' ? 'btn-active' : ''}`}
+									onClick={() => setFilterStatus('UNPUBLISHED')}
+								>
+									UNPUBLISHED
+								</button>
+								<button
+									className={`btn btn-sm btn-outline md:w-1/5 ${filterStatus === 'PENDING' ? 'btn-active' : ''}`}
+									onClick={() => setFilterStatus('PENDING')}
+								>
+									PENDING
+								</button>
+								<button
+									className={`btn btn-sm btn-outline md:w-1/5 ${filterStatus === 'REJECTED' ? 'btn-active' : ''}`}
+									onClick={() => setFilterStatus('REJECTED')}
+								>
+									REJECTED
+								</button>
+							</div>
 							<div className='md:grid md:grid-cols-2 md:gap-3'>
 								{merchants
 									?.find((merch) => merch.id === extraObject.id)
-									?.articles?.map((article) => (
+									?.articles?.filter((article) => {
+										if (filterStatus === 'ALL') {
+											return article;
+										} else {
+											return article?.status === filterStatus;
+										}
+									})
+									?.map((article) => (
 										<Article
 											key={article.id}
-											{...article}
+											merchant_id={extraObject?.id}
+											article={article}
+											accompagnements={merchants?.find((merch) => merch.id === extraObject.id)?.accompagnements || []}
 										/>
 									))}
 							</div>
@@ -208,36 +260,50 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
 export default MerchantsSettingsDetailView;
 
 const Article = (props) => {
+	console.log('props', props);
 	const dispatch = useDispatch();
+	const { merchants, skip, isLoading, noMoreQuery } = useSelector((state) => state.merchant);
+
 	const openMerchantArticle = (obj) => {
+		console.log(obj);
 		dispatch(
 			openRightDrawer({
-				header: `Add New Article`,
+				header: `Edit Article - ${obj?.article?.id}`,
 				bodyType: RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ARTICLE,
-				extraObject: obj,
+				extraObject: { ...obj },
 			})
 		);
 	};
 
+	console.log(merchants?.find((merch) => merch.id === props.merchant_id)?.articles?.find((article) => article?.id === props?.article?.id));
+
 	return (
-		<div
-			className='flex flex-col justify-center my-4 hover:cursor-pointer'
-			onClick={() => openMerchantArticle({ article: { ...props }, inEditMode: true })}
-		>
-			<div className='relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-lg p-3 max-w-xs md:max-w-4xl mx-auto border border-white bg-white w-full'>
-				<div className='w-full md:w-1/3 bg-white grid place-items-center max-h-2'>
-					<img
-						src={props.media[0]?.url}
-						alt='tailwind logo'
-						className='rounded-xl h-32 w-32'
-						// style={{ objectFit: 'contain' }}
-					/>
-				</div>
-				<div className='w-full md:w-2/3 bg-white flex flex-col space-y-2 p-3'>
-					<div className='flex justify-between item-center'>
-						<p className='text-gray-500 font-medium hidden md:block'>{moment(props.created_at).format('DD/MM/YYYY')}</p>
-						{/* <p className='text-gray-500 font-medium hidden md:block'>Vacations</p> */}
-						{/* <div className='flex items-center'>
+		<>
+			<div
+				className='flex flex-col justify-center my-4 hover:cursor-pointer '
+				onClick={() => openMerchantArticle({ article: props?.article, merchant_id: props?.merchant_id, accompagnements: props?.accompagnements, inEditMode: true })}
+			>
+				<div className='relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-lg p-3 max-w-xs md:max-w-4xl mx-auto border border-white bg-white hover:bg-gray-200 w-full'>
+					<div className='w-full md:w-1/3  grid place-items-center max-h-3'>
+						<img
+							src={props?.article?.image}
+							alt='tailwind logo'
+							className='rounded-xl h-32 w-32'
+							// style={{ objectFit: 'contain' }}
+						/>
+					</div>
+
+					<div className='w-full md:w-2/3  flex flex-col space-y-2 p-3'>
+						<div className='flex justify-between item-center'>
+							{/* <p className='text-gray-500 font-medium hidden md:block'>{moment(props?.article?.created_at).format('DD/MM/YYYY')}</p> */}
+							<p className='text-gray-500 font-medium hidden md:block'>{(props?.article?.id)}</p>
+							<p className={`font-medium hidden capitalize md:block ${props?.article?.status === 'PUBLISHED' ? 'text-success' : 'text-secondary'}`}>
+								{merchants
+									?.find((merch) => merch.id === props.merchant_id)
+									?.articles?.find((article) => article?.id === props?.article?.id)
+									?.status?.toLocaleLowerCase()}
+							</p>
+							{/* <div className='flex items-center'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								className='h-5 w-5 text-yellow-500'
@@ -266,20 +332,63 @@ const Article = (props) => {
 							</svg>
 						</div>
 						<div className='bg-gray-200 px-3 py-1 rounded-full text-xs font-medium text-gray-800 hidden md:block'>Superhost</div> */}
+						</div>
+						<h3 className='font-black text-gray-800 text-md uppercase'>{cliTruncate(props?.article?.title, 22)}</h3>
+						<p className='md:text-lg text-gray-500 text-base lowercase'>{cliTruncate(props?.article?.description || props?.article?.title, 25)}</p>
+						<p className='text-xl font-black text-gray-800'>
+							{props?.article?.price}
+							<span className='font-normal text-gray-600 text-base ml-2'>FCFA</span>
+						</p>
+
+						<div
+							className='col-span-2 text-base'
+							onClick={(e) => e.stopPropagation()}
+						>
+							<select
+								value={merchants?.find((merch) => merch.id === props.merchant_id)?.articles?.find((article) => article?.id === props?.article?.id)?.status}
+								className='select select-bordered select-sm w-2/3'
+								onChange={async (e) => {
+									console.log(e.target.value);
+									await dispatch(
+										switchArticlePublishFromSettings({
+											articleId: merchants?.find((merch) => merch.id === props.merchant_id)?.articles?.find((article) => article?.id === props?.article?.id)?.id,
+											status: e.target.value,
+										})
+									).then(async (response) => {
+										if (response?.error) {
+											dispatch(
+												showNotification({
+													message: 'Error while change the article publish status',
+													status: 0,
+												})
+											);
+										} else {
+											dispatch(
+												showNotification({
+													message: 'Succefully changed the publish status',
+													status: 1,
+												})
+											);
+
+											// closeModal();
+										}
+									});
+								}}
+							>
+								<option value='PUBLISHED'>PUBLISHED</option>
+								<option value='UNPUBLISHED'>UNPUBLISHED</option>
+								<option value='PENDING'>PENDING</option>
+								<option value='REJECTED'>REJECTED</option>
+							</select>
+						</div>
 					</div>
-					<h3 className='font-black text-gray-800 text-md uppercase'>{cliTruncate(props.title, 23)}</h3>
-					<p className='md:text-lg text-gray-500 text-base lowercase'>{cliTruncate(props?.description || props?.title, 25)}</p>
-					<p className='text-xl font-black text-gray-800'>
-						{props.price}
-						<span className='font-normal text-gray-600 text-base ml-2'>FCFA</span>
-					</p>
 				</div>
 			</div>
-		</div>
+		</>
 		// <div className='card card-side bg-base-100 shadow-xl my-4 grid grid-cols-4 h-36'>
 		// 	<figure className='p-2'>
 		// 		<img
-		// 			src={props.media[0]?.url}
+		// 			src={props?.image}
 		// 			alt='Movie'
 		// 			className='rounded-sm'
 		// 			style={{

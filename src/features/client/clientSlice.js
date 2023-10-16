@@ -11,6 +11,9 @@ export const getClientsContent = createAsyncThunk('/clients/content', async (par
 	const direction = params.direction || 'DESC';
 	const limit = params.limit || 1000;
 	const searchPattern = params.searchPattern || '';
+	const phoneNumber = params.phoneNumber || '';
+	const merchantId = parseInt(params.merchantId) || 0;
+	const merchantName = params.merchantName || '';
 
 	const accountType =
 		personal && merchant
@@ -38,6 +41,9 @@ export const getClientsContent = createAsyncThunk('/clients/content', async (par
 			status: status,
 			searchPattern: searchPattern,
 			direction: direction,
+			phoneNumber,
+			merchantId,
+			merchantName,
 			skip: skip,
 			limit: limit,
 		},
@@ -67,22 +73,110 @@ export const createPersonalClientAccount = createAsyncThunk('/clients/create-acc
 	}
 });
 
+export const modifyPersonalClientAccount = createAsyncThunk('/clients/modify-account-personal', async (payload) => {
+	try {
+		const clientId = payload.clientId;
+		const merchantId = payload.merchantId || 'null';
+		delete payload.clientId;
+		delete payload.merchantId;
+
+		// :personal or :merchant or :livreur
+		const response = await axios.post(`/api/client/modify-client-account/personal/${clientId}/${merchantId}`, payload);
+		console.log(response);
+		return response.data;
+	} catch (e) {
+		throw new Error(e.statusText);
+	}
+});
+
 export const createMerchantClientAccount = createAsyncThunk('/clients/create-account-merchant', async (payload) => {
 	try {
 		const formData = new FormData();
 		console.log(payload.registration);
-		// formData.append('phone_number', payload.registration.phone_number);
 		formData.append('profile_picture', payload.registration.profile_picture);
 		formData.append('registration', JSON.stringify(payload.registration));
 		formData.append('locations', JSON.stringify(payload.locations));
 		formData.append('workDays', JSON.stringify(payload.workDays));
 		console.log(formData);
+
 		// :personal or :merchant or :livreur
 		const response = await axios.post(`/api/client/create-client-account/merchant`, formData, {
 			headers: {
 				'Content-type': 'multipart/form-data',
 			},
 		});
+		console.log(response);
+		return response.data;
+	} catch (e) {
+		throw new Error(e.statusText);
+	}
+});
+
+export const modifyMerchantClientAccount = createAsyncThunk('/clients/modify-account-merchant', async (payload) => {
+	try {
+		console.log(payload.registration);
+		console.log('payload.registration.profile_picture', payload.registration.profile_picture);
+		console.log('payload.registration.profile_picture 2', payload?.registration?.profile_picture?.size);
+		const clientId = payload.clientId;
+		const merchantId = payload.merchantId || 'null';
+		let response;
+		if (!payload?.registration?.profile_picture?.size && payload?.registration?.profile_picture?.includes('https://res.cloudinary.com/')) {
+			const postPayload = JSON.stringify({ registration: payload.registration, locations: payload.locations, workDays: payload.workDays });
+
+			response = await axios.post(`/api/client/modify-client-account-img-cloud/merchant/${clientId}/${merchantId}`, postPayload);
+		} else {
+			console.log('in 2');
+			const formData = new FormData();
+			formData.append('profile_picture', payload.registration.profile_picture);
+			formData.append('registration', JSON.stringify(payload.registration));
+			formData.append('locations', JSON.stringify(payload.locations));
+			formData.append('workDays', JSON.stringify(payload.workDays));
+			console.log(formData);
+
+			// :personal or :merchant or :livreur
+			response = await axios.post(`/api/client/modify-client-account/merchant/${clientId}/${merchantId}`, formData, {
+				headers: {
+					'Content-type': 'multipart/form-data',
+				},
+			});
+		}
+
+		console.log(response);
+		return response.data;
+	} catch (e) {
+		throw new Error(e.statusText);
+	}
+});
+
+export const turnClientIntoMerchantAccount = createAsyncThunk('/clients/turn-client-into-merchant', async (payload) => {
+	try {
+		const clientId = payload.clientId;
+
+		const formData = new FormData();
+		formData.append('profile_picture', payload.registration.profile_picture);
+		formData.append('registration', JSON.stringify(payload.registration));
+		formData.append('locations', JSON.stringify(payload.locations));
+		formData.append('workDays', JSON.stringify(payload.workDays));
+
+		delete payload.clientId;
+		// :personal or :merchant or :livreur
+		const response = await axios.post(`/api/client/turn-client-into-merchant/${clientId}`, formData, {
+			headers: {
+				'Content-type': 'multipart/form-data',
+			},
+		});
+		console.log(response);
+		return response.data;
+	} catch (e) {
+		throw new Error(e.statusText);
+	}
+});
+
+export const updateMerchantSchedule = createAsyncThunk('/clients/update-merchant-schedule', async (payload) => {
+	try {
+		const merchantId = payload.merchantId;
+
+		const response = await axios.post(`/api/client/update-merchant-schedule/${merchantId}`, JSON.stringify({ workDays: payload.workDays }));
 		console.log(response);
 		return response.data;
 	} catch (e) {
@@ -104,6 +198,16 @@ export const clientSlice = createSlice({
 			state.skip = 0;
 			state.clients = [];
 			state.noMoreQuery = false;
+		},
+
+		replaceClientObjectByUpdatedOne: (state, action) => {
+			const indexToRemoved = state.clients.findIndex((client) => client.id === action.payload?.client?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.clients[indexToRemoved] = action.payload.client;
+			}
+			state.isLoading = false;
 		},
 	},
 
@@ -160,6 +264,70 @@ export const clientSlice = createSlice({
 			state.isLoading = false;
 		},
 
+		[modifyPersonalClientAccount.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[modifyPersonalClientAccount.fulfilled]: (state, action) => {
+			const indexToRemoved = state.clients.findIndex((client) => client.id === action.payload?.client?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.clients[indexToRemoved] = action.payload.client;
+			}
+			state.isLoading = false;
+		},
+		[modifyPersonalClientAccount.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[modifyMerchantClientAccount.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[modifyMerchantClientAccount.fulfilled]: (state, action) => {
+			const indexToRemoved = state.clients.findIndex((client) => client.id === action.payload?.client?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.clients[indexToRemoved] = action.payload.client;
+			}
+			state.isLoading = false;
+		},
+		[modifyMerchantClientAccount.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[turnClientIntoMerchantAccount.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[turnClientIntoMerchantAccount.fulfilled]: (state, action) => {
+			const indexToRemoved = state.clients.findIndex((client) => client.id === action.payload?.client?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.clients[indexToRemoved] = action.payload.client;
+			}
+			state.isLoading = false;
+		},
+		[turnClientIntoMerchantAccount.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[updateMerchantSchedule.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[updateMerchantSchedule.fulfilled]: (state, action) => {
+			const indexToRemoved = state.clients.findIndex((client) => client.id === action.payload?.client?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.clients[indexToRemoved] = action.payload.client;
+			}
+			state.isLoading = false;
+		},
+		[updateMerchantSchedule.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
 		[createMerchantClientAccount.pending]: (state) => {
 			state.isLoading = true;
 		},
@@ -175,6 +343,6 @@ export const clientSlice = createSlice({
 	},
 });
 
-export const { resetFrom } = clientSlice.actions;
+export const { resetFrom, replaceClientObjectByUpdatedOne } = clientSlice.actions;
 
 export default clientSlice.reducer;

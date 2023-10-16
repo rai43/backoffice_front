@@ -13,6 +13,12 @@ import MerchantsDetailView from '../features/merchantsMenu/components/MerchantsD
 import MerchantsSettingsDetailView from '../features/merchantsSettings/components/MerchantsSettingsDetailView';
 import MenuArticleAddOrEdit from '../features/merchantsMenu/components/MenuArticleAddOrEdit';
 import AssignLivreur from '../features/order/components/AssignLivreur';
+import AddOrEditDiscount from '../features/discountManagement/components/AddOrEditDiscount';
+import OrderPosition from '../features/order/components/OrderPosition';
+import AssignLivreursToZone from '../features/DynamicAssignment/components/AssignLivreursToZone';
+import LivreurDetailView from '../features/livreurs/components/LivreurDetailView';
+import AddOrModifyLivreur from '../features/livreurs/components/AddOrModifyLivreur';
+import ChangeProvider from '../features/smsPorvider/components/ChangeProvider';
 
 function ModalLayout() {
 	const { isOpen, bodyType, size, extraObject, title } = useSelector((state) => state.modal);
@@ -27,7 +33,10 @@ function ModalLayout() {
 			{/* The button to open modal */}
 
 			{/* Put this part before </body> tag */}
-			<div className={`modal ${isOpen ? 'modal-open' : ''}`}>
+			<div
+				className={`modal ${isOpen ? 'modal-open' : ''}`}
+				id='modal-layout-id'
+			>
 				<div className={`modal-box  ${size === 'lg' ? 'max-w-5xl' : ''}`}>
 					<button
 						className='btn btn-sm btn-circle absolute right-2 top-2'
@@ -60,6 +69,18 @@ function ModalLayout() {
 							),
 							[MODAL_BODY_TYPES.CLIENT_DETAILS]: (
 								<ClientDetailView
+									extraObject={extraObject}
+									closeModal={close}
+								/>
+							),
+							[MODAL_BODY_TYPES.LIVREUR_DETAILS]: (
+								<LivreurDetailView
+									extraObject={extraObject}
+									closeModal={close}
+								/>
+							),
+							[MODAL_BODY_TYPES.CHANGE_PROVIDER]: (
+								<ChangeProvider
 									extraObject={extraObject}
 									closeModal={close}
 								/>
@@ -100,8 +121,32 @@ function ModalLayout() {
 									closeModal={close}
 								/>
 							),
+							[MODAL_BODY_TYPES.ASSIGN_LIVREURS_TO_ZONE]: (
+								<AssignLivreursToZone
+									extraObject={extraObject}
+									closeModal={close}
+								/>
+							),
 							[MODAL_BODY_TYPES.CLIENTS_ADD_OR_EDIT]: (
 								<AddOrModifyClients
+									extraObject={extraObject}
+									closeModal={close}
+								/>
+							),
+							[MODAL_BODY_TYPES.LIVREUR_ADD_OR_EDIT]: (
+								<AddOrModifyLivreur
+									extraObject={extraObject}
+									closeModal={close}
+								/>
+							),
+							[MODAL_BODY_TYPES.DISCOUNT_ADD_OR_EDIT]: (
+								<AddOrEditDiscount
+									extraObject={extraObject}
+									closeModal={close}
+								/>
+							),
+							[MODAL_BODY_TYPES.ORDER_POSITION]: (
+								<OrderPosition
 									extraObject={extraObject}
 									closeModal={close}
 								/>

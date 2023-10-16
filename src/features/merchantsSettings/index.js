@@ -18,8 +18,10 @@ const INITIAL_MERCHANTS_FILTER_OBJ = {
 	active: true,
 	deleted: false,
 	direction: 'DESC',
-	limit: '10',
+	limit: '50',
 	searchPattern: '',
+	merchantId: '',
+	merchantName: '',
 };
 
 const orderOptions = [
@@ -28,7 +30,8 @@ const orderOptions = [
 ];
 
 const fetchLimitOptions = [
-	{ name: '10', value: '10' },
+	{ name: '50', value: '50' },
+	{ name: '100', value: '100' },
 	{ name: '250', value: '250' },
 	{ name: '500', value: '500' },
 	{ name: '1000', value: '1000' },
@@ -68,7 +71,6 @@ const MerchantsMenu = () => {
 
 	const onFetchMerchants = async () => {
 		dispatch(resetFrom());
-		dispatch(resetFrom());
 		const dispatchParams = {
 			skip: 0,
 			active: formik.values.active,
@@ -76,6 +78,8 @@ const MerchantsMenu = () => {
 			limit: formik.values.limit,
 			direction: formik.values.direction,
 			searchPattern: formik.values.searchPattern,
+			merchantId: formik.values.merchantId,
+			merchantName: formik.values.merchantName,
 		};
 		applyFilter(dispatchParams);
 	};
@@ -90,6 +94,8 @@ const MerchantsMenu = () => {
 				limit: formik.values.limit,
 				direction: formik.values.direction,
 				searchPattern: formik.values.searchPattern,
+				merchantId: formik.values.merchantId,
+				merchantName: formik.values.merchantName,
 			};
 
 			await applyFilter(dispatchParams);
@@ -150,10 +156,10 @@ const MerchantsMenu = () => {
 					Filters
 				</div>
 				<div className='collapse-content'>
+					<div className='sm:col-span-2 md:col-span-4 divider my-1'>General Filters</div>
 					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 lg:gap-x-5 lg:gap-y-3'>
 						<div>
 							<p className={'inline-block'}>Account Status</p>
-							<div className='divider m-0'></div>
 							<div className='grid grid-cols-1 md:grid-cols-3 gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 								<InputCheckbox
 									defaultValue={formik.values.active}
@@ -175,7 +181,6 @@ const MerchantsMenu = () => {
 						</div>
 						<div>
 							<p className={'inline-block'}>Direction</p>
-							<div className='divider m-0'></div>
 							<div className='grid grid-cols-1  gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 								<SelectBox
 									options={orderOptions}
@@ -183,6 +188,7 @@ const MerchantsMenu = () => {
 									updateType='direction'
 									placeholder='Select desired direction'
 									labelStyle='hidden'
+									selectStyle={'select-sm'}
 									defaultValue={formik.values.direction}
 									updateFormValue={updateFormValue}
 								/>
@@ -190,7 +196,6 @@ const MerchantsMenu = () => {
 						</div>
 						<div>
 							<p className={'inline-block'}>Fetch Limit</p>
-							<div className='divider m-0'></div>
 							<div className='grid grid-cols-1  gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 								<SelectBox
 									options={fetchLimitOptions}
@@ -198,10 +203,32 @@ const MerchantsMenu = () => {
 									updateType='limit'
 									placeholder='Select desired limit'
 									labelStyle='hidden'
+									selectStyle={'select-sm'}
 									defaultValue={formik.values.limit}
 									updateFormValue={updateFormValue}
 								/>
 							</div>
+						</div>
+						<div className='sm:col-span-2 md:col-span-4 divider my-1'>Extra Filters</div>
+						<div className='sm:col-span-2 md:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-x-5 lg:gap-y-3'>
+							<InputText
+								type='text'
+								defaultValue={formik.values.merchantName}
+								updateType='merchantName'
+								containerStyle=''
+								inputStyle='input-sm'
+								labelTitle='Merchant Name'
+								updateFormValue={updateFormValue}
+							/>
+							<InputText
+								type='number'
+								defaultValue={formik.values.merchantId}
+								updateType='merchantId'
+								containerStyle=''
+								inputStyle='input-sm'
+								labelTitle='Merchant ID'
+								updateFormValue={updateFormValue}
+							/>
 						</div>
 						<button
 							onClick={() => onFetchMerchants()}
@@ -209,41 +236,6 @@ const MerchantsMenu = () => {
 						>
 							Apply Filters
 						</button>
-					</div>
-				</div>
-			</div>
-			<div className='grid grid-cols-1 md:grid-cols-3 gap-2 my-2'>
-				{/* <Datepicker
-					containerClassName='w-full'
-					// value={dateValue}
-					theme={'light'}
-					inputClassName='input input-bordered w-full'
-					popoverDirection={'down'}
-					toggleClassName='invisible'
-					// onChange={handleDatePickerValueChange}
-					showShortcuts={true}
-					primaryColor={'white'}
-				/> */}
-				<div className='md:col-span-2 md:col-start-2'>
-					<div className='grid grid-cols-8 gap-2'>
-						<InputText
-							type='text'
-							defaultValue={formik.values.searchPattern}
-							updateType='searchPattern'
-							placeholder='Type to search'
-							containerStyle='col-start-2 col-span-6'
-							labelTitle='Search Pattern'
-							updateFormValue={updateFormValue}
-							showLabel={false}
-						/>
-						<div className='flex items-center justify-center'>
-							<button
-								className='btn btn-outline w-2/3 btn-sm btn-ghost'
-								onClick={onFetchMerchants}
-							>
-								<MagnifyingGlassIcon className='w-6 h-6' />
-							</button>
-						</div>
 					</div>
 				</div>
 			</div>

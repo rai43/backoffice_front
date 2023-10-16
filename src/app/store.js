@@ -11,6 +11,9 @@ import retraitSlice from '../features/retrait/retraitSlice';
 import orderSlice from '../features/order/orderSlice';
 import merchantsSlice from '../features/merchantsMenu/merchantsMenuSlice';
 import merchantsSettingsSlice from '../features/merchantsSettings/merchantsSettingsSlice';
+import discountManagementSlice from '../features/discountManagement/discountManagementSlice';
+import dynamicAssignmentSlice from '../features/DynamicAssignment/dynamicAssignmentSlice';
+import smsPorviderSlide from '../features/smsPorvider/smsPorviderSlide';
 
 const combinedReducer = {
 	header: headerSlice,
@@ -25,6 +28,9 @@ const combinedReducer = {
 	order: orderSlice,
 	article: merchantsSlice,
 	merchant: merchantsSettingsSlice,
+	discount: discountManagementSlice,
+	dynamicAssignment: dynamicAssignmentSlice,
+	smsPorvider: smsPorviderSlide,
 };
 
 export default configureStore({

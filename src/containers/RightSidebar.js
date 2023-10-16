@@ -6,7 +6,9 @@ import UserDetailsBodyRightDrawer from '../features/user/components/UserDetailsB
 import { RIGHT_DRAWER_TYPES } from '../utils/globalConstantUtil';
 import ClientWalletDetailView from '../features/client/components/ClientWalletDetailView';
 import AccompagnementAddOrEdit from '../features/merchantsSettings/components/AccompagnementAddOrEdit';
+import MenuArticleAddOrEdit from '../features/merchantsMenu/components/MenuArticleAddOrEdit';
 import ArticleAddOrEdit from '../features/merchantsSettings/components/ArticleAddOrEdit';
+import LivreurWalletDetailView from '../features/livreurs/components/LivreurWalletDetailView';
 // import CalendarEventsBodyRightDrawer from "../features/calendar/CalendarEventsBodyRightDrawer";
 
 function RightSidebar() {
@@ -59,6 +61,12 @@ function RightSidebar() {
 											closeRightDrawer={close}
 										/>
 									),
+									[RIGHT_DRAWER_TYPES.LIVREUR_CARD_DETAILS]: (
+										<LivreurWalletDetailView
+											extraObject={extraObject}
+											closeRightDrawer={close}
+										/>
+									),
 									[RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ACCOMPAGNEMENT]: (
 										<AccompagnementAddOrEdit
 											extraObject={extraObject}
@@ -67,6 +75,12 @@ function RightSidebar() {
 									),
 									[RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ARTICLE]: (
 										<ArticleAddOrEdit
+											extraObject={extraObject}
+											closeRightDrawer={close}
+										/>
+									),
+									[RIGHT_DRAWER_TYPES.MERCHANT_ARTICLE_ADD_EDIT]: (
+										<MenuArticleAddOrEdit
 											extraObject={extraObject}
 											closeRightDrawer={close}
 										/>

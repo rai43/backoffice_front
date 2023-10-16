@@ -1,7 +1,8 @@
 import React from 'react';
 import streetLogo from '../../assets/street_logo.jpeg';
 
-const UserBasicDetail = ({ phone_number, is_deleted, merchant_name, photo, client_type, country }) => {
+const UserBasicDetail = ({ phone_number, is_deleted, merchant_name, photo, client_type, country, id, merchants, isLivreur }) => {
+	console.log(merchants);
 	return (
 		<div className='w-full grid grid-cols-1 md:grid-cols-4'>
 			<div className='col-span-3 p-2 grid grid-rows-2 gap-2'>
@@ -13,9 +14,13 @@ const UserBasicDetail = ({ phone_number, is_deleted, merchant_name, photo, clien
 
 					<div className='inline-grid mx-6 font-extralight'>/ mobile number</div>
 				</div>
-				<div>
-					<span className='mx-4 p-3 my-3 text-primary font-semibold'>{merchant_name?.toLocaleUpperCase() || client_type?.libelle?.toLocaleUpperCase()}</span>
-				</div>
+				{!isLivreur && (
+					<div>
+						<span className='mx-4 p-3 my-3 text-primary font-semibold'>
+							{merchants[0]?.name?.toLocaleUpperCase() || client_type?.libelle?.toLocaleUpperCase()} {client_type?.code?.toLocaleUpperCase() === 'MARCH' ? ' - MERCHANT ID: ' + id : ''}
+						</span>
+					</div>
+				)}
 			</div>
 
 			<div className='flex flex-row-reverse'>

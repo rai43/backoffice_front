@@ -3,7 +3,7 @@ import capitalize from 'capitalize-the-first-letter';
 import React, { useState, useEffect } from 'react';
 import InformationCircleIcon from '@heroicons/react/24/outline/InformationCircleIcon';
 
-const SelectBox = ({ labelTitle, labelDescription, defaultValue, containerStyle, placeholder, labelStyle, options, updateType, updateFormValue }) => {
+const SelectBox = ({ labelTitle, labelDescription, defaultValue, containerStyle, selectStyle, placeholder, labelStyle, options, updateType, updateFormValue }) => {
 	const [value, setValue] = useState(defaultValue || false);
 
 	const updateValue = (newValue) => {
@@ -28,7 +28,7 @@ const SelectBox = ({ labelTitle, labelDescription, defaultValue, containerStyle,
 			</label>
 
 			<select
-				className='select select-bordered w-full'
+				className={'select select-bordered w-full ' + selectStyle}
 				value={value}
 				onChange={(e) => updateValue(e.target.value)}
 			>

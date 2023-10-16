@@ -44,7 +44,8 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 		{
 			field: 'id',
 			headerName: 'Merchant ID',
-			width: 170,
+			// width: 170,
+			flex: 2,
 			pinned: true,
 			// filterParams: containFilterParams,
 			onCellClicked: (params) => openMerchantDetails(params.data),
@@ -59,7 +60,8 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 		{
 			field: 'name',
 			headerName: 'Name',
-			width: 260,
+			flex: 2,
+			// width: 260,
 			filterParams: containFilterParams,
 			pinned: true,
 			onCellClicked: (params) => openMerchantDetails(params.data),
@@ -74,7 +76,8 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 		{
 			field: 'articles',
 			headerName: 'Articles',
-			width: 210,
+			flex: 2,
+			// width: 210,
 			filterParams: containFilterParams,
 			onCellClicked: (params) => openMerchantDetails(params.data),
 			cellRenderer: ({ value }) => {
@@ -84,7 +87,8 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 		{
 			field: 'accompagnements',
 			headerName: 'Accompagnements',
-			width: 210,
+			flex: 2,
+			// width: 210,
 			filterParams: containFilterParams,
 			onCellClicked: (params) => openMerchantDetails(params.data),
 			cellRenderer: ({ value }) => {
@@ -95,7 +99,8 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
 		{
 			field: 'created_at',
 			headerName: 'Registration Date',
-			width: 170,
+			flex: 2,
+			// width: 170,
 			filter: 'agDateColumnFilter',
 			onCellClicked: (params) => openMerchantDetails(params.data),
 			cellRenderer: (value) => {

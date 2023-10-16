@@ -47,9 +47,9 @@ const AccompagnementAddOrEdit = ({ extraObject, closeRightDrawer }) => {
 				type='text'
 				defaultValue={name}
 				updateType='name'
-				placeholder='Merchant Name'
+				placeholder='Accompagnement'
 				containerStyle='mt-3'
-				labelTitle='Merchant Name'
+				labelTitle='Accompagnement'
 				updateFormValue={updateForm}
 				// inputStyle={`${!formik.isValid && formik.touched.merchant_name && formik.errors.merchant_name ? 'input-error' : ''} `}
 			/>

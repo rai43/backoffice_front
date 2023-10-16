@@ -27,7 +27,7 @@ const INITIAL_MERCHANT_OBJ = {
 
 const AddOrModifyClients = ({ extraObject }) => {
 	console.log('extraObject', extraObject);
-	const { client } = extraObject;
+	const { client, clientToMarchant, isEditCustomerSchedule } = extraObject;
 	// const { client_type, country, wallets, merchants } = client;
 
 	const dispatch = useDispatch();
@@ -72,7 +72,7 @@ const AddOrModifyClients = ({ extraObject }) => {
 			? {
 					...INITIAL_MERCHANT_OBJ,
 					phone_number: '+225' + client?.phone_number,
-					merchant_name: client?.merchant_name,
+					merchant_name: client?.merchants[0]?.name,
 					latitude: client?.merchants[0]?.latitude,
 					longitude: client?.merchants[0]?.longitude,
 					profile_picture: client?.merchants[0]?.logo,
@@ -97,8 +97,12 @@ const AddOrModifyClients = ({ extraObject }) => {
 
 	useEffect(() => {
 		if (client?.client_type?.code) {
-			setActiveStep((oldValue) => oldValue + 1);
-			if (client.client_type.code === 'MARCH') {
+			if (isEditCustomerSchedule) {
+				setActiveStep((_) => 3);
+			} else {
+				setActiveStep((oldValue) => oldValue + 1);
+			}
+			if (clientToMarchant || client.client_type.code === 'MARCH') {
 				setSelectedAccount('merchant');
 			} else if (client.client_type.code === 'PERSO') {
 				setSelectedAccount('personal');
@@ -156,6 +160,7 @@ const AddOrModifyClients = ({ extraObject }) => {
 							clickAction={setActiveStep}
 							firstLoad={firstLoad}
 							preventGoBack={client?.phone_number}
+							clientToMarchant={clientToMarchant}
 						/>
 					)}
 				</>
@@ -164,6 +169,7 @@ const AddOrModifyClients = ({ extraObject }) => {
 					{selectedAccount === 'personal' ? (
 						<>
 							<Summary
+								client={client}
 								clickAction={setActiveStep}
 								registrationInfo={personalFormik.values}
 								actionTypeBool={client?.phone_number}
@@ -185,15 +191,20 @@ const AddOrModifyClients = ({ extraObject }) => {
 						clickAction={setActiveStep}
 						workDays={workDays}
 						setWorkDays={setWorkDays}
+						isEditCustomerSchedule={isEditCustomerSchedule}
+						merchantId={client?.merchants[0]?.id}
 					/>
 				</>
 			) : activeStep === 4 ? (
 				<>
 					<Summary
+						client={client}
+						actionTypeBool={client?.phone_number}
 						clickAction={setActiveStep}
 						registrationInfo={merchantFormik.values}
 						locationsInfo={locations}
 						workDaysInfo={workDays}
+						clientToMarchant={clientToMarchant}
 					/>
 				</>
 			) : (

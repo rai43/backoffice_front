@@ -9,7 +9,7 @@ import ImageUpload from '../../../../components/Input/ImageUpload';
 import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon';
 import { getWeekDateRange } from '../../../../utils/functions/getWeekDateRange';
 import { useDispatch } from 'react-redux';
-import { createMerchantClientAccount, createPersonalClientAccount } from '../../clientSlice';
+import { createMerchantClientAccount, createPersonalClientAccount, modifyMerchantClientAccount, modifyPersonalClientAccount, turnClientIntoMerchantAccount } from '../../clientSlice';
 import { showNotification } from '../../../common/headerSlice';
 import { closeModal } from '../../../common/modalSlice';
 
@@ -21,62 +21,141 @@ const transformTime = (_date, _time) => {
 
 const { weekDatesNamesVsDates } = getWeekDateRange();
 
-const Summary = ({ registrationInfo, locationsInfo, workDaysInfo, clickAction, actionTypeBool }) => {
+const Summary = ({ registrationInfo, locationsInfo, workDaysInfo, clickAction, actionTypeBool, clientToMarchant, client }) => {
 	const dispatch = useDispatch();
 
 	const handleSubmit = async () => {
-		if (registrationInfo.accountType === 'PERSO') {
+		if (clientToMarchant) {
+			// turnClientIntoMerchantAccount
 			const data = {
-				registration: registrationInfo,
-			};
-
-			dispatch(createPersonalClientAccount(data)).then(async (response) => {
-				console.log('response: ', response);
-				if (response?.error) {
-					console.log(response.error);
-					dispatch(
-						showNotification({
-							message: 'Error while creating the client account',
-							status: 0,
-						})
-					);
-				} else {
-					dispatch(
-						showNotification({
-							message: 'Succefully created the client account',
-							status: 1,
-						})
-					);
-					dispatch(closeModal());
-				}
-			});
-		} else if (registrationInfo.accountType === 'MARCH') {
-			const data = {
+				clientId: client?.id,
 				registration: registrationInfo,
 				locations: locationsInfo,
 				workDays: workDaysInfo,
 			};
-
-			dispatch(createMerchantClientAccount(data)).then(async (response) => {
+			dispatch(turnClientIntoMerchantAccount(data)).then(async (response) => {
 				console.log('response: ', response);
 				if (response?.error) {
 					console.log(response.error);
 					dispatch(
 						showNotification({
-							message: 'Error while creating the client account',
+							message: 'Error while editing the merchant account',
 							status: 0,
 						})
 					);
 				} else {
 					dispatch(
 						showNotification({
-							message: 'Succefully created the client account',
+							message: 'Succefully editing the merchant account',
 							status: 1,
 						})
 					);
 					dispatch(closeModal());
 				}
 			});
+		} else if (registrationInfo.accountType === 'PERSO') {
+			const data = {
+				clientId: client?.id,
+				registration: registrationInfo,
+			};
+
+			if (actionTypeBool) {
+				dispatch(modifyPersonalClientAccount(data)).then(async (response) => {
+					console.log('response: ', response);
+					if (response?.error) {
+						console.log(response.error);
+						dispatch(
+							showNotification({
+								message: 'Error while creating the client account',
+								status: 0,
+							})
+						);
+					} else {
+						dispatch(
+							showNotification({
+								message: 'Succefully created the client account',
+								status: 1,
+							})
+						);
+						dispatch(closeModal());
+					}
+				});
+			} else {
+				dispatch(createPersonalClientAccount(data)).then(async (response) => {
+					console.log('response: ', response);
+					if (response?.error) {
+						console.log(response.error);
+						dispatch(
+							showNotification({
+								message: 'Error while creating the client account',
+								status: 0,
+							})
+						);
+					} else {
+						dispatch(
+							showNotification({
+								message: 'Succefully created the client account',
+								status: 1,
+							})
+						);
+						dispatch(closeModal());
+					}
+				});
+			}
+		} else if (registrationInfo.accountType === 'MARCH') {
+			const data = {
+				clientId: client?.id,
+				merchantId: client?.merchants[0]?.id,
+				registration: registrationInfo,
+				locations: locationsInfo,
+				workDays: workDaysInfo,
+			};
+			console.log('data', data);
+			console.log('actionTypeBool', actionTypeBool);
+
+			if (actionTypeBool) {
+				dispatch(modifyMerchantClientAccount(data)).then(async (response) => {
+					console.log('response: ', response);
+					if (response?.error) {
+						console.log(response.error);
+						dispatch(
+							showNotification({
+								message: 'Error while editing the merchant account',
+								status: 0,
+							})
+						);
+					} else {
+						dispatch(
+							showNotification({
+								message: 'Succefully editing the merchant account',
+								status: 1,
+							})
+						);
+						dispatch(closeModal());
+					}
+				});
+			} else {
+				dispatch(createMerchantClientAccount(data)).then(async (response) => {
+					console.log('response: ', response);
+					if (response?.error) {
+						console.log(response.error);
+						dispatch(
+							showNotification({
+								message: 'Error while creating the merchant account',
+								status: 0,
+							})
+						);
+					} else {
+						dispatch(
+							showNotification({
+								message: 'Succefully created the merchant account',
+								status: 1,
+							})
+						);
+						dispatch(closeModal());
+					}
+				});
+			}
 		}
 	};
 
@@ -193,6 +272,9 @@ const Summary = ({ registrationInfo, locationsInfo, workDaysInfo, clickAction, a
 								timeZone='UTC'
 								plugins={[timeGridPlugin, interactionPlugin]}
 								initialView='timeGridWeek'
+								eventTimeFormat={({ start, end }) => {
+									return `From ${moment(start).format('HH:mm')} to ${moment(end).format('HH:mm')}`;
+								}}
 								firstDay={1}
 								headerToolbar={{
 									left: 'title',
@@ -212,7 +294,7 @@ const Summary = ({ registrationInfo, locationsInfo, workDaysInfo, clickAction, a
 										title: `(${weekDay.status}) - ${weekDay.description}`,
 										start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
 										end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time),
-										backgroundColor: weekDay.status === 'OPENED' ? '#049407' : weekDay.status === 'CLOSED' ? '#940404' : '#e3e3e3',
+										backgroundColor: weekDay.status === 'OPENED' ? '#0c8599' : weekDay.status === 'CLOSED' ? '#fd7e14' : '#e3e3e3',
 									};
 								})}
 							/>
@@ -226,7 +308,7 @@ const Summary = ({ registrationInfo, locationsInfo, workDaysInfo, clickAction, a
 					className='btn btn-outline btn-primary btn-sm'
 					onClick={handleSubmit}
 				>
-					{actionTypeBool ? 'Modify Account' : 'Create Account'}
+					{clientToMarchant ? 'Create New Merchant' : actionTypeBool ? 'Modify Account' : 'Create Account'}
 				</button>
 				<button
 					className=' btn btn-outline btn-ghost btn-sm'

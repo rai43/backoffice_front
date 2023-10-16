@@ -7,10 +7,10 @@ import InputCheckbox from '../../components/Input/InputCheckbox';
 import InfoText from '../../components/Typography/InfoText';
 import { CONFIRMATION_MODAL_CLOSE_TYPES, MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
 import { openModal } from '../common/modalSlice';
-import { getClientsContent, resetFrom } from '../client/clientSlice';
 import Livreurs from './components/Livreurs';
 import SelectBox from '../../components/Input/SelectBox';
-import { getLivreursContent } from './livreursSlice';
+import { getLivreursContent, resetFrom } from './livreursSlice';
+import InputText from '../../components/Input/InputText';
 
 const INITIAL_LIVREURS_FILTER_OBJ = {
 	active: true,
@@ -18,6 +18,7 @@ const INITIAL_LIVREURS_FILTER_OBJ = {
 	direction: 'DESC',
 	limit: '500',
 	searchPattern: '',
+	livreurInfo: '',
 };
 
 const orderOptions = [
@@ -98,6 +99,7 @@ const Livreur = () => {
 				limit: formik.values.limit,
 				direction: formik.values.direction,
 				searchPattern: formik.values.searchPattern,
+				livreurInfo: formik.values.livreurInfo,
 			};
 
 			await applyFilter(dispatchParams);
@@ -113,8 +115,9 @@ const Livreur = () => {
 			limit: formik.values.limit,
 			direction: formik.values.direction,
 			searchPattern: formik.values.searchPattern,
+			livreurInfo: formik.values.livreurInfo,
 		};
-		applyFilter(dispatchParams);
+		await applyFilter(dispatchParams);
 	};
 
 	useEffect(() => {
@@ -149,16 +152,16 @@ const Livreur = () => {
 							Filters
 						</div>
 						<div className='collapse-content'>
-							<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 lg:gap-x-5 lg:gap-y-3'>
-								<div>
+							<div className='sm:col-span-2 md:col-span-4 divider my-1'>General Filters</div>
+							<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 lg:gap-x-5 lg:gap-y-3'>
+								<div className='mt-2'>
 									<p className={'inline-block'}>Account Status</p>
-									<div className='divider m-0'></div>
 									<div className='grid grid-cols-1 md:grid-cols-3 gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<InputCheckbox
 											defaultValue={formik.values.active}
 											updateType='active'
 											containerStyle='md:col-span-2 mt-1'
-											inputStyle='checkbox-sm'
+											inputStyle='checkbox-sm checkbox-secondary '
 											labelTitle='ACTIVE'
 											updateFormValue={updateFormValue}
 										/>
@@ -166,15 +169,14 @@ const Livreur = () => {
 											defaultValue={formik.values.deleted}
 											updateType='deleted'
 											containerStyle='md:col-span-2 mt-1'
-											inputStyle='checkbox-sm'
+											inputStyle='checkbox-sm checkbox-secondary '
 											labelTitle='DELETED'
 											updateFormValue={updateFormValue}
 										/>
 									</div>
 								</div>
-								<div>
+								<div className='mt-2'>
 									<p className={'inline-block'}>Direction</p>
-									<div className='divider m-0'></div>
 									<div className='grid grid-cols-1  gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<SelectBox
 											options={orderOptions}
@@ -184,12 +186,12 @@ const Livreur = () => {
 											labelStyle='hidden'
 											defaultValue={formik.values.direction}
 											updateFormValue={updateFormValue}
+											selectStyle={'select-sm mt-1'}
 										/>
 									</div>
 								</div>
-								<div>
+								<div className='mt-2'>
 									<p className={'inline-block'}>Fetch Limit</p>
-									<div className='divider m-0'></div>
 									<div className='grid grid-cols-1  gap-1 lg:gap-x-5 lg:gap-y-1 font-thin'>
 										<SelectBox
 											options={fetchLimitOptions}
@@ -199,12 +201,22 @@ const Livreur = () => {
 											labelStyle='hidden'
 											defaultValue={formik.values.limit}
 											updateFormValue={updateFormValue}
+											selectStyle={'select-sm mt-1'}
 										/>
 									</div>
 								</div>
+								<InputText
+									type='text'
+									defaultValue={formik.values.livreurInfo}
+									updateType='livreurInfo'
+									containerStyle=''
+									inputStyle='input-sm'
+									labelTitle='Livreur Info'
+									updateFormValue={updateFormValue}
+								/>
 								<button
 									onClick={() => onFetchLivreurs()}
-									className='btn btn-outline btn-primary w-full sm:col-span-1 md:col-start-2 my-2'
+									className='btn btn-outline btn-sm btn-secondary w-full sm:col-span-2 md:col-start-2 my-2'
 								>
 									Apply Filters
 								</button>

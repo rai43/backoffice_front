@@ -206,7 +206,6 @@ const UsersTransactions = ({ transactions, currPage, onLoad, updateFormValue, cl
 		[]
 	);
 
-
 	return (
 		<div>
 			<div className='overflow-hidden mt-2'>

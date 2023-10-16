@@ -102,13 +102,7 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
 							<button
 								className='btn btn-outline btn-sm btn-ghost w-1/4'
 								onClick={() => {
-									if (
-										location.name.length &&
-										location.details.length &&
-										parseInt(location?.latitude || 0) > 0 &&
-										parseInt(location?.longitude || 0) > 0 &&
-										parseInt(location?.radius || 0) > 0
-									) {
+									if (location.name.length && location.details.length && parseInt(location?.radius || 0) > 0) {
 										setLocations((oldValues) => {
 											return [{ ...location, name: location.name.toLocaleUpperCase(), id: uuidv4() }, ...oldValues];
 										});

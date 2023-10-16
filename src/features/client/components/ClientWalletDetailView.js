@@ -20,6 +20,7 @@ import { CONFIRMATION_MODAL_CLOSE_TYPES, MODAL_BODY_TYPES } from '../../../utils
 import { showNotification } from '../../common/headerSlice';
 import ClientRequetesTable from './ClientRequetesTable';
 import { getClientRetraits } from '../../retrait/retraitSlice';
+import { replaceClientObjectByUpdatedOne } from '../clientSlice';
 
 const INITIAL_WALLET_FILTER_OBJ = {
 	transactionType: 'ALL',
@@ -51,8 +52,8 @@ const ClientWalletDetailView = ({ extraObject }) => {
 	const dispatch = useDispatch();
 
 	const [walletStatus, setWalletStatus] = useState({ balance: extraObject?.wallet?.balance, bonus: extraObject?.wallet?.bonus });
-	const [modalObj, setModalObj] = useState({ isOpened: false, amount: 0, action: '' });
-	const [isBlockOpen, setIsBlockedOpen] = useState({ isOpened: false });
+	const [modalObj, setModalObj] = useState({ isOpened: false, amount: 0, actionType: 'principal', action: '' });
+	const [isActive, setIsActive] = useState(extraObject?.wallet?.wallet_status?.code === 'ACTIVATED');
 
 	const [activePage, setActivePage] = useState('/my-wallet/transactions');
 	const [statistics, setsStatistics] = useState({
@@ -175,7 +176,6 @@ const ClientWalletDetailView = ({ extraObject }) => {
 								onChange={handleDatePickerValueChange}
 								showShortcuts={true}
 								primaryColor={'white'}
-								
 							/>
 							{activePage === '/my-wallet/transactions' ? (
 								<SelectBox
@@ -234,7 +234,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 								Debit
 							</button>
 							<button
-								className='btn btn-sm btn-outline btn-error w-full'
+								className={`btn btn-sm btn-outline w-full ${isActive ? 'btn-error' : 'btn-secondary'}`}
 								onClick={() =>
 									setModalObj((old) => {
 										return {
@@ -246,7 +246,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 								}
 							>
 								<LockClosedIcon className='h-4 w-4 mr-3' />
-								{extraObject?.wallet?.is_deleted ? 'Unblock' : 'Block'}
+								{isActive ? 'Block' : 'Unblock'}
 							</button>
 						</div>
 					</div>
@@ -360,6 +360,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 						<div className='py-4'>
 							<InputText
 								type='number'
+								labelTitle={'Amount'}
 								defaultValue={0}
 								updateType={''}
 								containerStyle=''
@@ -377,6 +378,46 @@ const ClientWalletDetailView = ({ extraObject }) => {
 					) : (
 						<></>
 					)}
+					{extraObject?.wallet?.wallet_type?.code === 'PERSO' ? (
+						<>
+							<label className='label cursor-pointer'>
+								<span className='label-text'>Principal Account</span>
+								<input
+									type='radio'
+									name='radio-10'
+									className='radio checked:bg-blue-500'
+									onChange={(_) =>
+										setModalObj((old) => {
+											return {
+												...old,
+												actionType: 'principal',
+											};
+										})
+									}
+									checked={modalObj?.actionType === 'principal'}
+								/>
+							</label>
+							<label className='label cursor-pointer'>
+								<span className='label-text'>Bonus Account</span>
+								<input
+									type='radio'
+									name='radio-10'
+									className='radio checked:bg-red-500'
+									onChange={(_) =>
+										setModalObj((old) => {
+											return {
+												...old,
+												actionType: 'bonus',
+											};
+										})
+									}
+									checked={modalObj?.actionType === 'bonus'}
+								/>
+							</label>
+						</>
+					) : (
+						<></>
+					)}
 					<div className='modal-action'>
 						<label
 							htmlFor='my-modal-6'
@@ -386,6 +427,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 									action: '',
 									amount: 0,
 									isOpened: false,
+									actionType: 'principal',
 								})
 							}
 						>
@@ -398,7 +440,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 								if (modalObj.action === 'credit') {
 									console.log('credit');
 
-									const response = await dispatch(creditAccountToServer({ wallet: extraObject?.wallet?.id, amount: modalObj.amount }));
+									const response = await dispatch(creditAccountToServer({ wallet: extraObject?.wallet?.id, amount: modalObj.amount, accountType: modalObj?.actionType }));
 
 									if (response?.error) {
 										console.log(response.error);
@@ -410,7 +452,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 										);
 									} else {
 										setModalObj((old) => {
-											return { ...old, action: '', amount: 0, isOpened: false };
+											return { ...old, action: '', amount: 0, isOpened: false, actionType: 'principal' };
 										});
 
 										dispatch(
@@ -430,20 +472,38 @@ const ClientWalletDetailView = ({ extraObject }) => {
 												};
 											});
 
-											setWalletStatus((old) => {
-												return {
-													...old,
-													balance: old.balance + response?.payload?.transaction?.amount,
-												};
-											});
+											if (response?.payload?.isPrincipalAccount) {
+												setWalletStatus((old) => {
+													return {
+														...old,
+														balance: old.balance + response?.payload?.transaction?.amount,
+													};
+												});
+											} else {
+												setWalletStatus((old) => {
+													return {
+														...old,
+														bonus: old.bonus + response?.payload?.transaction?.amount,
+													};
+												});
+											}
 										} catch (e) {
 											console.log('Could not fetch the statistics');
+										}
+
+										try {
+											console.log('replaceClientObjectByUpdatedOne');
+											// replaceClientObjectByUpdatedOne(action?.payload?.client);
+											const { payload } = await dispatch(replaceClientObjectByUpdatedOne({ client: response?.payload?.client }));
+											console.log(payload);
+										} catch (e) {
+											console.log('Could not update the informations');
 										}
 									}
 								} else if (modalObj.action === 'debit') {
 									console.log('debit');
 
-									const response = await dispatch(debitAccountToServer({ wallet: extraObject?.wallet?.id, amount: modalObj.amount }));
+									const response = await dispatch(debitAccountToServer({ wallet: extraObject?.wallet?.id, amount: modalObj.amount, accountType: modalObj?.actionType }));
 
 									if (response?.error) {
 										console.log(response.error);
@@ -455,7 +515,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 										);
 									} else {
 										setModalObj((old) => {
-											return { ...old, action: '', amount: 0, isOpened: false };
+											return { ...old, action: '', amount: 0, isOpened: false, actionType: 'principal' };
 										});
 
 										dispatch(
@@ -475,14 +535,32 @@ const ClientWalletDetailView = ({ extraObject }) => {
 												};
 											});
 
-											setWalletStatus((old) => {
-												return {
-													...old,
-													balance: old.balance - response?.payload?.transaction?.amount,
-												};
-											});
+											if (response?.payload?.isPrincipalAccount) {
+												setWalletStatus((old) => {
+													return {
+														...old,
+														balance: old.balance - response?.payload?.transaction?.amount,
+													};
+												});
+											} else {
+												setWalletStatus((old) => {
+													return {
+														...old,
+														bonus: old.bonus - response?.payload?.transaction?.amount,
+													};
+												});
+											}
 										} catch (e) {
 											console.log('Could not fetch the statistics');
+										}
+
+										try {
+											console.log('replaceClientObjectByUpdatedOne');
+											// replaceClientObjectByUpdatedOne(action?.payload?.client);
+											const { payload } = await dispatch(replaceClientObjectByUpdatedOne({ client: response?.payload?.client }));
+											console.log(payload);
+										} catch (e) {
+											console.log('Could not update the informations');
 										}
 									}
 								}
@@ -496,7 +574,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 
 			<div className={`modal modal-bottom sm:modal-middle ${modalObj?.isOpened && modalObj.action === 'block' ? 'modal-open' : ''}`}>
 				<div className='modal-box'>
-					<h3 className='font-bold text-lg'>Are you sure you want to block this client?</h3>
+					<h3 className='font-bold text-lg'>{isActive ? 'Are you sure you want to block this client?' : 'Are you sure you want to unblock this client?'}</h3>
 					<div className='modal-action'>
 						<label
 							htmlFor='my-modal-6'
@@ -506,6 +584,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 									action: '',
 									amount: 0,
 									isOpened: false,
+									actionType: 'principal',
 								})
 							}
 						>
@@ -527,7 +606,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 									);
 								} else {
 									setModalObj((old) => {
-										return { ...old, action: '', amount: 0, isOpened: false };
+										return { ...old, action: '', amount: 0, isOpened: false, actionType: 'principal' };
 									});
 
 									dispatch(
@@ -537,8 +616,19 @@ const ClientWalletDetailView = ({ extraObject }) => {
 										})
 									);
 
-									if (extraObject?.wallet?.is_deleted) {
-										extraObject.wallet.is_deleted = response?.wallet?.is_deleted || extraObject.wallet.is_deleted;
+									if (response?.payload?.wallet?.wallet_status_id === 1) {
+										setIsActive(true);
+									} else if (response?.payload?.wallet?.wallet_status_id === 3) {
+										setIsActive(false);
+									}
+
+									try {
+										console.log('replaceClientObjectByUpdatedOne');
+										// replaceClientObjectByUpdatedOne(action?.payload?.client);
+										const { payload } = await dispatch(replaceClientObjectByUpdatedOne({ client: response?.payload?.client }));
+										console.log(payload);
+									} catch (e) {
+										console.log('Could not update the informations');
 									}
 								}
 
@@ -546,6 +636,7 @@ const ClientWalletDetailView = ({ extraObject }) => {
 									action: '',
 									amount: 0,
 									isOpened: false,
+									actionType: 'principal',
 								});
 
 								//

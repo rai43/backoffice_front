@@ -8,6 +8,13 @@ import UserIcon from '@heroicons/react/24/outline/UserIcon';
 import GlobeAltIcon from '@heroicons/react/24/outline/GlobeAltIcon';
 import ArrowsRightLeftIcon from '@heroicons/react/24/outline/ArrowsRightLeftIcon';
 
+import { PiShareNetworkThin } from 'react-icons/pi';
+import { FcSms } from 'react-icons/fc';
+import { FaSlideshare } from 'react-icons/fa6';
+
+import { MdManageHistory } from 'react-icons/md';
+import { PiContactlessPaymentLight } from 'react-icons/pi';
+
 import { VscSettings } from 'react-icons/vsc';
 
 import { MdOutlineFastfood, MdOutlineMenuBook } from 'react-icons/md';
@@ -50,19 +57,24 @@ const routes = [
 		name: 'Menu and Ordering', // name that appear in Sidebar
 		submenu: [
 			{
-				path: '/app/menu-and-ordering/menu',
-				icon: <MdOutlineMenuBook className={submenuIconClasses} />,
-				name: 'Merchants Menu',
-			},
-			{
 				path: '/app/menu-and-ordering/orders', // url
 				icon: <PiBowlFoodThin className={submenuIconClasses} />, // icon component
 				name: 'Orders', // name that appear in Sidebar
 			},
 			{
+				path: '/app/menu-and-ordering/menu',
+				icon: <MdOutlineMenuBook className={submenuIconClasses} />,
+				name: 'Menu Items',
+			},
+			{
 				path: '/app/menu-and-ordering/settings',
 				icon: <VscSettings className={submenuIconClasses} />,
 				name: 'Merchant Menu Settings',
+			},
+			{
+				path: '/app/menu-and-ordering/dynamic-assignment',
+				icon: <PiShareNetworkThin className={submenuIconClasses} />,
+				name: 'Dynamic Assignment',
 			},
 		],
 	},
@@ -73,19 +85,42 @@ const routes = [
 	},
 	{
 		path: '', //no url needed as this has submenu
+		icon: <MdManageHistory className={`${iconClasses} inline`} />, // icon component
+		name: 'General Management', // name that appear in Sidebar
+		submenu: [
+			{
+				path: '/app/general-management/discount-management', // url
+				icon: <Cog6ToothIcon className={submenuIconClasses} />, // icon component
+				name: 'Discount Management', // name that appear in Sidebar
+			},
+			{
+				path: '/app/general-management/subscriptions',
+				icon: <PiContactlessPaymentLight className={submenuIconClasses} />,
+				name: 'Subscriptions',
+			},
+			{
+				path: '/app/general-management/invitations',
+				icon: <FaSlideshare className={submenuIconClasses} />,
+				name: 'Invitations',
+			},
+		],
+	},
+	{
+		path: '', //no url needed as this has submenu
 		icon: <WrenchScrewdriverIcon className={`${iconClasses} inline`} />, // icon component
 		name: 'Settings', // name that appear in Sidebar
 		submenu: [
 			{
-				path: '/app/settings/user-type', // url
-				icon: <Cog6ToothIcon className={submenuIconClasses} />, // icon component
-				name: 'User Type', // name that appear in Sidebar
+				path: '/app/settings/sms-provider',
+				icon: <FcSms className={submenuIconClasses} />,
+				name: 'SMS Providers',
 			},
 			// {
-			//   path: "/app/features",
-			//   icon: <UserIcon className={submenuIconClasses} />,
-			//   name: "Features",
+			// 	path: '/app/settings/user-type', // url
+			// 	icon: <Cog6ToothIcon className={submenuIconClasses} />, // icon component
+			// 	name: 'User Type', // name that appear in Sidebar
 			// },
+
 			// {
 			//   path: "/app/components",
 			//   icon: <UserIcon className={submenuIconClasses} />,

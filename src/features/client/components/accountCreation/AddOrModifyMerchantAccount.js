@@ -3,7 +3,7 @@ import InputPhoneNumber from '../../../../components/Input/InputPhoneNumber';
 import InputText from '../../../../components/Input/InputText';
 import ImageUpload from '../../../../components/Input/ImageUpload';
 
-const AddOrModifyMerchantAccount = ({ formik, updateFormValue, clickAction, firstLoad, preventGoBack }) => {
+const AddOrModifyMerchantAccount = ({ formik, updateFormValue, clickAction, firstLoad, preventGoBack, clientToMarchant }) => {
 	console.log(formik.values);
 	return (
 		<>
@@ -66,7 +66,9 @@ const AddOrModifyMerchantAccount = ({ formik, updateFormValue, clickAction, firs
 					className='btn btn-outline btn-primary btn-sm'
 					onClick={() =>
 						clickAction((old) => {
-							if (preventGoBack || (!firstLoad && formik.isValid && formik.values.profile_picture !== '')) {
+							console.log(formik.values);
+							console.log('preventGoBack', preventGoBack);
+							if ((!clientToMarchant && preventGoBack) || (!firstLoad && formik.isValid && formik.values.profile_picture !== '' && formik.values.profile_picture !== undefined)) {
 								return old + 1;
 							} else {
 								return old;

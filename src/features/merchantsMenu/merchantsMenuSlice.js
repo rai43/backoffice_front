@@ -9,6 +9,9 @@ export const getMerchantsArticlesContent = createAsyncThunk('/merchants-article/
 	const direction = params.direction || 'DESC';
 	const limit = params.limit || 1000;
 	const searchPattern = params.searchPattern || '';
+	const merchantId = params.merchantId || 0;
+	const articleStatus = params.status || '';
+	const availability = params.availability || '';
 
 	const status =
 		active && deleted
@@ -24,6 +27,9 @@ export const getMerchantsArticlesContent = createAsyncThunk('/merchants-article/
 			status: status,
 			searchPattern: searchPattern,
 			direction: direction,
+			merchantId,
+			articleStatus,
+			availability,
 			skip: skip,
 			limit: limit,
 		},
@@ -76,6 +82,61 @@ export const saveMenu = createAsyncThunk('/merchants-article/save-menu', async (
 	}
 });
 
+export const updateMenu = createAsyncThunk('/merchants-article/update-article', async (params) => {
+	try {
+		let response;
+		if (!params?.image?.size && params?.image?.includes('https://res.cloudinary.com/')) {
+			console.log(params);
+			const title = params.title;
+			const price = params.price;
+			const description = params.description;
+			const merchant_id = params.merchant_id;
+			const article_id = params.article_id;
+
+			const accompagnements = Object.keys(params?.accs).map((accKey) => {
+				if (params?.accs[accKey]) return accKey;
+			});
+			const supplements = Object.keys(params?.supps).map((suppKey) => {
+				const dataObj = params?.supps[suppKey];
+				if (dataObj?.status && parseInt(dataObj?.price) > 0) return { accompagnement_id: parseInt(suppKey), accompagnement_price: parseInt(dataObj?.price) };
+			});
+			const payload = JSON.stringify({ title, price, description, merchant_id, accompagnements, supplements: supplements });
+			console.log(payload);
+
+			response = await axios.post(`/api/articles/update-article/${article_id}`, payload);
+		} else {
+			const formData = new FormData();
+			formData.append('title', JSON.stringify(params.title.trim()));
+			formData.append('price', JSON.stringify(parseInt(params.price)));
+			formData.append('description', JSON.stringify(params.description.trim()));
+			formData.append('image', params.image);
+			formData.append('merchant_id', JSON.stringify(params.merchant_id));
+			formData.append('article_id', JSON.stringify(params.article_id));
+
+			const accompagnements = Object.keys(params?.accs).map((accKey) => {
+				if (params?.accs[accKey]) return accKey;
+			});
+			const supplements = Object.keys(params?.supps).map((suppKey) => {
+				const dataObj = params?.supps[suppKey];
+				if (dataObj?.status && parseInt(dataObj?.price) > 0) return { accompagnement_id: parseInt(suppKey), accompagnement_price: parseInt(dataObj?.price) };
+			});
+
+			formData.append('accompagnements', JSON.stringify(accompagnements));
+			formData.append('supplements', JSON.stringify(supplements));
+
+			response = await axios.post(`/api/articles/update-article-with-image/${params?.article_id}`, formData, {
+				headers: {
+					'Content-type': 'multipart/form-data',
+				},
+			});
+		}
+		console.log(response);
+		return response.data;
+	} catch (e) {
+		throw new Error(e.statusText);
+	}
+});
+
 export const getMerchantsBySearch = createAsyncThunk('/merchants/merchant-search', async (params) => {
 	const searchPattern = params.searchPattern || '';
 
@@ -85,6 +146,21 @@ export const getMerchantsBySearch = createAsyncThunk('/merchants/merchant-search
 		},
 	});
 	return response.data.merchants;
+});
+
+export const switchArticleStatus = createAsyncThunk('/merchants/switch-article-status', async (params) => {
+	const articleId = params.articleId || '';
+
+	const response = await axios.patch(`/api/articles/switch-article-availability/${articleId}`, {});
+	return response.data;
+});
+
+export const switchArticlePublish = createAsyncThunk('/merchants/switch-article-publish', async (params) => {
+	const articleId = params.articleId || '';
+	const status = params.status;
+
+	const response = await axios.patch(`/api/articles/switch-article-published/${articleId}/${status}`, {});
+	return response.data;
 });
 
 export const merchantsSlice = createSlice({
@@ -139,6 +215,24 @@ export const merchantsSlice = createSlice({
 			state.isLoading = false;
 		},
 
+		[updateMenu.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[updateMenu.fulfilled]: (state, action) => {
+			const indexToRemoved = state.articles.findIndex((article) => article.id === action.payload?.article?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.articles[indexToRemoved] = action.payload?.article;
+			}
+			state.isLoading = false;
+
+			state.isLoading = false;
+		},
+		[updateMenu.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
 		[getMerchantsBySearch.pending]: (state) => {
 			state.isLoading = true;
 		},
@@ -149,6 +243,39 @@ export const merchantsSlice = createSlice({
 			state.isLoading = false;
 		},
 		[getMerchantsBySearch.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[switchArticleStatus.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[switchArticleStatus.fulfilled]: (state, action) => {
+			const indexToRemoved = state.articles.findIndex((article) => article.id === action.payload?.article?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.articles[indexToRemoved] = action.payload?.article;
+			}
+			state.isLoading = false;
+		},
+		[switchArticleStatus.rejected]: (state) => {
+			state.isLoading = false;
+		},
+
+		[switchArticlePublish.pending]: (state) => {
+			state.isLoading = true;
+		},
+		[switchArticlePublish.fulfilled]: (state, action) => {
+			console.log(action.payload);
+			const indexToRemoved = state.articles.findIndex((article) => article.id === action.payload?.article?.id);
+
+			// If the object is found, replace it with the new object
+			if (indexToRemoved !== -1) {
+				state.articles[indexToRemoved] = action.payload?.article;
+			}
+			state.isLoading = false;
+		},
+		[switchArticlePublish.rejected]: (state) => {
 			state.isLoading = false;
 		},
 	},
