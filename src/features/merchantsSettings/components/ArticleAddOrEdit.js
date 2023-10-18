@@ -174,9 +174,9 @@ const ArticleAddOrEdit = ({ extraObject, closeRightDrawer }) => {
           type="number"
           defaultValue={price}
           updateType="price"
-          placeholder="Price"
+          placeholder="Client Price"
           containerStyle=""
-          labelTitle="Price"
+          labelTitle="Client Price"
           updateFormValue={updateForm}
           // disabled={extraObject?.inEditMode}
           // inputStyle={`${!formik.isValid && formik.touched.merchant_name && formik.errors.merchant_name ? 'input-error' : ''} `}
