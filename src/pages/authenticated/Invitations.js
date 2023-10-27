@@ -1,17 +1,16 @@
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { setPageTitle } from '../../features/common/headerSlice';
-import Customers from '../../features/client';
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setPageTitle } from "../../features/common/headerSlice";
+import Invitations from "../../features/invitations";
 
 function InternalPage() {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(setPageTitle({ title: 'Invitations' }));
-	}, []);
+  useEffect(() => {
+    dispatch(setPageTitle({ title: "Invitations" }));
+  }, []);
 
-	return <div>Invitations</div>
-	// return <Customers />;
+  return <Invitations />;
 }
 
 export default InternalPage;

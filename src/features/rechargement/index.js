@@ -5,8 +5,8 @@
 
 // const INITIAL_RECHARGEMENT_FILTER_OBJ = {
 // 	transactionType: 'ALL',
-// 	from: moment().subtract(30, 'd').format('YYYY-MM-DD'),
-// 	to: moment().add(1, 'days').format('YYYY-MM-DD'),
+// 	from: moment.utc().subtract(30, 'd').format('YYYY-MM-DD'),
+// 	to: moment.utc().add(1, 'days').format('YYYY-MM-DD'),
 // 	minAmount: 0,
 // 	maxAmount: 0,
 // 	searchPattern: '',

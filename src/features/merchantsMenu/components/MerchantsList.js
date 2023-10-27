@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { useDispatch, useSelector } from "react-redux";
 import { openModal } from "../../common/modalSlice";
@@ -13,6 +13,9 @@ import Table from "../../../components/Table/Table";
 import { AG_GRID_DEFAULT_COL_DEF } from "../../../utils/globalConstantUtil";
 import { classNames } from "../../../components/Common/UtilsClassNames";
 import moment from "moment";
+import { CiGps } from "react-icons/ci";
+import { AiOutlineCloudDownload } from "react-icons/ai";
+import { adjustGridHeight } from "../../../utils/functions/adjustGridHeight";
 
 const containFilterParams = {
   filterOptions: ["contains", "notContains"],
@@ -20,7 +23,17 @@ const containFilterParams = {
   maxNumConditions: 1,
 };
 
+const gridOptions = {
+  paginationPageSize: 20, // Initial page size
+  suppressExcelExport: true,
+  defaultColDef: {
+    sortable: true,
+    resizable: true,
+  },
+};
+
 const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
+  const gridRef = useRef(null);
   const dispatch = useDispatch();
   const { articles, from, isLoading, noMoreQuery } = useSelector(
     (state) => state.article,
@@ -205,7 +218,7 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
         let formattedValue = value ? value : "N/A";
 
         if (formattedValue !== "N/A") {
-          formattedValue = moment(value).format("DD/MM/YYYY");
+          formattedValue = moment.utc(value).format("DD/MM/YYYY");
         }
 
         return (
@@ -213,7 +226,9 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
             <p>
               <span className=" text-sm mr-2">{formattedValue}</span>
             </p>
-            <span className=" text-sm">{moment(value).format("HH:mm")}</span>
+            <span className=" text-sm">
+              {moment.utc(value).format("HH:mm")}
+            </span>
           </div>
         );
       },
@@ -237,12 +252,73 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
     },
   ]);
 
+  const onButtonClick = () => {
+    // Command ID,,"Action","Cancel","Position"
+    const csvData = gridRef.current.api.getDataAsCsv({});
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `exported_food_items_data.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="overflow-hidden mt-2">
       {!isLoading && (
         <>
+          <div className="flex justify-end mb-4 mt-2 gap-5">
+            <div>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={onButtonClick}
+              >
+                <AiOutlineCloudDownload className="mx-2 h-4 w-4" />
+                Download
+              </button>
+            </div>
+            <div className="font-semibold">
+              <label>Page Size:</label>
+              <select
+                className="mx-3"
+                onChange={(e) => {
+                  const newSize = parseInt(e.target.value);
+                  gridOptions.api.paginationSetPageSize(newSize);
+                  console.log(
+                    "gridOptions.api.paginationPageSize",
+                    gridOptions.api.paginationProxy.pageSize,
+                  );
+                }}
+                defaultValue={20}
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="300">300</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+              </select>
+
+              {/* <label>Current Page:</label>
+							<input
+								type='number'
+								min='1'
+								onChange={(e) => {
+									const newPage = parseInt(e.target.value);
+									gridOptions.api.paginationGoToPage(newPage - 1); // Page numbers start from 0
+								}}
+							/> */}
+            </div>
+          </div>
           <div className="ag-theme-alpine h-[40rem]">
             <AgGridReact
+              ref={gridRef}
+              gridOptions={gridOptions}
               columnDefs={columnDefs}
               rowData={articles}
               defaultColDef={AG_GRID_DEFAULT_COL_DEF}
@@ -252,37 +328,72 @@ const MerchantsList = ({ onLoadMerchants, currPage, updateFormValue }) => {
               rowHeight={50}
               sideBar={"filters"}
               // Add the onFilterChanged event handler
-              onFilterChanged={function (gridOptions) {
-                const filterInstanceId =
-                  gridOptions.api.getFilterInstance("id");
-                const filterValueId = filterInstanceId
-                  ? filterInstanceId.getModel()
-                  : null;
-                const filterInstanceTitle =
-                  gridOptions.api.getFilterInstance("title");
-                const filterValueTitle = filterInstanceTitle
-                  ? filterInstanceTitle.getModel()
-                  : null;
-
-                // filterValue will contain the current filter value
-                if (filterValueId || filterValueTitle) {
-                  const searchPattern1 = filterValueId?.filter; // Access the filter value
-                  const searchPattern2 = filterValueTitle?.filter; // Access the filter value
-                  console.log("Search pattern1:", searchPattern1);
-                  console.log("Search pattern:", searchPattern2);
-                  // Perform your search or update logic here with searchPattern
-                }
-              }}
-              // onSelectionChanged={(val) => {
-              // 	const selectedObject = val.api.getSelectedRows()[0];
-              // 	openModal({
-              // 		...annualCheckupModalConfig,
-              // 		title: selectedObject.label,
-              // 		extraObject: {
-              // 			data: selectedObject,
-              // 			config: { openInReadOnlyMode: true },
-              // 		},
-              // 	});
+              // onFilterChanged={function (gridOptions) {
+              //   const filterInstanceId =
+              //     gridOptions.api.getFilterInstance("id");
+              //   const filterValueId = filterInstanceId
+              //     ? filterInstanceId.getModel()
+              //     : null;
+              //   const filterInstanceTitle =
+              //     gridOptions.api.getFilterInstance("title");
+              //   const filterValueTitle = filterInstanceTitle
+              //     ? filterInstanceTitle.getModel()
+              //     : null;
+              //
+              //   // filterValue will contain the current filter value
+              //   if (filterValueId || filterValueTitle) {
+              //     const searchPattern1 = filterValueId?.filter; // Access the filter value
+              //     const searchPattern2 = filterValueTitle?.filter; // Access the filter value
+              //     console.log("Search pattern1:", searchPattern1);
+              //     console.log("Search pattern:", searchPattern2);
+              //     // Perform your search or update logic here with searchPattern
+              //   }
+              // }}
+              // onPaginationChanged={async (params) => {
+              //   adjustGridHeight(params.api); // Adjust height
+              //   console.log("here");
+              //
+              //   let currentPage = params.api.paginationGetCurrentPage();
+              //   let totalPages = params.api.paginationGetTotalPages();
+              //   if (params.newPage) {
+              //     localStorage.setItem(
+              //       "currentPageMenu",
+              //       JSON.stringify(currentPage),
+              //     );
+              //     localStorage.removeItem("oldPageMenu");
+              //   }
+              //   if (
+              //     currentPage === totalPages - 1 &&
+              //     currentPage !== 0 &&
+              //     currentPage !== 0
+              //   ) {
+              //     localStorage.setItem(
+              //       "oldPageMenu",
+              //       JSON.stringify(currentPage),
+              //     );
+              //     await onLoadMerchants();
+              //     const pageToNavigate = JSON.parse(
+              //       localStorage.getItem("oldPageMenu"),
+              //     );
+              //     params.api.paginationGoToPage(pageToNavigate);
+              //   }
+              // }}
+              // onFirstDataRendered={(params) => {
+              //   adjustGridHeight(params.api); // Adjust height
+              //
+              //   const pageToNavigate = JSON.parse(
+              //     localStorage.getItem("currentPageMenu"),
+              //   );
+              //   const oldPageToNavigate = JSON.parse(
+              //     localStorage.getItem("oldPageMenu"),
+              //   );
+              //   params.api.paginationGoToPage(
+              //     oldPageToNavigate ? oldPageToNavigate : pageToNavigate,
+              //   );
+              //   // params.api.paginationGoToPage(pageToNavigate);
+              // }}
+              // onPaginationChanged={async (params) => {
+              //   adjustGridHeight(params.api);
               // }}
               rowSelection="single"
             />

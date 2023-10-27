@@ -15,6 +15,8 @@ import discountManagementSlice from "../features/discountManagement/discountMana
 import dynamicAssignmentSlice from "../features/DynamicAssignment/dynamicAssignmentSlice";
 import smsPorviderSlide from "../features/smsPorvider/smsPorviderSlide";
 import offersSlice from "../features/offers/offersSlice";
+import subscriptionSlice from "../features/subscription/subscriptionSlice";
+import invitationSlice from "../features/invitations/invitationSlice";
 
 const combinedReducer = {
   header: headerSlice,
@@ -33,6 +35,8 @@ const combinedReducer = {
   dynamicAssignment: dynamicAssignmentSlice,
   smsPorvider: smsPorviderSlide,
   offers: offersSlice,
+  subscriptions: subscriptionSlice,
+  invitations: invitationSlice,
 };
 
 export default configureStore({
