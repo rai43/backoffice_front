@@ -17,12 +17,12 @@ const OrderDetails = ({ extraObject, closeModal }) => {
       <div className="grid md:grid-cols-2 gap-3 uppercase">
         <div className="grid grid-cols-3 font-semibold">
           <h4 className="uppercase">ID</h4>
-          <div className="col-span-2 text-primary">{extraObject.id}</div>
+          <div className="col-span-2 text-primary">{extraObject?.id}</div>
         </div>
         <div className="grid grid-cols-3 font-semibold">
           <h4 className="uppercase">Date</h4>
           <div className="col-span-2 text-primary">
-            {moment(extraObject.created_at).format("DD/MM/YYYY HH:mm")}
+            {moment.utc(extraObject?.created_at).format("DD/MM/YYYY HH:mm")}
           </div>
         </div>
         <div className="grid grid-cols-3 font-semibold">
@@ -150,22 +150,26 @@ const OrderDetails = ({ extraObject, closeModal }) => {
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "PENDING",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "PENDING",
-                  )?.created_at,
-                ).format("HH:mm")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) => status?.commande_status?.code === "PENDING",
+                    )?.created_at,
+                  )
+                  .format("HH:mm")
               : "- -"}
           </div>
           <div className="stat-desc">
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "PENDING",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "PENDING",
-                  )?.created_at,
-                ).format("DD-MM-YYYY")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) => status?.commande_status?.code === "PENDING",
+                    )?.created_at,
+                  )
+                  .format("DD-MM-YYYY")
               : "- -"}
           </div>
         </div>
@@ -176,22 +180,28 @@ const OrderDetails = ({ extraObject, closeModal }) => {
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "REGISTERED",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "REGISTERED",
-                  )?.created_at,
-                ).format("HH:mm")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) =>
+                        status?.commande_status?.code === "REGISTERED",
+                    )?.created_at,
+                  )
+                  .format("HH:mm")
               : "- -"}
           </div>
           <div className="stat-desc text-">
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "REGISTERED",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "REGISTERED",
-                  )?.created_at,
-                ).format("DD-MM-YYYY")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) =>
+                        status?.commande_status?.code === "REGISTERED",
+                    )?.created_at,
+                  )
+                  .format("DD-MM-YYYY")
               : "- -"}
           </div>
         </div>
@@ -202,22 +212,26 @@ const OrderDetails = ({ extraObject, closeModal }) => {
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "INPROCESS",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "INPROCESS",
-                  )?.created_at,
-                ).format("HH:mm")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) => status?.commande_status?.code === "INPROCESS",
+                    )?.created_at,
+                  )
+                  .format("HH:mm")
               : "- -"}
           </div>
           <div className="stat-desc text-">
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "INPROCESS",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "INPROCESS",
-                  )?.created_at,
-                ).format("DD-MM-YYYY")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) => status?.commande_status?.code === "INPROCESS",
+                    )?.created_at,
+                  )
+                  .format("DD-MM-YYYY")
               : "- -"}
           </div>
         </div>
@@ -228,22 +242,28 @@ const OrderDetails = ({ extraObject, closeModal }) => {
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "INDELIVERY",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "INDELIVERY",
-                  )?.created_at,
-                ).format("HH:mm")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) =>
+                        status?.commande_status?.code === "INDELIVERY",
+                    )?.created_at,
+                  )
+                  .format("HH:mm")
               : "- -"}
           </div>
           <div className="stat-desc text-">
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "INDELIVERY",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "INDELIVERY",
-                  )?.created_at,
-                ).format("DD-MM-YYYY")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) =>
+                        status?.commande_status?.code === "INDELIVERY",
+                    )?.created_at,
+                  )
+                  .format("DD-MM-YYYY")
               : "- -"}
           </div>
         </div>
@@ -254,22 +274,26 @@ const OrderDetails = ({ extraObject, closeModal }) => {
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "DELIVERED",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "DELIVERED",
-                  )?.created_at,
-                ).format("HH:mm")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) => status?.commande_status?.code === "DELIVERED",
+                    )?.created_at,
+                  )
+                  .format("HH:mm")
               : "- -"}
           </div>
           <div className="stat-desc text-primary">
             {extraObject?.commande_commande_statuses.find(
               (status) => status?.commande_status?.code === "DELIVERED",
             )
-              ? moment(
-                  extraObject?.commande_commande_statuses.find(
-                    (status) => status?.commande_status?.code === "DELIVERED",
-                  )?.created_at,
-                ).format("DD-MM-YYYY")
+              ? moment
+                  .utc(
+                    extraObject?.commande_commande_statuses.find(
+                      (status) => status?.commande_status?.code === "DELIVERED",
+                    )?.created_at,
+                  )
+                  .format("DD-MM-YYYY")
               : "- -"}
           </div>
         </div>
@@ -282,22 +306,28 @@ const OrderDetails = ({ extraObject, closeModal }) => {
               {extraObject?.commande_commande_statuses.find(
                 (status) => status?.commande_status?.code === "CANCELED",
               )
-                ? moment(
-                    extraObject?.commande_commande_statuses.find(
-                      (status) => status?.commande_status?.code === "CANCELED",
-                    )?.created_at,
-                  ).format("HH:mm")
+                ? moment
+                    .utc(
+                      extraObject?.commande_commande_statuses.find(
+                        (status) =>
+                          status?.commande_status?.code === "CANCELED",
+                      )?.created_at,
+                    )
+                    .format("HH:mm")
                 : "- -"}
             </div>
             <div className="stat-desc text-secondary">
               {extraObject?.commande_commande_statuses.find(
                 (status) => status?.commande_status?.code === "CANCELED",
               )
-                ? moment(
-                    extraObject?.commande_commande_statuses.find(
-                      (status) => status?.commande_status?.code === "CANCELED",
-                    )?.created_at,
-                  ).format("DD-MM-YYYY")
+                ? moment
+                    .utc(
+                      extraObject?.commande_commande_statuses.find(
+                        (status) =>
+                          status?.commande_status?.code === "CANCELED",
+                      )?.created_at,
+                    )
+                    .format("DD-MM-YYYY")
                 : "- -"}
             </div>
           </div>

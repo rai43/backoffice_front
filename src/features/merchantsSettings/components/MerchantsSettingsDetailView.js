@@ -140,7 +140,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
           <div className="stat">
             <div className="stat-title">Creation Info</div>
             <div className="stat-value text-[1.2rem]">
-              {moment(extraObject?.created_at).format("DD-MM-YYYY HH:mm") ||
+              {moment.utc(extraObject?.created_at).format("DD-MM-YYYY HH:mm") ||
                 "N/A"}
             </div>
             <div className="stat-desc">
@@ -370,7 +370,7 @@ const Article = (props) => {
 
           <div className="w-full md:w-2/3  flex flex-col space-y-2 p-3">
             <div className="flex justify-between item-center">
-              {/* <p className='text-gray-500 font-medium hidden md:block'>{moment(props?.article?.created_at).format('DD/MM/YYYY')}</p> */}
+              {/* <p className='text-gray-500 font-medium hidden md:block'>{moment.utc(props?.article?.created_at).format('DD/MM/YYYY')}</p> */}
               <p className="text-gray-500 font-medium hidden md:block">
                 {props?.article?.id}
               </p>
@@ -547,7 +547,7 @@ const Accompagnement = (props) => {
             <h3 className="font-bold">
               {props.acc.name}{" "}
               <span className="text-sm text-primary">
-                on {moment(props.acc.created_at).format("lll")}
+                on {moment.utc(props.acc.created_at).format("DD-MM-YYYY HH:mm")}
               </span>
             </h3>
             <div className="text-xs text-primary font-semibold">
