@@ -1,54 +1,51 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import FullCalendar from "@fullcalendar/react";
-import interactionPlugin from "@fullcalendar/interaction";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import { AiOutlineDelete } from "react-icons/ai";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import FullCalendar from '@fullcalendar/react';
+import interactionPlugin from '@fullcalendar/interaction';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import { AiOutlineDelete } from 'react-icons/ai';
 
-import TitleCard from "../../../../components/Cards/TitleCard";
-import InputText from "../../../../components/Input/InputText";
+import TitleCard from '../../../../components/Cards/TitleCard';
+import InputText from '../../../../components/Input/InputText';
 
-import moment, { weekdays } from "moment";
-import InputAsyncSelect from "../../../../components/Input/InputAsyncSelect";
-import { getWeekDateRange } from "../../../../utils/functions/getWeekDateRange";
-import { isNaN } from "lodash";
-import { useDispatch } from "react-redux";
-import { showNotification } from "../../../common/headerSlice";
-import { closeModal } from "../../../common/modalSlice";
-import { updateMerchantSchedule } from "../../clientSlice";
-import {
-  disableScroll,
-  enableScroll,
-} from "../../../../utils/functions/preventAndAllowScroll";
+import moment, { weekdays } from 'moment';
+import InputAsyncSelect from '../../../../components/Input/InputAsyncSelect';
+import { getWeekDateRange } from '../../../../utils/functions/getWeekDateRange';
+import { isNaN } from 'lodash';
+import { useDispatch } from 'react-redux';
+import { showNotification } from '../../../common/headerSlice';
+import { closeModal } from '../../../common/modalSlice';
+import { updateMerchantSchedule } from '../../clientSlice';
+import { disableScroll, enableScroll } from '../../../../utils/functions/preventAndAllowScroll';
 
 const week_days_options = [
-  { value: "MONDAY", label: "MONDAY" },
-  { value: "TUESDAY", label: "TUESDAY" },
-  { value: "WEDNESDAY", label: "WEDNESDAY" },
-  { value: "THURSDAY", label: "THURSDAY" },
-  { value: "FRIDAY", label: "FRIDAY" },
-  { value: "SATURDAY", label: "SATURDAY" },
-  { value: "SUNDAY", label: "SUNDAY" },
+  { value: 'MONDAY', label: 'MONDAY' },
+  { value: 'TUESDAY', label: 'TUESDAY' },
+  { value: 'WEDNESDAY', label: 'WEDNESDAY' },
+  { value: 'THURSDAY', label: 'THURSDAY' },
+  { value: 'FRIDAY', label: 'FRIDAY' },
+  { value: 'SATURDAY', label: 'SATURDAY' },
+  { value: 'SUNDAY', label: 'SUNDAY' }
 ];
 
 const status_options = [
-  { value: "OPENED", label: "OPENED" },
-  { value: "CLOSED", label: "CLOSED" },
+  { value: 'OPENED', label: 'OPENED' },
+  { value: 'CLOSED', label: 'CLOSED' }
 ];
 
 const INITIAL_OBJ = {
-  id: "",
-  day: "",
-  status: "",
-  start_time: "",
-  end_time: "",
-  description: "",
+  id: '',
+  day: '',
+  status: '',
+  start_time: '',
+  end_time: '',
+  description: ''
 };
 
 const { startingDate, endingDate, weekDatesNamesVsDates } = getWeekDateRange();
 
 const transformTime = (_date, _time) => {
-  const datetime = moment.utc(_date + " " + _time);
+  const datetime = moment.utc(_date + ' ' + _time);
 
   return datetime.toDate();
 };
@@ -58,7 +55,7 @@ const WorkSchedule = ({
   workDays,
   setWorkDays,
   isEditCustomerSchedule,
-  merchantId,
+  merchantId
 }) => {
   const dispatch = useDispatch();
 
@@ -68,13 +65,11 @@ const WorkSchedule = ({
   const [isDelteWorkSchOpened, setIsDelteWorkSchOpened] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [workDay, setWorkDay] = useState(INITIAL_OBJ);
-  const [firstDayOfMonth, setFirstDayOfMonth] = useState(
-    moment.utc().startOf("month"),
-  );
+  const [firstDayOfMonth, setFirstDayOfMonth] = useState(moment.utc().startOf('month'));
 
   const filterWeekDays = (inputValue) => {
     return week_days_options.filter((i) =>
-      i.label.toLowerCase().includes(inputValue.toLowerCase()),
+      i.label.toLowerCase().includes(inputValue.toLowerCase())
     );
   };
 
@@ -84,9 +79,7 @@ const WorkSchedule = ({
     });
 
   const filterStatus = (inputValue) => {
-    return status_options.filter((i) =>
-      i.label.toLowerCase().includes(inputValue.toLowerCase()),
-    );
+    return status_options.filter((i) => i.label.toLowerCase().includes(inputValue.toLowerCase()));
   };
 
   const statusPromiseOptions = (inputValue) =>
@@ -134,16 +127,10 @@ const WorkSchedule = ({
         return {
           id: weekDay.id,
           title: `(${weekDay.status}) - ${weekDay.description}`,
-          start: transformTime(
-            weekDatesNamesVsDates[weekDay.day],
-            weekDay.start_time,
-          ),
-          end: transformTime(
-            weekDatesNamesVsDates[weekDay.day],
-            weekDay.end_time,
-          ),
+          start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
+          end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time)
         };
-      }),
+      })
     );
   }, [workDays]);
 
@@ -153,15 +140,15 @@ const WorkSchedule = ({
         return {
           ...oldValues,
           day: workDay.day,
-          status: workDay.status,
+          status: workDay.status
         };
       });
     } else {
       return setWorkDay((oldValues) => {
         return {
           ...oldValues,
-          day: week_days_options[0]?.value || "",
-          status: status_options[0]?.value || "",
+          day: week_days_options[0]?.value || '',
+          status: status_options[0]?.value || ''
         };
       });
     }
@@ -170,25 +157,25 @@ const WorkSchedule = ({
   const handleSubmit = () => {
     const data = {
       merchantId: merchantId,
-      workDays: workDays,
+      workDays: workDays
     };
 
     dispatch(updateMerchantSchedule(data)).then(async (response) => {
-      console.log("response: ", response);
+      console.log('response: ', response);
       if (response?.error) {
         console.log(response.error);
         dispatch(
           showNotification({
-            message: "Error while updating the merchant workdays",
-            status: 0,
-          }),
+            message: 'Error while updating the merchant workdays',
+            status: 0
+          })
         );
       } else {
         dispatch(
           showNotification({
-            message: "Succefully updated the merchant workdays",
-            status: 1,
-          }),
+            message: 'Succefully updated the merchant workdays',
+            status: 1
+          })
         );
         dispatch(closeModal());
       }
@@ -198,45 +185,31 @@ const WorkSchedule = ({
   return (
     <div className="w-full my-3" ref={mainContentRef}>
       <div
-        className={`${
-          isDelteWorkSchOpened ? "modal-open" : ""
-        } modal modal-bottom sm:modal-middle`}
+        className={`${isDelteWorkSchOpened ? 'modal-open' : ''} modal modal-bottom sm:modal-middle`}
       >
         <div className="modal-box">
           <h3 className="font-bold text-lg">
-            Are you sure you want to delete the work day schedule with ID:{" "}
+            Are you sure you want to delete the work day schedule with ID:{' '}
             <span className="text-primary">{workDay?.id}</span>?
           </h3>
 
           <div className="">
             <div className="divider">Information</div>
             <p>
-              Day:{" "}
-              <span className="text-primary font-semibold lowercase">
-                {workDay?.day}
-              </span>
+              Day: <span className="text-primary font-semibold lowercase">{workDay?.day}</span>
             </p>
             <p>
-              Interval: From{" "}
-              <span className="text-primary font-semibold lowercase">
-                {workDay?.start_time}
-              </span>{" "}
-              To{" "}
-              <span className="text-primary font-semibold lowercase">
-                {workDay?.end_time}
-              </span>
+              Interval: From{' '}
+              <span className="text-primary font-semibold lowercase">{workDay?.start_time}</span> To{' '}
+              <span className="text-primary font-semibold lowercase">{workDay?.end_time}</span>
             </p>
             <p>
-              Status:{" "}
-              <span className="text-primary font-semibold lowercase">
-                {workDay?.status}
-              </span>
+              Status:{' '}
+              <span className="text-primary font-semibold lowercase">{workDay?.status}</span>
             </p>
             <p>
-              Description:{" "}
-              <span className="text-primary font-semibold lowercase">
-                {workDay?.description}
-              </span>
+              Description:{' '}
+              <span className="text-primary font-semibold lowercase">{workDay?.description}</span>
             </p>
           </div>
           <div className="divider">Actions</div>
@@ -260,16 +233,12 @@ const WorkSchedule = ({
                   workDay.start_time.length &&
                   workDay.end_time.length
                 ) {
-                  console.log("data:", workDay);
-                  const existingIndex = workDays.findIndex(
-                    (obj) => obj.id === workDay.id,
-                  );
-                  console.log("existingIndex: ", existingIndex);
+                  console.log('data:', workDay);
+                  const existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
+                  console.log('existingIndex: ', existingIndex);
                   if (existingIndex !== -1) {
                     setWorkDays((oldData) =>
-                      oldData.filter(
-                        (elt) => elt?.id !== workDays[existingIndex]?.id,
-                      ),
+                      oldData.filter((elt) => elt?.id !== workDays[existingIndex]?.id)
                     );
                   }
 
@@ -305,7 +274,7 @@ const WorkSchedule = ({
       <div className="flex items-center justify-between">
         <div className="flex  justify-normal gap-2 sm:gap-4">
           <p className="font-semibold text-xl w-48">
-            {moment.utc(firstDayOfMonth).format("MMMM yyyy").toString()}
+            {moment.utc(firstDayOfMonth).format('MMMM yyyy').toString()}
             <span className="text-xs ml-2 ">Street</span>
           </p>
         </div>
@@ -333,10 +302,10 @@ const WorkSchedule = ({
                 workDay.id
                   ? {
                       label: workDay.day,
-                      value: workDay.day,
+                      value: workDay.day
                     }
                   : {
-                      ...week_days_options[0],
+                      ...week_days_options[0]
                     }
               }
             />
@@ -369,10 +338,10 @@ const WorkSchedule = ({
                 workDay.id
                   ? {
                       label: workDay.status,
-                      value: workDay.status,
+                      value: workDay.status
                     }
                   : {
-                      ...status_options[0],
+                      ...status_options[0]
                     }
               }
             />
@@ -409,9 +378,7 @@ const WorkSchedule = ({
               Cancel
             </button>
             <button
-              className={`btn btn-outline btn-sm ${
-                isUpdate ? "btn-ghost" : "btn-primary"
-              } w-1/4`}
+              className={`btn btn-outline btn-sm ${isUpdate ? 'btn-ghost' : 'btn-primary'} w-1/4`}
               onClick={() => {
                 console.log(workDay);
 
@@ -421,91 +388,72 @@ const WorkSchedule = ({
                   workDay.start_time.length &&
                   workDay.end_time.length
                 ) {
-                  console.log("data:", workDay);
+                  console.log('data:', workDay);
                   if (isUpdate) {
-                    console.log("isUpdate:", isUpdate);
+                    console.log('isUpdate:', isUpdate);
                     if (
                       moment
-                        .utc(workDay?.end_time, "HH:mm")
-                        .isBefore(moment.utc(workDay?.start_time, "HH:mm"))
+                        .utc(workDay?.end_time, 'HH:mm')
+                        .isBefore(moment.utc(workDay?.start_time, 'HH:mm'))
                     ) {
                       dispatch(
                         showNotification({
-                          message: "Start time can not be after end time",
-                          status: 0,
-                        }),
+                          message: 'Start time can not be after end time',
+                          status: 0
+                        })
                       );
                     } else {
-                      console.log("isUpdate else:", isUpdate);
+                      console.log('isUpdate else:', isUpdate);
                       let tempWorkDays = [];
-                      const existingIndex = workDays.findIndex(
-                        (obj) => obj.id === workDay.id,
-                      );
-                      console.log("existingIndex: ", existingIndex);
+                      const existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
+                      console.log('existingIndex: ', existingIndex);
                       if (existingIndex !== -1) {
                         tempWorkDays = [
-                          ...workDays.filter(
-                            (elt) => elt?.id !== workDays[existingIndex]?.id,
-                          ),
+                          ...workDays.filter((elt) => elt?.id !== workDays[existingIndex]?.id)
                         ];
                       }
-                      console.log("tempWorkDays: ", tempWorkDays);
+                      console.log('tempWorkDays: ', tempWorkDays);
                       const clash = tempWorkDays.some((obj) => {
                         console.log(
-                          "tempWorkDays: ",
+                          'tempWorkDays: ',
                           moment
-                            .utc(obj.start_time, "HH:mm")
-                            .isSameOrBefore(
-                              moment.utc(workDay.start_time, "HH:mm"),
-                            ) &&
+                            .utc(obj.start_time, 'HH:mm')
+                            .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
                             moment
-                              .utc(obj.end_time, "HH:mm")
-                              .isSameOrAfter(
-                                moment.utc(workDay.start_time, "HH:mm"),
-                              ),
+                              .utc(obj.end_time, 'HH:mm')
+                              .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))
                         );
                         return (
                           obj.day === workDay.day &&
                           ((moment
-                            .utc(obj.start_time, "HH:mm")
-                            .isSameOrBefore(
-                              moment.utc(workDay.start_time, "HH:mm"),
-                            ) &&
+                            .utc(obj.start_time, 'HH:mm')
+                            .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
                             moment
-                              .utc(obj.end_time, "HH:mm")
-                              .isSameOrAfter(
-                                moment.utc(workDay.start_time, "HH:mm"),
-                              )) ||
+                              .utc(obj.end_time, 'HH:mm')
+                              .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))) ||
                             (moment
-                              .utc(obj.start_time, "HH:mm")
-                              .isSameOrBefore(
-                                moment.utc(workDay.end_time, "HH:mm"),
-                              ) &&
+                              .utc(obj.start_time, 'HH:mm')
+                              .isSameOrBefore(moment.utc(workDay.end_time, 'HH:mm')) &&
                               moment
-                                .utc(obj.end_time, "HH:mm")
-                                .isSameOrAfter(
-                                  moment.utc(workDay.end_time, "HH:mm"),
-                                )))
+                                .utc(obj.end_time, 'HH:mm')
+                                .isSameOrAfter(moment.utc(workDay.end_time, 'HH:mm'))))
                         );
                       });
-                      console.log("clash", clash);
+                      console.log('clash', clash);
 
                       if (clash) {
                         dispatch(
                           showNotification({
                             message:
-                              "Could not add this schedule as it clashes with an existing one",
-                            status: 0,
-                          }),
+                              'Could not add this schedule as it clashes with an existing one',
+                            status: 0
+                          })
                         );
                       } else {
-                        console.log("here");
+                        console.log('here');
                         // setWorkDays((oldData) => oldData.filter((elt) => elt?.id !== workDays[existingIndex]?.id));
                         setWorkDays((oldValues) => {
-                          return [
-                            { ...workDay, id: uuidv4() },
-                            ...tempWorkDays,
-                          ];
+                          return [{ ...workDay, id: uuidv4() }, ...tempWorkDays];
                         });
                         setWorkDay((_) => INITIAL_OBJ);
                         setAddNew((old) => !old);
@@ -515,14 +463,14 @@ const WorkSchedule = ({
                   } else {
                     if (
                       moment
-                        .utc(workDay?.end_time, "HH:mm")
-                        .isBefore(moment.utc(workDay?.start_time, "HH:mm"))
+                        .utc(workDay?.end_time, 'HH:mm')
+                        .isBefore(moment.utc(workDay?.start_time, 'HH:mm'))
                     ) {
                       dispatch(
                         showNotification({
-                          message: "Start time can not be after end time",
-                          status: 0,
-                        }),
+                          message: 'Start time can not be after end time',
+                          status: 0
+                        })
                       );
                     } else {
                       // Check if there's a clash for the selected day
@@ -537,47 +485,37 @@ const WorkSchedule = ({
                         return (
                           obj.day === workDay.day &&
                           ((moment
-                            .utc(obj.start_time, "HH:mm")
-                            .isSameOrBefore(
-                              moment.utc(workDay.start_time, "HH:mm"),
-                            ) &&
+                            .utc(obj.start_time, 'HH:mm')
+                            .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
                             moment
-                              .utc(obj.end_time, "HH:mm")
-                              .isSameOrAfter(
-                                moment.utc(workDay.start_time, "HH:mm"),
-                              )) ||
+                              .utc(obj.end_time, 'HH:mm')
+                              .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))) ||
                             (moment
-                              .utc(obj.start_time, "HH:mm")
-                              .isSameOrBefore(
-                                moment.utc(workDay.end_time, "HH:mm"),
-                              ) &&
+                              .utc(obj.start_time, 'HH:mm')
+                              .isSameOrBefore(moment.utc(workDay.end_time, 'HH:mm')) &&
                               moment
-                                .utc(obj.end_time, "HH:mm")
-                                .isSameOrAfter(
-                                  moment.utc(workDay.end_time, "HH:mm"),
-                                )))
+                                .utc(obj.end_time, 'HH:mm')
+                                .isSameOrAfter(moment.utc(workDay.end_time, 'HH:mm'))))
                         );
                       });
-                      console.log("clash", clash);
+                      console.log('clash', clash);
 
                       if (clash) {
                         dispatch(
                           showNotification({
                             message:
-                              "Could not add this schedule as it clashes with an existing one",
-                            status: 0,
-                          }),
+                              'Could not add this schedule as it clashes with an existing one',
+                            status: 0
+                          })
                         );
                       } else {
                         setWorkDays((oldValues) => {
                           let existingIndex = -1;
                           if (workDay?.id?.length) {
-                            existingIndex = workDays.findIndex(
-                              (obj) => obj.id === workDay.id,
-                            );
+                            existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
                           }
 
-                          console.log("existingIndex", existingIndex);
+                          console.log('existingIndex', existingIndex);
 
                           if (existingIndex !== -1) {
                             workDays[existingIndex] = workDay;
@@ -595,7 +533,7 @@ const WorkSchedule = ({
                 }
               }}
             >
-              {isUpdate ? "Update" : "Add"}
+              {isUpdate ? 'Update' : 'Add'}
             </button>
           </div>
         </>
@@ -606,23 +544,21 @@ const WorkSchedule = ({
         <FullCalendar
           timeZone="UTC"
           eventTimeFormat={({ start, end }) => {
-            return `${moment.utc(start).format("HH:mm")} - ${moment
-              .utc(end)
-              .format("HH:mm")}`;
+            return `${moment.utc(start).format('HH:mm')} - ${moment.utc(end).format('HH:mm')}`;
           }}
           plugins={[timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           firstDay={1}
           headerToolbar={{
-            left: "title",
-            right: "timeGridWeek",
+            left: 'title',
+            right: 'timeGridWeek'
           }}
           // titleFormat'dddd, MMMM D, YYYY'
           titleFormat={(args) => {
-            return moment.utc().format("dddd");
+            return moment.utc().format('dddd');
           }}
           dayHeaderFormat={(args) => {
-            return moment.utc(args.date).format("ddd");
+            return moment.utc(args.date).format('ddd');
           }}
           // dateClick={handleDateClick}
           eventClick={handleDateClick}
@@ -630,20 +566,14 @@ const WorkSchedule = ({
             return {
               id: weekDay.id,
               title: `(${weekDay.status}) - ${weekDay.description}`,
-              start: transformTime(
-                weekDatesNamesVsDates[weekDay.day],
-                weekDay.start_time,
-              ),
-              end: transformTime(
-                weekDatesNamesVsDates[weekDay.day],
-                weekDay.end_time,
-              ),
+              start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
+              end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time),
               backgroundColor:
-                weekDay.status === "OPENED"
-                  ? "#0c8599"
-                  : weekDay.status === "CLOSED"
-                  ? "#fd7e14"
-                  : "#e3e3e3",
+                weekDay.status === 'OPENED'
+                  ? '#0c8599'
+                  : weekDay.status === 'CLOSED'
+                    ? '#fd7e14'
+                    : '#e3e3e3'
               // backgroundColor: weekDay.status === 'OPENED' ? '#049407' : weekDay.status === 'CLOSED' ? '#940404' : '#e3e3e3',
             };
           })}
@@ -653,10 +583,7 @@ const WorkSchedule = ({
 
       {isEditCustomerSchedule ? (
         <div className="grid grid-cols-3">
-          <button
-            className="btn btn-outline btn-primary btn-sm col-start-2"
-            onClick={handleSubmit}
-          >
+          <button className="btn btn-outline btn-primary btn-sm col-start-2" onClick={handleSubmit}>
             Save Schedule
           </button>
         </div>

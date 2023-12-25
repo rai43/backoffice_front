@@ -1,36 +1,30 @@
-import React, { useState } from "react";
-import moment from "moment";
-import cliTruncate from "cli-truncate";
-import {
-  MdPlaylistAdd,
-  MdOutlineDeleteOutline,
-  MdOutlineModeEditOutline,
-} from "react-icons/md";
+import React, { useState } from 'react';
+import moment from 'moment';
+import cliTruncate from 'cli-truncate';
+import { MdPlaylistAdd, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 
-import UserBasicDetail from "../../../components/Common/UserBasicDetail";
-import TitleCard from "../../../components/Cards/TitleCard";
-import InfoText from "../../../components/Typography/InfoText";
-import { useDispatch, useSelector } from "react-redux";
-import { openRightDrawer } from "../../common/rightDrawerSlice";
-import { RIGHT_DRAWER_TYPES } from "../../../utils/globalConstantUtil";
+import UserBasicDetail from '../../../components/Common/UserBasicDetail';
+import TitleCard from '../../../components/Cards/TitleCard';
+import InfoText from '../../../components/Typography/InfoText';
+import { useDispatch, useSelector } from 'react-redux';
+import { openRightDrawer } from '../../common/rightDrawerSlice';
+import { RIGHT_DRAWER_TYPES } from '../../../utils/globalConstantUtil';
 import {
   deleteMerchantsAccompagnement,
-  switchArticlePublishFromSettings,
-} from "../merchantsSettingsSlice";
-import { showNotification } from "../../common/headerSlice";
-import { switchArticlePublish } from "../../merchantsMenu/merchantsMenuSlice";
+  switchArticlePublishFromSettings
+} from '../merchantsSettingsSlice';
+import { showNotification } from '../../common/headerSlice';
+import { switchArticlePublish } from '../../merchantsMenu/merchantsMenuSlice';
 
 const MerchantsSettingsDetailView = ({ extraObject }) => {
   const dispatch = useDispatch();
-  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterStatus, setFilterStatus] = useState('ALL');
   const [modalInfo, setModalInfo] = useState({
     isOpened: false,
-    name: "",
-    id: "",
+    name: '',
+    id: ''
   });
-  const { merchants, skip, isLoading, noMoreQuery } = useSelector(
-    (state) => state.merchant,
-  );
+  const { merchants, skip, isLoading, noMoreQuery } = useSelector((state) => state.merchant);
   console.log(extraObject);
 
   const openMerchantArticle = (obj) => {
@@ -39,8 +33,8 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
       openRightDrawer({
         header: `Add New Article`,
         bodyType: RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ARTICLE,
-        extraObject: obj,
-      }),
+        extraObject: obj
+      })
     );
   };
 
@@ -50,8 +44,8 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
       openRightDrawer({
         header: `Accompagnements`,
         bodyType: RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ACCOMPAGNEMENT,
-        extraObject: obj,
-      }),
+        extraObject: obj
+      })
     );
   };
   // console.log(extraObject);
@@ -65,7 +59,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
             merchant_id: extraObject?.id,
             accompagnements: merchants
               ?.find((merch) => merch.id === extraObject.id)
-              ?.accompagnements?.filter((acc) => acc.is_deleted === false),
+              ?.accompagnements?.filter((acc) => acc.is_deleted === false)
           })
         }
       >
@@ -78,9 +72,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
     return (
       <button
         className="btn btn-outline btn-primary btn-sm"
-        onClick={() =>
-          openMerchantAccompagnement({ merchant_id: extraObject?.id })
-        }
+        onClick={() => openMerchantAccompagnement({ merchant_id: extraObject?.id })}
       >
         Add a New Accompagnement
       </button>
@@ -100,9 +92,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
         <div className="w-full stats stats-vertical lg:stats-horizontal shadow mb-4">
           <div className="stat">
             <div className="stat-title">Merchant ID</div>
-            <div className={`stat-value text-[1.6rem] text-primary`}>
-              {extraObject?.id || "0"}
-            </div>
+            <div className={`stat-value text-[1.6rem] text-primary`}>{extraObject?.id || '0'}</div>
             <div className="stat-desc">
               <span className="font-semibold"></span>
             </div>
@@ -111,14 +101,14 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
             <div className="stat-title">Articles</div>
             <div
               className={`stat-value text-[1.6rem] ${
-                extraObject?.articles?.length > 0 ? "text-primary" : ""
+                extraObject?.articles?.length > 0 ? 'text-primary' : ''
               }`}
             >
-              {extraObject?.articles?.length || "0"}
+              {extraObject?.articles?.length || '0'}
             </div>
             <div className="stat-desc">
               <span className="font-semibold">{`Article${
-                extraObject?.articles?.length ? "s" : ""
+                extraObject?.articles?.length ? 's' : ''
               }`}</span>
             </div>
           </div>
@@ -126,28 +116,24 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
             <div className="stat-title">Accompagnements</div>
             <div
               className={`stat-value text-[1.6rem] ${
-                extraObject?.accompagnements?.length > 0 ? "text-primary" : ""
+                extraObject?.accompagnements?.length > 0 ? 'text-primary' : ''
               }`}
             >
-              {extraObject?.accompagnements?.length || "0"}
+              {extraObject?.accompagnements?.length || '0'}
             </div>
             <div className="stat-desc">
               <span className="font-semibold">{`Accompagnement${
-                extraObject?.accompagnements?.length ? "s" : ""
+                extraObject?.accompagnements?.length ? 's' : ''
               }`}</span>
             </div>
           </div>
           <div className="stat">
             <div className="stat-title">Creation Info</div>
             <div className="stat-value text-[1.2rem]">
-              {moment.utc(extraObject?.created_at).format("DD-MM-YYYY HH:mm") ||
-                "N/A"}
+              {moment.utc(extraObject?.created_at).format('DD-MM-YYYY HH:mm') || 'N/A'}
             </div>
             <div className="stat-desc">
-              By:{" "}
-              <span className="font-semibold">
-                {extraObject?.created_by || "Backoffice"}
-              </span>
+              By: <span className="font-semibold">{extraObject?.created_by || 'Backoffice'}</span>
             </div>
           </div>
         </div>
@@ -155,79 +141,71 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
         {/* Content */}
 
         <TitleCard
-          title={"Accompagnements"}
-          topMargin={"mt-4"}
+          title={'Accompagnements'}
+          topMargin={'mt-4'}
           // containerStyle={'max-h-60'}
           TopSideButtons={<AddAccompagnement />}
         >
-          {merchants?.find((merch) => merch.id === extraObject.id)
-            ?.accompagnements?.length ? (
+          {merchants?.find((merch) => merch.id === extraObject.id)?.accompagnements?.length ? (
             <>
               {merchants
                 ?.find((merch) => merch.id === extraObject.id)
                 ?.accompagnements?.filter((acc) => acc.is_deleted === false)
                 .map((acc) => (
-                  <Accompagnement
-                    key={acc.id}
-                    acc={acc}
-                    setModalInfo={setModalInfo}
-                  />
+                  <Accompagnement key={acc.id} acc={acc} setModalInfo={setModalInfo} />
                 ))}
             </>
           ) : (
-            <InfoText styleClasses={"md:grid-cols-2"}>
-              No accompagnement found ...
-            </InfoText>
+            <InfoText styleClasses={'md:grid-cols-2'}>No accompagnement found ...</InfoText>
           )}
         </TitleCard>
 
         <TitleCard
-          title={"Articles"}
-          topMargin={"mt-4"}
-          containerStyle={""}
+          title={'Articles'}
+          topMargin={'mt-4'}
+          containerStyle={''}
           TopSideButtons={<AddArticle />}
         >
-          {merchants?.find((merch) => merch.id === extraObject.id)?.articles
-            ?.length ? (
+          {merchants?.find((merch) => merch.id === extraObject.id)?.articles?.length ? (
             <>
               <div className="btn-group btn-group-vertical md:btn-group-horizontal w-full px-2">
                 <button
                   className={`btn btn-sm btn-outline md:w-1/5 ${
-                    filterStatus === "ALL" ? "btn-active" : ""
+                    filterStatus === 'ALL' ? 'btn-active' : ''
                   }`}
-                  onClick={() => setFilterStatus("ALL")}
+                  onClick={() => setFilterStatus('ALL')}
                 >
                   SHOW ALL
                 </button>
                 <button
                   className={`btn btn-sm btn-outline md:w-1/5 ${
-                    filterStatus === "PUBLISHED" ? "btn-active" : ""
+                    filterStatus === 'PUBLISHED' ? 'btn-active' : ''
                   }`}
-                  onClick={() => setFilterStatus("PUBLISHED")}
+                  onClick={() => setFilterStatus('PUBLISHED')}
                 >
                   PUBLISHED
                 </button>
                 <button
                   className={`btn btn-sm btn-outline md:w-1/5 ${
-                    filterStatus === "UNPUBLISHED" ? "btn-active" : ""
+                    filterStatus === 'UNPUBLISHED' ? 'btn-active' : ''
                   }`}
-                  onClick={() => setFilterStatus("UNPUBLISHED")}
+                  onClick={() => setFilterStatus('UNPUBLISHED')}
                 >
                   UNPUBLISHED
                 </button>
                 <button
                   className={`btn btn-sm btn-outline md:w-1/5 ${
-                    filterStatus === "PENDING" ? "btn-active" : ""
+                    filterStatus === 'PENDING' ? 'btn-active' : ''
                   }`}
-                  onClick={() => setFilterStatus("PENDING")}
+                  onClick={() => setFilterStatus('PENDING')}
                 >
                   PENDING
                 </button>
                 <button
                   className={`btn btn-sm btn-outline md:w-1/5 ${
-                    filterStatus === "REJECTED" ? "btn-active" : ""
+                    filterStatus === 'REJECTED' ? 'btn-active' : ''
                   }`}
-                  onClick={() => setFilterStatus("REJECTED")}
+                  onClick={() => setFilterStatus('REJECTED')}
                 >
                   REJECTED
                 </button>
@@ -236,7 +214,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
                 {merchants
                   ?.find((merch) => merch.id === extraObject.id)
                   ?.articles?.filter((article) => {
-                    if (filterStatus === "ALL") {
+                    if (filterStatus === 'ALL') {
                       return article;
                     } else {
                       return article?.status === filterStatus;
@@ -248,32 +226,25 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
                       merchant_id={extraObject?.id}
                       article={article}
                       accompagnements={
-                        merchants?.find((merch) => merch.id === extraObject.id)
-                          ?.accompagnements || []
+                        merchants?.find((merch) => merch.id === extraObject.id)?.accompagnements ||
+                        []
                       }
                     />
                   ))}
               </div>
             </>
           ) : (
-            <InfoText styleClasses={"md:grid-cols-2"}>
-              No article found ...
-            </InfoText>
+            <InfoText styleClasses={'md:grid-cols-2'}>No article found ...</InfoText>
           )}
         </TitleCard>
       </div>
       <div
-        className={`modal modal-bottom sm:modal-middle ${
-          modalInfo.isOpened ? "modal-open" : ""
-        }`}
+        className={`modal modal-bottom sm:modal-middle ${modalInfo.isOpened ? 'modal-open' : ''}`}
       >
         <div className="modal-box">
           <h3 className="font-bold text-lg">
-            Are you sure you want to delete the accompagnement{" "}
-            <span className="font-semibold text-primary uppercase">
-              {modalInfo.name}
-            </span>{" "}
-            ?
+            Are you sure you want to delete the accompagnement{' '}
+            <span className="font-semibold text-primary uppercase">{modalInfo.name}</span> ?
           </h3>
           <div className="modal-action">
             <label
@@ -281,7 +252,7 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
               className="btn btn-outline btn-ghost"
               onClick={() =>
                 setModalInfo((oldData) => {
-                  return { ...oldData, isOpened: false, id: "", name: "" };
+                  return { ...oldData, isOpened: false, id: '', name: '' };
                 })
               }
             >
@@ -294,25 +265,25 @@ const MerchantsSettingsDetailView = ({ extraObject }) => {
                 await dispatch(
                   deleteMerchantsAccompagnement({
                     name: modalInfo.name,
-                    id: modalInfo.id,
-                  }),
+                    id: modalInfo.id
+                  })
                 ).then(async (response) => {
                   if (response?.error) {
                     dispatch(
                       showNotification({
-                        message: "Error while deleting the accompagnement",
-                        status: 0,
-                      }),
+                        message: 'Error while deleting the accompagnement',
+                        status: 0
+                      })
                     );
                   } else {
                     dispatch(
                       showNotification({
-                        message: "Succefully deleted the accompagnement",
-                        status: 1,
-                      }),
+                        message: 'Succefully deleted the accompagnement',
+                        status: 1
+                      })
                     );
                     setModalInfo((oldData) => {
-                      return { ...oldData, isOpened: false, id: "", name: "" };
+                      return { ...oldData, isOpened: false, id: '', name: '' };
                     });
                   }
                 });
@@ -331,17 +302,15 @@ export default MerchantsSettingsDetailView;
 
 const Article = (props) => {
   const dispatch = useDispatch();
-  const { merchants, skip, isLoading, noMoreQuery } = useSelector(
-    (state) => state.merchant,
-  );
+  const { merchants, skip, isLoading, noMoreQuery } = useSelector((state) => state.merchant);
 
   const openMerchantArticle = (obj) => {
     dispatch(
       openRightDrawer({
         header: `Edit Article - ${obj?.article?.id}`,
         bodyType: RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ARTICLE,
-        extraObject: { ...obj },
-      }),
+        extraObject: { ...obj }
+      })
     );
   };
 
@@ -354,7 +323,7 @@ const Article = (props) => {
             article: props?.article,
             merchant_id: props?.merchant_id,
             accompagnements: props?.accompagnements,
-            inEditMode: true,
+            inEditMode: true
           })
         }
       >
@@ -371,21 +340,15 @@ const Article = (props) => {
           <div className="w-full md:w-2/3  flex flex-col space-y-2 p-3">
             <div className="flex justify-between item-center">
               {/* <p className='text-gray-500 font-medium hidden md:block'>{moment.utc(props?.article?.created_at).format('DD/MM/YYYY')}</p> */}
-              <p className="text-gray-500 font-medium hidden md:block">
-                {props?.article?.id}
-              </p>
+              <p className="text-gray-500 font-medium hidden md:block">{props?.article?.id}</p>
               <p
                 className={`font-medium hidden capitalize md:block ${
-                  props?.article?.status === "PUBLISHED"
-                    ? "text-success"
-                    : "text-secondary"
+                  props?.article?.status === 'PUBLISHED' ? 'text-success' : 'text-secondary'
                 }`}
               >
                 {merchants
                   ?.find((merch) => merch.id === props.merchant_id)
-                  ?.articles?.find(
-                    (article) => article?.id === props?.article?.id,
-                  )
+                  ?.articles?.find((article) => article?.id === props?.article?.id)
                   ?.status?.toLocaleLowerCase()}
               </p>
               {/* <div className='flex items-center'>
@@ -422,35 +385,23 @@ const Article = (props) => {
               {cliTruncate(props?.article?.title, 22)}
             </h3>
             <p className="md:text-lg text-gray-500 text-base lowercase">
-              {cliTruncate(
-                props?.article?.description || props?.article?.title,
-                25,
-              )}
+              {cliTruncate(props?.article?.description || props?.article?.title, 25)}
             </p>
             <p className="text-sm font-black text-gray-800">
               Price: {props?.article?.price}
-              <span className="font-normal text-gray-600 text-sm ml-2">
-                FCFA
-              </span>
+              <span className="font-normal text-gray-600 text-sm ml-2">FCFA</span>
             </p>
             <p className="text-sm font-black text-gray-800">
               Merch. Price: {props?.article?.merchant_price}
-              <span className="font-normal text-gray-600 text-sm ml-2">
-                FCFA
-              </span>
+              <span className="font-normal text-gray-600 text-sm ml-2">FCFA</span>
             </p>
 
-            <div
-              className="col-span-2 text-base"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="col-span-2 text-base" onClick={(e) => e.stopPropagation()}>
               <select
                 value={
                   merchants
                     ?.find((merch) => merch.id === props.merchant_id)
-                    ?.articles?.find(
-                      (article) => article?.id === props?.article?.id,
-                    )?.status
+                    ?.articles?.find((article) => article?.id === props?.article?.id)?.status
                 }
                 className="select select-bordered select-sm w-2/3"
                 onChange={async (e) => {
@@ -459,26 +410,23 @@ const Article = (props) => {
                     switchArticlePublishFromSettings({
                       articleId: merchants
                         ?.find((merch) => merch.id === props.merchant_id)
-                        ?.articles?.find(
-                          (article) => article?.id === props?.article?.id,
-                        )?.id,
-                      status: e.target.value,
-                    }),
+                        ?.articles?.find((article) => article?.id === props?.article?.id)?.id,
+                      status: e.target.value
+                    })
                   ).then(async (response) => {
                     if (response?.error) {
                       dispatch(
                         showNotification({
-                          message:
-                            "Error while change the article publish status",
-                          status: 0,
-                        }),
+                          message: 'Error while change the article publish status',
+                          status: 0
+                        })
                       );
                     } else {
                       dispatch(
                         showNotification({
-                          message: "Succefully changed the publish status",
-                          status: 1,
-                        }),
+                          message: 'Succefully changed the publish status',
+                          status: 1
+                        })
                       );
 
                       // closeModal();
@@ -533,8 +481,8 @@ const Accompagnement = (props) => {
       openRightDrawer({
         header: `Edit Accompagnements`,
         bodyType: RIGHT_DRAWER_TYPES.MERCHANT_SETTINGS_ACCOMPAGNEMENT,
-        extraObject: { ...props.acc, inEditMode: true },
-      }),
+        extraObject: { ...props.acc, inEditMode: true }
+      })
     );
   };
 
@@ -544,22 +492,25 @@ const Accompagnement = (props) => {
         <div>
           <MdPlaylistAdd className="h-5 w-5" />
           <div>
-            <h3 className="font-bold">
-              {props.acc.name}{" "}
-              <span className="text-sm text-primary">
-                on {moment.utc(props.acc.created_at).format("DD-MM-YYYY HH:mm")}
-              </span>
+            <h3 className="font-bold uppercase">
+              {props.acc.name} {/*<span className="text-sm text-primary">*/}
+              {/*  on {moment.utc(props.acc.created_at).format("DD-MM-YYYY HH:mm")}*/}
+              {/*</span>*/}
             </h3>
-            <div className="text-xs text-primary font-semibold">
-              {props.acc.price || 0} F CFA
+            <div className="text-xs">
+              Merch. Price{' '}
+              <span className={'text-primary font-semibold'}>
+                {props.acc.supplement_merchant_price || 0} F CFA
+              </span>{' '}
+              Client. Price{' '}
+              <span className={'text-primary font-semibold'}>
+                {props.acc.supplement_client_price || 0} F CFA
+              </span>
             </div>
           </div>
         </div>
         <div className="">
-          <button
-            className="btn btn-sm btn-outline btn-ghost"
-            onClick={openMerchantAccompagnement}
-          >
+          <button className="btn btn-sm btn-outline btn-ghost" onClick={openMerchantAccompagnement}>
             <MdOutlineModeEditOutline className="h-5 w-5" />
           </button>
 
@@ -572,7 +523,7 @@ const Accompagnement = (props) => {
                     ...oldData,
                     isOpened: true,
                     id: props.acc.id,
-                    name: props.acc.name,
+                    name: props.acc.name
                   };
                 })
               }

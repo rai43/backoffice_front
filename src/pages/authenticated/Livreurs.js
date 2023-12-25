@@ -2,15 +2,17 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../features/common/headerSlice';
 import Livreur from '../../features/livreurs';
+import { resetTableLivreurSettings } from '../../features/common/livreursTableSlice';
 
 function InternalPage() {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(setPageTitle({ title: 'Livreurs' }));
-	}, []);
+  useEffect(() => {
+    dispatch(resetTableLivreurSettings());
+    dispatch(setPageTitle({ title: 'Livreurs' }));
+  }, []);
 
-	return <Livreur />;
+  return <Livreur />;
 }
 
 export default InternalPage;

@@ -1,11 +1,11 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { Icon } from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Icon } from 'leaflet';
 
-import "leaflet/dist/leaflet.css";
-import markerIconPng from "leaflet/dist/images/marker-icon.png";
-import markShadowPng from "leaflet/dist/images/marker-shadow.png";
-import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import 'leaflet/dist/leaflet.css';
+import markerIconPng from 'leaflet/dist/images/marker-icon.png';
+import markShadowPng from 'leaflet/dist/images/marker-shadow.png';
+import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 const position = [51.505, -0.09];
 
@@ -15,14 +15,11 @@ const OrderPosition = ({ extraObject }) => {
     extraObject?.all
       ? [orders[0]?.address?.latitude, orders[0]?.address?.longitude]
       : extraObject?.selectedRows && extraObject?.orders?.length
-      ? [
-          extraObject?.orders[0]?.address?.latitude || 0,
-          extraObject?.orders[0]?.address?.longitude || 0,
-        ]
-      : [
-          extraObject?.order?.address?.latitude || 0,
-          extraObject?.order?.address?.longitude || 0,
-        ],
+        ? [
+            extraObject?.orders[0]?.address?.latitude || 0,
+            extraObject?.orders[0]?.address?.longitude || 0
+          ]
+        : [extraObject?.order?.address?.latitude || 0, extraObject?.order?.address?.longitude || 0]
   );
   // const [position, setPosition] = useState(extraObject?.all ? [5.4054433, -3.9922133]);
 
@@ -49,7 +46,7 @@ const OrderPosition = ({ extraObject }) => {
         zoom={13}
         scrollWheelZoom={false}
         // className='absolute'
-        style={{ height: "750px", width: "100%" }}
+        style={{ height: '750px', width: '100%' }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -61,7 +58,7 @@ const OrderPosition = ({ extraObject }) => {
             icon={
               new Icon({
                 iconUrl: markerIconPng,
-                shadowUrl: markShadowPng,
+                shadowUrl: markShadowPng
               })
             }
           >
@@ -82,22 +79,17 @@ const OrderPosition = ({ extraObject }) => {
           extraObject?.orders?.map((order) => (
             <Marker
               key={order?.id}
-              position={[
-                order?.address?.latitude || 0,
-                order?.address?.longitude || 0,
-              ]}
+              position={[order?.address?.latitude || 0, order?.address?.longitude || 0]}
               icon={
                 new Icon({
                   iconUrl: markerIconPng,
-                  shadowUrl: markShadowPng,
+                  shadowUrl: markShadowPng
                 })
               }
             >
               <Popup>
                 Client <br />
-                <span className="text-primary font-bold">
-                  {order?.client?.phone_number}
-                </span>
+                <span className="text-primary font-bold">{order?.client?.phone_number}</span>
               </Popup>
             </Marker>
           ))}
@@ -106,22 +98,17 @@ const OrderPosition = ({ extraObject }) => {
           orders?.map((order) => (
             <Marker
               key={order?.id}
-              position={[
-                order?.address?.latitude || 0,
-                order?.address?.longitude || 0,
-              ]}
+              position={[order?.address?.latitude || 0, order?.address?.longitude || 0]}
               icon={
                 new Icon({
                   iconUrl: markerIconPng,
-                  shadowUrl: markShadowPng,
+                  shadowUrl: markShadowPng
                 })
               }
             >
               <Popup>
                 Client <br />
-                <span className="text-primary font-bold">
-                  {order?.client?.phone_number}
-                </span>
+                <span className="text-primary font-bold">{order?.client?.phone_number}</span>
               </Popup>
             </Marker>
           ))}

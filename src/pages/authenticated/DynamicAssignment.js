@@ -2,15 +2,17 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../features/common/headerSlice';
 import DynamicAssignment from '../../features/DynamicAssignment/index';
+import { resetTableDiscountManagementSettings } from '../../features/common/discountManagementTableSlice';
 
 function InternalPage() {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(setPageTitle({ title: 'Dynamic Livreurs Assignment' }));
-	}, []);
+  useEffect(() => {
+    dispatch(resetTableDiscountManagementSettings());
+    dispatch(setPageTitle({ title: 'Dynamic Livreurs Assignment' }));
+  }, []);
 
-	return <DynamicAssignment />;
+  return <DynamicAssignment />;
 }
 
 export default InternalPage;

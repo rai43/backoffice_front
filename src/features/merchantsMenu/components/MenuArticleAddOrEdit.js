@@ -1,80 +1,50 @@
-import React, { useCallback, useEffect, useState } from "react";
-import InputText from "../../../components/Input/InputText";
-import { useDispatch, useSelector } from "react-redux";
-import { showNotification } from "../../common/headerSlice";
-import ImageUpload from "../../../components/Input/ImageUpload";
-import {
-  getMerchantsBySearch,
-  saveMenu,
-  updateMenu,
-} from "../merchantsMenuSlice";
-import InputAsyncSelect from "../../../components/Input/InputAsyncSelect";
+import React, { useCallback, useEffect, useState } from 'react';
+import InputText from '../../../components/Input/InputText';
+import { useDispatch, useSelector } from 'react-redux';
+import { showNotification } from '../../common/headerSlice';
+import ImageUpload from '../../../components/Input/ImageUpload';
+import { getMerchantsBySearch, saveMenu, updateMenu } from '../merchantsMenuSlice';
+import InputAsyncSelect from '../../../components/Input/InputAsyncSelect';
 
-const MenuArticleAddOrEdit = ({
-  extraObject,
-  closeModal,
-  closeRightDrawer,
-}) => {
-  console.log(extraObject);
+const MenuArticleAddOrEdit = ({ extraObject, closeModal, closeRightDrawer }) => {
   const dispatch = useDispatch();
-  const { searchedMerchants, isLoading } = useSelector(
-    (state) => state.article,
-  );
+  const { isLoading } = useSelector((state) => state.article);
   const [merchant, setMerchant] = useState(
-    extraObject?.inEditMode || extraObject?.edit
-      ? extraObject?.article?.merchantId
-      : "",
+    extraObject?.inEditMode || extraObject?.edit ? extraObject?.article?.merchantId : ''
   );
+  const [merchantAccompagnements, setMerchantAccompagnements] = useState([]);
   const [title, setTitle] = useState(
-    extraObject?.inEditMode || extraObject?.edit
-      ? extraObject?.article?.title
-      : "",
+    extraObject?.inEditMode || extraObject?.edit ? extraObject?.article?.title : ''
   );
   const [description, setDescription] = useState(
-    extraObject?.inEditMode || extraObject?.edit
-      ? extraObject?.article?.description
-      : "",
+    extraObject?.inEditMode || extraObject?.edit ? extraObject?.article?.description : ''
   );
   const [price, setPrice] = useState(
-    extraObject?.inEditMode || extraObject?.edit
-      ? extraObject?.article?.price
-      : 0,
+    extraObject?.inEditMode || extraObject?.edit ? extraObject?.article?.price : 0
   );
   const [merchantPrice, setMerchantPrice] = useState(
-    extraObject?.inEditMode || extraObject?.edit
-      ? extraObject?.article?.merchant_price
-      : 0,
+    extraObject?.inEditMode || extraObject?.edit ? extraObject?.article?.merchant_price : 0
   );
   const [image, setImage] = useState(
-    extraObject?.inEditMode || extraObject?.edit
-      ? extraObject?.article?.image
-      : "",
+    extraObject?.inEditMode || extraObject?.edit ? extraObject?.article?.image : ''
   );
   const [accs, setAccs] = useState({});
   const [supps, setSupps] = useState({});
 
   const updateForm = useCallback(({ key, value }) => {
-    if (key === "merchant") {
+    console.log(value);
+    if (key === 'merchant') {
       return setMerchant(value);
     }
-    if (key === "title") return setTitle(value);
-    if (key === "description") return setDescription(value);
-    if (key === "price") return setPrice(value);
-    if (key === "merchantPrice") return setMerchantPrice(value);
-    if (key === "image") return setImage(value);
+    if (key === 'title') return setTitle(value);
+    if (key === 'description') return setDescription(value);
+    if (key === 'price') return setPrice(value);
+    if (key === 'merchantPrice') return setMerchantPrice(value);
+    if (key === 'image') return setImage(value);
   }, []);
 
   const onSaveHandler = async () => {
-    console.log(
-      title,
-      description,
-      price,
-      merchantPrice,
-      image,
-      accs,
-      supps,
-      merchant,
-    );
+    console.log(title, description, price, merchantPrice, image, accs, supps, merchant);
     if (
       title.length <= 3 ||
       description.length <= 3 ||
@@ -93,22 +63,22 @@ const MenuArticleAddOrEdit = ({
         merchantPrice,
         image,
         accs,
-        supps,
-      }),
+        supps
+      })
     ).then(async (response) => {
       if (response?.error) {
         dispatch(
           showNotification({
-            message: "Error while creating the article",
-            status: 0,
-          }),
+            message: 'Error while creating the article',
+            status: 0
+          })
         );
       } else {
         dispatch(
           showNotification({
-            message: "Succefully created the article",
-            status: 1,
-          }),
+            message: 'Succefully created the article',
+            status: 1
+          })
         );
         closeModal();
       }
@@ -118,27 +88,25 @@ const MenuArticleAddOrEdit = ({
   const merchantsPromiseOptions = (inputValue) =>
     new Promise((resolve) => {
       if (inputValue?.length >= 3) {
-        dispatch(getMerchantsBySearch({ searchPattern: inputValue })).then(
-          (res) =>
-            resolve(
-              (res?.payload || [])
-                .filter(
-                  (merchant) =>
-                    merchant.name
-                      .toLowerCase()
-                      .includes(inputValue.toLowerCase()) ||
-                    merchant.whatsapp
-                      .toLowerCase()
-                      .includes(inputValue.toLowerCase()),
-                )
-                .map((merchant) => {
-                  return {
-                    value: merchant.id,
-                    label: `${merchant.name} (${merchant?.whatsapp})`,
-                  };
-                }),
-            ),
-        );
+        dispatch(getMerchantsBySearch({ searchPattern: inputValue })).then((res) => {
+          setMerchantAccompagnements((oldValues) => {
+            return [...oldValues, ...(res?.payload || [])];
+          });
+          resolve(
+            (res?.payload || [])
+              .filter(
+                (merchant) =>
+                  merchant.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+                  merchant.whatsapp.toLowerCase().includes(inputValue.toLowerCase())
+              )
+              .map((merchant) => {
+                return {
+                  value: merchant.id,
+                  label: `${merchant.name} (${merchant?.whatsapp})`
+                };
+              })
+          );
+        });
       } else {
         resolve([]);
       }
@@ -149,31 +117,26 @@ const MenuArticleAddOrEdit = ({
       setAccs((oldValues) => {
         return {
           ...oldValues,
-          [accompagnement?.accompagnement_id]: true,
+          [accompagnement?.accompagnement_id]: true
         };
-      }),
+      })
     );
     extraObject?.article?.article_supplements?.map((supplement) =>
       setSupps((oldValues) => {
         return {
           ...oldValues,
           [supplement?.accompagnement_id]: {
-            price: supplement?.price,
-            status: true,
-          },
+            status: true
+          }
         };
-      }),
+      })
     );
   }, []);
-
-  useEffect(() => console.log(searchedMerchants), [searchedMerchants]);
 
   return (
     <div>
       <h3 className="text-lg font-semibold mt-2">
-        {extraObject?.inEditMode || extraObject?.edit
-          ? "EDIT A NEW ARTICLE"
-          : "ADD A NEW ARTICLE"}
+        {extraObject?.inEditMode || extraObject?.edit ? 'EDIT A NEW ARTICLE' : 'ADD A NEW ARTICLE'}
       </h3>
       <div className="divider"></div>
       <div className="grid md:grid-cols-2 gap-3">
@@ -268,11 +231,11 @@ const MenuArticleAddOrEdit = ({
 
       {!extraObject?.edit &&
       !isLoading &&
-      searchedMerchants?.find((merch) => merch.id === merchant)?.id ? (
+      merchantAccompagnements?.find((merch) => merch.id === merchant)?.id ? (
         <>
           <h3 className="mt-4">ACCOMPAGNEMENTS</h3>
           <div className="divider mt-0"></div>
-          {searchedMerchants
+          {merchantAccompagnements
             ?.find((merch) => merch.id === merchant)
             ?.accompagnements?.filter((acc) => acc.is_deleted === false)
             ?.map((acc) => (
@@ -283,7 +246,7 @@ const MenuArticleAddOrEdit = ({
                     setAccs((oldValues) => {
                       return {
                         ...oldValues,
-                        [e.target.value]: e.target.checked,
+                        [e.target.value]: e.target.checked
                       };
                     })
                   }
@@ -303,15 +266,15 @@ const MenuArticleAddOrEdit = ({
           <h3 className="mt-4">SUPPLEMENTS</h3>
           <div className="divider mt-0"></div>
           <div className="grid">
-            {searchedMerchants
+            {merchantAccompagnements
               ?.find((merch) => merch.id === merchant)
               ?.accompagnements?.filter((acc) => acc.is_deleted === false)
-              ?.map((acc) => (
-                <div key={acc?.id} className="grid md:grid-cols-8">
+              ?.map((supp) => (
+                <div key={supp?.id} className="grid md:grid-cols-8">
                   {/* <label className='label cursor-pointer md:col-start-2 md:col-span-6'> */}
                   <input
                     type="checkbox"
-                    value={acc.id}
+                    value={supp.id}
                     className="checkbox checkbox-primary checkbox-sm md:col-start-2 mt-2"
                     onChange={(e) =>
                       setSupps((oldValues) => {
@@ -319,31 +282,19 @@ const MenuArticleAddOrEdit = ({
                           ...oldValues,
                           [e.target.value]: {
                             ...supps[e.target.value],
-                            status: e.target.checked,
-                          },
+                            status: e.target.checked
+                          }
                         };
                       })
                     }
                   />
-                  <span className="label-text md:col-span-3 mt-2">
-                    {acc.name}
+                  <span className="label-text md:col-span-2 mt-2 uppercase">{supp?.name}</span>
+                  <span className="label-text md:col-span-2 mt-2">
+                    M: {supp?.supplement_merchant_price} F
                   </span>
-                  <input
-                    type="number"
-                    className="input input-bordered input-sm md:col-span-2 mt-2"
-                    placeholder="Price"
-                    value={supps[acc.id]?.price}
-                    disabled={!supps[acc.id]?.status}
-                    onChange={(e) =>
-                      setSupps((oldValues) => {
-                        return {
-                          ...oldValues,
-                          [acc.id]: { ...supps[acc.id], price: e.target.value },
-                        };
-                      })
-                    }
-                  />
-                  {/* </label> */}
+                  <span className="label-text md:col-span-2 mt-2">
+                    C: {supp?.supplement_client_price} F
+                  </span>
                 </div>
               ))}
           </div>
@@ -351,8 +302,7 @@ const MenuArticleAddOrEdit = ({
       ) : (
         <></>
       )}
-      {extraObject?.edit &&
-      extraObject?.article?.merchant?.accompagnements?.length ? (
+      {extraObject?.edit && extraObject?.article?.merchant?.accompagnements?.length ? (
         <>
           <h3 className="mt-4">ACCOMPAGNEMENTS</h3>
           <div className="divider mt-0"></div>
@@ -366,7 +316,7 @@ const MenuArticleAddOrEdit = ({
                     setAccs((oldValues) => {
                       return {
                         ...oldValues,
-                        [e.target.value]: e.target.checked,
+                        [e.target.value]: e.target.checked
                       };
                     })
                   }
@@ -402,35 +352,20 @@ const MenuArticleAddOrEdit = ({
                           ...oldValues,
                           [e.target.value]: {
                             ...supps[e.target.value],
-                            status: e.target.checked,
-                          },
+                            status: e.target.checked
+                          }
                         };
                       })
                     }
                     checked={supps[supp.id]?.status}
                   />
-                  <span className="label-text md:col-span-3 mt-2">
-                    {supp.name}
+                  <span className="label-text md:col-span-2 mt-2 uppercase">{supp?.name}</span>
+                  <span className="label-text md:col-span-2 mt-2">
+                    M: {supp?.supplement_merchant_price} F
                   </span>
-                  <input
-                    type="number"
-                    className="input input-bordered input-sm md:col-span-2 mt-2"
-                    placeholder="Price"
-                    value={supps[supp.id]?.price}
-                    disabled={!supps[supp.id]?.status}
-                    onChange={(e) =>
-                      setSupps((oldValues) => {
-                        return {
-                          ...oldValues,
-                          [supp.id]: {
-                            ...supps[supp.id],
-                            price: e.target.value,
-                          },
-                        };
-                      })
-                    }
-                  />
-                  {/* </label> */}
+                  <span className="label-text md:col-span-2 mt-2">
+                    C: {supp?.supplement_client_price} F
+                  </span>
                 </div>
               ))}
           </div>
@@ -439,12 +374,11 @@ const MenuArticleAddOrEdit = ({
         <></>
       )}
 
-      {extraObject?.edit &&
-      searchedMerchants?.find((merch) => merch.id === merchant)?.id ? (
+      {extraObject?.edit && merchantAccompagnements?.find((merch) => merch.id === merchant)?.id ? (
         <>
           <h3 className="mt-4">ACCOMPAGNEMENTS</h3>
           <div className="divider mt-0"></div>
-          {searchedMerchants
+          {merchantAccompagnements
             ?.find((merch) => merch.id === merchant)
             ?.accompagnements?.filter((acc) => acc.is_deleted === false)
             ?.map((acc) => (
@@ -455,7 +389,7 @@ const MenuArticleAddOrEdit = ({
                     setAccs((oldValues) => {
                       return {
                         ...oldValues,
-                        [e.target.value]: e.target.checked,
+                        [e.target.value]: e.target.checked
                       };
                     })
                   }
@@ -475,7 +409,7 @@ const MenuArticleAddOrEdit = ({
           <h3 className="mt-4">SUPPLEMENTS</h3>
           <div className="divider mt-0"></div>
           <div className="grid">
-            {searchedMerchants
+            {merchantAccompagnements
               ?.find((merch) => merch.id === merchant)
               ?.accompagnements?.filter((acc) => acc.is_deleted === false)
               ?.map((acc) => (
@@ -491,15 +425,13 @@ const MenuArticleAddOrEdit = ({
                           ...oldValues,
                           [e.target.value]: {
                             ...supps[e.target.value],
-                            status: e.target.checked,
-                          },
+                            status: e.target.checked
+                          }
                         };
                       })
                     }
                   />
-                  <span className="label-text md:col-span-3 mt-2">
-                    {acc.name}
-                  </span>
+                  <span className="label-text md:col-span-3 mt-2">{acc.name}</span>
                   <input
                     type="number"
                     className="input input-bordered input-sm md:col-span-2 mt-2"
@@ -510,7 +442,7 @@ const MenuArticleAddOrEdit = ({
                       setSupps((oldValues) => {
                         return {
                           ...oldValues,
-                          [acc.id]: { ...supps[acc.id], price: e.target.value },
+                          [acc.id]: { ...supps[acc.id], price: e.target.value }
                         };
                       })
                     }
@@ -540,22 +472,22 @@ const MenuArticleAddOrEdit = ({
                     merchantPrice: parseInt(merchantPrice),
                     image,
                     accs,
-                    supps,
-                  }),
+                    supps
+                  })
                 ).then(async (response) => {
                   if (response?.error) {
                     dispatch(
                       showNotification({
-                        message: "Error while updating the article",
-                        status: 0,
-                      }),
+                        message: 'Error while updating the article',
+                        status: 0
+                      })
                     );
                   } else {
                     dispatch(
                       showNotification({
-                        message: "Succefully updated the article",
-                        status: 1,
-                      }),
+                        message: 'Succefully updated the article',
+                        status: 1
+                      })
                     );
                     closeRightDrawer();
                   }
@@ -569,7 +501,7 @@ const MenuArticleAddOrEdit = ({
               className="btn btn-outline btn-primary w-full md:col-start-2"
               onClick={onSaveHandler}
             >
-              {extraObject?.inEditMode ? "UPDATE" : "SAVE"}
+              {extraObject?.inEditMode ? 'UPDATE' : 'SAVE'}
             </button>
           )}
         </div>

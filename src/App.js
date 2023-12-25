@@ -1,4 +1,5 @@
 import { lazy, useEffect } from 'react';
+
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import { themeChange } from 'theme-change';
 
@@ -21,59 +22,45 @@ initializeApp();
 const token = auth.checkAuth();
 
 function App() {
-	useEffect(() => {
-		// daisy UI themes initialization
-		themeChange(false);
-	}, []);
+  useEffect(() => {
+    // daisy UI themes initialization
+    themeChange(false);
+  }, []);
 
-	return (
-		<>
-			<>
-				<Router>
-					<Routes>
-						{/* IMPORTANT! Do not modify the following routes */}
-						<Route
-							path='/login'
-							element={<Login />}
-						/>
-						<Route
-							path='/forgot-password'
-							element={<p>ForgotPassword </p>}
-						/>
-						<Route
-							path='/register'
-							element={<p>Register </p>}
-						/>
-						{/* IMPORTANT! Do not modify the above routes */}
+  return (
+    <>
+      <>
+        <Router>
+          <Routes>
+            {/* IMPORTANT! Do not modify the following routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<p>ForgotPassword </p>} />
+            <Route path="/register" element={<p>Register </p>} />
+            {/* IMPORTANT! Do not modify the above routes */}
 
-						{/* Place new routes over this */}
-						{/* VERY IMPORTANT! All new routes should be place bellow /app/... */}
-						<Route
-							path='/app/*'
-							element={
-								<AuthenticatedRoute>
-									<Layout />
-								</AuthenticatedRoute>
-							}
-						/>
+            {/* Place new routes over this */}
+            {/* VERY IMPORTANT! All new routes should be place bellow /app/... */}
+            <Route
+              path="/app/*"
+              element={
+                <AuthenticatedRoute>
+                  <Layout />
+                </AuthenticatedRoute>
+              }
+            />
 
-						{/* Redirect in case no route matches */}
-						{/* Case 1: the token exists then redirect to /app/dashboard */}
-						{/* Case 2: the token does not exist, so redirect to /login */}
-						<Route
-							path='*'
-							element={
-								<Navigate
-									to={token ? '/app/dashboard' : '/login'}
-									replace
-								/>
-							}
-						/>
-					</Routes>
-				</Router>
-			</>
-		</>
-	);
+            {/* Redirect in case no route matches */}
+            {/* Case 1: the token exists then redirect to /app/dashboard */}
+            {/* Case 2: the token does not exist, so redirect to /login */}
+            <Route
+              path="*"
+              element={<Navigate to={token ? '/app/dashboard' : '/login'} replace />}
+            />
+          </Routes>
+        </Router>
+      </>
+    </>
+  );
 }
 
 export default App;

@@ -1,19 +1,16 @@
-import React, { useMemo, useRef } from "react";
-import { AgGridReact } from "ag-grid-react";
-import { openModal } from "../../common/modalSlice";
-import {
-  AG_GRID_DEFAULT_COL_DEF,
-  MODAL_BODY_TYPES,
-} from "../../../utils/globalConstantUtil";
-import { useDispatch, useSelector } from "react-redux";
-import { classNames } from "../../../components/Common/UtilsClassNames";
-import { adjustGridHeight } from "../../../utils/functions/adjustGridHeight";
-import moment from "moment/moment";
+import React, { useMemo, useRef } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { openModal } from '../../common/modalSlice';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
+import { useDispatch, useSelector } from 'react-redux';
+import { classNames } from '../../../components/Common/UtilsClassNames';
+import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
+import moment from 'moment/moment';
 
 const containFilterParams = {
-  filterOptions: ["contains", "notContains"],
+  filterOptions: ['contains', 'notContains'],
   debounceMs: 200,
-  maxNumConditions: 1,
+  maxNumConditions: 1
 };
 
 const gridOptions = {
@@ -21,113 +18,107 @@ const gridOptions = {
   suppressExcelExport: true,
   defaultColDef: {
     sortable: true,
-    resizable: true,
-  },
+    resizable: true
+  }
 };
 const SubscriptionList = (props) => {
   const dispatch = useDispatch();
   const gridRef = useRef(null);
-  const { subscriptions, isLoading } = useSelector(
-    (state) => state.subscriptions,
-  );
+  const { subscriptions, isLoading } = useSelector((state) => state.subscriptions);
 
   const columnDefs = useMemo(() => [
     {
-      field: "client.phone_number",
-      headerName: "Client",
+      field: 'client.phone_number',
+      headerName: 'Client',
       width: 160,
       pinned: true,
       filterParams: containFilterParams,
       // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
         // const wallets = params.data.wallets || [];
-        return data?.client?.phone_number + ""; // Adjust this based on your actual structure
+        return data?.client?.phone_number + ''; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
         return (
           // <div className='flex items-center justify-center'>
-          <p
-            className={classNames(
-              "px-3 py-1 uppercase leading-wide font-bold text-primary",
-            )}
-          >
+          <p className={classNames('px-3 py-1 uppercase leading-wide font-bold text-primary')}>
             {value}
           </p>
           // </div>
         );
-      },
+      }
     },
     {
-      field: "subscription.offer.offer",
-      headerName: "Offer",
+      field: 'subscription.offer.offer',
+      headerName: 'Offer',
       width: 140,
       filterParams: containFilterParams,
       // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
         // const wallets = params.data.wallets || [];
-        return data?.subscription?.offer?.offer || "N/A"; // Adjust this based on your actual structure
+        return data?.subscription?.offer?.offer || 'N/A'; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
         return (
           // <div className='flex items-center justify-center'>
-          <p className={classNames("px-3 py-1")}>{value}</p>
+          <p className={classNames('px-3 py-1')}>{value}</p>
           // </div>
         );
-      },
+      }
     },
     {
-      field: "subscription.offer.type",
-      headerName: "Subscription Type",
+      field: 'subscription.offer.type',
+      headerName: 'Subscription Type',
       width: 160,
       filterParams: containFilterParams,
       // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
         // const wallets = params.data.wallets || [];
-        return data?.subscription?.offer?.type || "N/A"; // Adjust this based on your actual structure
+        return data?.subscription?.offer?.type || 'N/A'; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
-        return <p className={classNames("px-3 py-1")}>{value}</p>;
-      },
+        return <p className={classNames('px-3 py-1')}>{value}</p>;
+      }
     },
     {
-      field: "subscription.amount",
-      headerName: "Amount",
+      field: 'subscription.amount',
+      headerName: 'Amount',
       width: 110,
       filterParams: containFilterParams,
       // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
         // const wallets = params.data.wallets || [];
-        return data?.subscription?.amount + "" || "0"; // Adjust this based on your actual structure
+        return data?.subscription?.amount + '' || '0'; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
-        return <p className={classNames("px-3 py-1")}>{value}</p>;
-      },
+        return <p className={classNames('px-3 py-1')}>{value}</p>;
+      }
     },
     {
-      field: "subscription_id",
-      headerName: "Sub. ID",
+      field: 'subscription_id',
+      headerName: 'Sub. ID',
       width: 110,
       filterParams: containFilterParams,
       // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
         // const wallets = params.data.wallets || [];
-        return data?.subscription_id + "" || "0"; // Adjust this based on your actual structure
+        return data?.subscription_id + '' || '0'; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
-        return <p className={classNames("px-3 py-1")}>{value}</p>;
-      },
+        return <p className={classNames('px-3 py-1')}>{value}</p>;
+      }
     },
     {
-      field: "subscription.start_date",
-      headerName: "Start Date",
+      field: 'subscription.start_date',
+      headerName: 'Start Date',
       width: 160,
-      filter: "agDateColumnFilter",
+      filter: 'agDateColumnFilter',
       // onCellClicked: (params) => onDetailsClicked(params.data),
       cellRenderer: ({ value }) => {
-        let formattedValue = value ? value : "N/A";
+        let formattedValue = value ? value : 'N/A';
 
-        if (formattedValue !== "N/A") {
-          formattedValue = moment.utc(value).format("DD/MM/YYYY");
+        if (formattedValue !== 'N/A') {
+          formattedValue = moment.utc(value).format('DD/MM/YYYY');
         }
 
         return (
@@ -135,24 +126,22 @@ const SubscriptionList = (props) => {
             <p>
               <span className=" text-sm mr-2">{formattedValue}</span>
             </p>
-            <span className=" text-sm">
-              {moment.utc(value).format("HH:mm")}
-            </span>
+            <span className=" text-sm">{moment.utc(value).format('HH:mm')}</span>
           </div>
         );
-      },
+      }
     },
     {
-      field: "subscription.end_date",
-      headerName: "End Date",
+      field: 'subscription.end_date',
+      headerName: 'End Date',
       width: 160,
-      filter: "agDateColumnFilter",
+      filter: 'agDateColumnFilter',
       // onCellClicked: (params) => onDetailsClicked(params.data),
       cellRenderer: ({ value }) => {
-        let formattedValue = value ? value : "N/A";
+        let formattedValue = value ? value : 'N/A';
 
-        if (formattedValue !== "N/A") {
-          formattedValue = moment.utc(value).format("DD/MM/YYYY");
+        if (formattedValue !== 'N/A') {
+          formattedValue = moment.utc(value).format('DD/MM/YYYY');
         }
 
         return (
@@ -160,24 +149,22 @@ const SubscriptionList = (props) => {
             <p>
               <span className=" text-sm mr-2">{formattedValue}</span>
             </p>
-            <span className=" text-sm">
-              {moment.utc(value).format("HH:mm")}
-            </span>
+            <span className=" text-sm">{moment.utc(value).format('HH:mm')}</span>
           </div>
         );
-      },
+      }
     },
     {
-      field: "created_at",
-      headerName: "Creation Date",
+      field: 'created_at',
+      headerName: 'Creation Date',
       width: 160,
-      filter: "agDateColumnFilter",
+      filter: 'agDateColumnFilter',
       // onCellClicked: (params) => onDetailsClicked(params.data),
       cellRenderer: ({ value }) => {
-        let formattedValue = value ? value : "N/A";
+        let formattedValue = value ? value : 'N/A';
 
-        if (formattedValue !== "N/A") {
-          formattedValue = moment.utc(value).format("DD/MM/YYYY");
+        if (formattedValue !== 'N/A') {
+          formattedValue = moment.utc(value).format('DD/MM/YYYY');
         }
 
         return (
@@ -185,13 +172,11 @@ const SubscriptionList = (props) => {
             <p>
               <span className=" text-sm mr-2">{formattedValue}</span>
             </p>
-            <span className=" text-sm">
-              {moment.utc(value).format("HH:mm")}
-            </span>
+            <span className=" text-sm">{moment.utc(value).format('HH:mm')}</span>
           </div>
         );
-      },
-    },
+      }
+    }
   ]);
 
   return (
@@ -208,8 +193,8 @@ const SubscriptionList = (props) => {
                     const newSize = parseInt(e.target.value);
                     gridOptions.api.paginationSetPageSize(newSize);
                     console.log(
-                      "gridOptions.api.paginationPageSize",
-                      gridOptions.api.paginationProxy.pageSize,
+                      'gridOptions.api.paginationPageSize',
+                      gridOptions.api.paginationProxy.pageSize
                     );
                   }}
                   defaultValue={20}

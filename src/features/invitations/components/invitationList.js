@@ -1,19 +1,18 @@
-import React, { useMemo, useRef } from "react";
-import { AgGridReact } from "ag-grid-react";
-import { openModal } from "../../common/modalSlice";
-import {
-  AG_GRID_DEFAULT_COL_DEF,
-  MODAL_BODY_TYPES,
-} from "../../../utils/globalConstantUtil";
-import { useDispatch, useSelector } from "react-redux";
-import { classNames } from "../../../components/Common/UtilsClassNames";
-import { adjustGridHeight } from "../../../utils/functions/adjustGridHeight";
-import moment from "moment/moment";
+import React, { useMemo, useRef } from 'react';
+
+import { AgGridReact } from 'ag-grid-react';
+import moment from 'moment/moment';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { classNames } from '../../../components/Common/UtilsClassNames';
+import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
+import { openModal } from '../../common/modalSlice';
 
 const containFilterParams = {
-  filterOptions: ["contains", "notContains"],
+  filterOptions: ['contains', 'notContains'],
   debounceMs: 200,
-  maxNumConditions: 1,
+  maxNumConditions: 1
 };
 
 const gridOptions = {
@@ -21,8 +20,8 @@ const gridOptions = {
   suppressExcelExport: true,
   defaultColDef: {
     sortable: true,
-    resizable: true,
-  },
+    resizable: true
+  }
 };
 const InvitationList = (props) => {
   const dispatch = useDispatch();
@@ -31,82 +30,88 @@ const InvitationList = (props) => {
 
   const columnDefs = useMemo(() => [
     {
-      field: "inviter_client.phone_number",
-      headerName: "Client",
+      field: 'inviter_client.phone_number',
+      headerName: 'Inviter',
       flex: 3,
       filterParams: containFilterParams,
       // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
         // const wallets = params.data.wallets || [];
-        return data?.inviter_client?.phone_number + ""; // Adjust this based on your actual structure
+        return data?.inviter_client?.phone_number + ''; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
         return (
           // <div className='flex items-center justify-center'>
-          <p
-            className={classNames(
-              "px-3 py-1 uppercase leading-wide font-bold text-primary",
-            )}
-          >
+          <p className={classNames('px-3 py-1 uppercase leading-wide font-bold text-primary')}>
             {value}
           </p>
           // </div>
         );
-      },
+      }
     },
     {
-      field: "invitee_client.phone_number",
-      headerName: "Client",
+      field: 'invitee_client.phone_number',
+      headerName: 'Invitee',
       flex: 3,
       filterParams: containFilterParams,
-      // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
-        // const wallets = params.data.wallets || [];
-        return data?.invitee_client?.phone_number + ""; // Adjust this based on your actual structure
+        return data?.invitee_client?.phone_number + ''; // Adjust this based on your actual structure
       },
       cellRenderer: ({ value }) => {
         return (
-          // <div className='flex items-center justify-center'>
-          <p
-            className={classNames(
-              "px-3 py-1 uppercase leading-wide font-bold text-secondary",
-            )}
-          >
+          <p className={classNames('px-3 py-1 uppercase leading-wide font-bold text-secondary')}>
             {value}
           </p>
-          // </div>
         );
-      },
+      }
     },
     {
-      field: "bonus.value",
-      headerName: "Offer",
+      field: 'bonus.value',
+      headerName: 'Offer',
       flex: 2,
       filterParams: containFilterParams,
-      // onCellClicked: (params) => onDetailsClicked(params.data),
       valueGetter: ({ data }) => {
-        // const wallets = params.data.wallets || [];
-        return data?.bonus.value || "N/A"; // Adjust this based on your actual structure
+        return data?.bonus ? data?.bonus?.value + '' : 'N/A';
       },
       cellRenderer: ({ value }) => {
-        return (
-          // <div className='flex items-center justify-center'>
-          <p className={classNames("px-3 py-1")}>{value}</p>
-          // </div>
-        );
-      },
+        return <p className={classNames('px-3 py-1')}>{value}</p>;
+      }
     },
     {
-      field: "created_at",
-      headerName: "Creation Date",
+      field: 'inviter_bonus_amount',
+      headerName: 'Inviter Bonus Amount',
+      flex: 2,
+      filterParams: containFilterParams,
+      valueGetter: ({ data }) => {
+        return data?.inviter_bonus_amount ? data?.inviter_bonus_amount + '' : 'N/A';
+      },
+      cellRenderer: ({ value }) => {
+        return <p className={classNames('px-3 py-1')}>{value}</p>;
+      }
+    },
+    {
+      field: 'invitee_bonus_amount',
+      headerName: 'Invitee Bonus Amount',
+      flex: 2,
+      filterParams: containFilterParams,
+      valueGetter: ({ data }) => {
+        return data?.invitee_bonus_amount ? data?.invitee_bonus_amount + '' : 'N/A';
+      },
+      cellRenderer: ({ value }) => {
+        return <p className={classNames('px-3 py-1')}>{value}</p>;
+      }
+    },
+    {
+      field: 'created_at',
+      headerName: 'Creation Date',
       flex: 3,
-      filter: "agDateColumnFilter",
+      filter: 'agDateColumnFilter',
       // onCellClicked: (params) => onDetailsClicked(params.data),
       cellRenderer: ({ value }) => {
-        let formattedValue = value ? value : "N/A";
+        let formattedValue = value ? value : 'N/A';
 
-        if (formattedValue !== "N/A") {
-          formattedValue = moment.utc(value).format("DD/MM/YYYY");
+        if (formattedValue !== 'N/A') {
+          formattedValue = moment.utc(value).format('DD/MM/YYYY');
         }
 
         return (
@@ -114,13 +119,11 @@ const InvitationList = (props) => {
             <p>
               <span className=" text-sm mr-2">{formattedValue}</span>
             </p>
-            <span className=" text-sm">
-              {moment.utc(value).format("HH:mm")}
-            </span>
+            <span className=" text-sm">{moment.utc(value).format('HH:mm')}</span>
           </div>
         );
-      },
-    },
+      }
+    }
   ]);
 
   return (
@@ -137,12 +140,11 @@ const InvitationList = (props) => {
                     const newSize = parseInt(e.target.value);
                     gridOptions.api.paginationSetPageSize(newSize);
                     console.log(
-                      "gridOptions.api.paginationPageSize",
-                      gridOptions.api.paginationProxy.pageSize,
+                      'gridOptions.api.paginationPageSize',
+                      gridOptions.api.paginationProxy.pageSize
                     );
                   }}
-                  defaultValue={20}
-                >
+                  defaultValue={20}>
                   <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="50">50</option>

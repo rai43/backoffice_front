@@ -4,13 +4,13 @@ import { setPageTitle } from '../../features/common/headerSlice';
 import DiscountManagement from '../../features/discountManagement';
 
 function InternalPage() {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(setPageTitle({ title: 'Discount Management' }));
-	}, []);
+  useEffect(() => {
+    dispatch(setPageTitle({ title: 'Discount Management' }));
+  }, []);
 
-	return <DiscountManagement />;
+  return <DiscountManagement />;
 }
 
 export default InternalPage;

@@ -1,55 +1,55 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import ArrowLeftOnRectangleIcon from "@heroicons/react/24/outline/ArrowLeftOnRectangleIcon";
-import ArrowRightOnRectangleIcon from "@heroicons/react/24/outline/ArrowRightOnRectangleIcon";
-import LockClosedIcon from "@heroicons/react/24/outline/LockClosedIcon";
-import DashboardStats from "../../dashboard/components/DashboardStats";
-import Datepicker from "react-tailwindcss-datepicker";
-import moment from "moment";
-import SelectBox from "../../../components/Input/SelectBox";
-import { useFormik } from "formik";
+import ArrowLeftOnRectangleIcon from '@heroicons/react/24/outline/ArrowLeftOnRectangleIcon';
+import ArrowRightOnRectangleIcon from '@heroicons/react/24/outline/ArrowRightOnRectangleIcon';
+import LockClosedIcon from '@heroicons/react/24/outline/LockClosedIcon';
+import DashboardStats from '../../dashboard/components/DashboardStats';
+import Datepicker from 'react-tailwindcss-datepicker';
+import moment from 'moment';
+import SelectBox from '../../../components/Input/SelectBox';
+import { useFormik } from 'formik';
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from 'react-redux';
 import {
   creditAccountToServer,
   debitAccountToServer,
   generateStatistics,
   getClientTransactions,
   resetForm,
-  switchWalletStatus,
-} from "../../transaction/transactionSlice";
+  switchWalletStatus
+} from '../../transaction/transactionSlice';
 
-import { getClientRechargements } from "../../rechargement/rechargementSlice";
-import InputText from "../../../components/Input/InputText";
-import { openModal } from "../../common/modalSlice";
+import { getClientRechargements } from '../../rechargement/rechargementSlice';
+import InputText from '../../../components/Input/InputText';
+import { openModal } from '../../common/modalSlice';
 import {
   CONFIRMATION_MODAL_CLOSE_TYPES,
-  MODAL_BODY_TYPES,
-} from "../../../utils/globalConstantUtil";
-import { showNotification } from "../../common/headerSlice";
+  MODAL_BODY_TYPES
+} from '../../../utils/globalConstantUtil';
+import { showNotification } from '../../common/headerSlice';
 
-import { getClientRetraits } from "../../retrait/retraitSlice";
+import { getClientRetraits } from '../../retrait/retraitSlice';
 
-import PersonalCardTransactionsNav from "../../client/containers/PersonalCardTransactionsNav";
-import ClientTransactionsTable from "../../client/components/ClientTransactionsTable";
-import ClientRechargementsTable from "../../client/components/ClientRechargementsTable";
-import ClientRequetesTable from "../../client/components/ClientRequetesTable";
-import { replaceLivreurObjectByUpdatedOne } from "../livreursSlice";
+import PersonalCardTransactionsNav from '../../client/containers/PersonalCardTransactionsNav';
+import ClientTransactionsTable from '../../client/components/ClientTransactionsTable';
+import ClientRechargementsTable from '../../client/components/ClientRechargementsTable';
+import ClientRequetesTable from '../../client/components/ClientRequetesTable';
+import { replaceLivreurObjectByUpdatedOne } from '../livreursSlice';
 
 const INITIAL_WALLET_FILTER_OBJ = {
-  transactionType: "ALL",
-  from: moment.utc().subtract(30, "d").format("YYYY-MM-DD"),
-  to: moment.utc().add(1, "days").format("YYYY-MM-DD"),
+  transactionType: 'ALL',
+  from: moment.utc().subtract(30, 'd').format('YYYY-MM-DD'),
+  to: moment.utc().add(1, 'days').format('YYYY-MM-DD')
 };
 
 const transactionTypeOptionsTransactions = [
-  { name: "ALL", value: "ALL" },
-  { name: "PAYMENT", value: "PAYMENT" },
-  { name: "RECHARGEMENT", value: "RECHARGEMENT" },
-  { name: "RECHARGEMENT_STREET", value: "RECHARGEMENT_STREET" },
-  { name: "RETRAIT", value: "RETRAIT" },
-  { name: "RECHARGEMENT_MOBILE_MONEY", value: "RECHARGEMENT_MOBILE_MONEY" },
-  { name: "BONUS", value: "BONUS" },
+  { name: 'ALL', value: 'ALL' },
+  { name: 'PAYMENT', value: 'PAYMENT' },
+  { name: 'RECHARGEMENT', value: 'RECHARGEMENT' },
+  { name: 'RECHARGEMENT_STREET', value: 'RECHARGEMENT_STREET' },
+  { name: 'RETRAIT', value: 'RETRAIT' },
+  { name: 'RECHARGEMENT_MOBILE_MONEY', value: 'RECHARGEMENT_MOBILE_MONEY' },
+  { name: 'BONUS', value: 'BONUS' }
 ];
 // const transactionTypeOptionsRechargements = [
 // 	{ name: 'ALL', value: 'ALL' },
@@ -60,26 +60,26 @@ const transactionTypeOptionsTransactions = [
 // ];
 
 const LivreurWalletDetailView = ({ extraObject }) => {
-  useEffect(() => console.log("extraObject", extraObject), []);
+  useEffect(() => console.log('extraObject', extraObject), []);
   const clientPhoneNumber = extraObject?.client?.phone_number;
   const pageNumberRef = useRef(0);
   const dispatch = useDispatch();
 
   const [walletStatus, setWalletStatus] = useState({
     balance: extraObject?.wallet?.balance,
-    bonus: extraObject?.wallet?.bonus,
+    bonus: extraObject?.wallet?.bonus
   });
   const [modalObj, setModalObj] = useState({
     isOpened: false,
     amount: 0,
-    actionType: "principal",
-    action: "",
+    actionType: 'principal',
+    action: ''
   });
   const [isActive, setIsActive] = useState(
-    extraObject?.wallet?.wallet_status?.code === "ACTIVATED",
+    extraObject?.wallet?.wallet_status?.code === 'ACTIVATED'
   );
 
-  const [activePage, setActivePage] = useState("/my-wallet/transactions");
+  const [activePage, setActivePage] = useState('/my-wallet/transactions');
   const [statistics, setsStatistics] = useState({
     transactionsInCount: 0,
     transactionsOutCount: 0,
@@ -92,18 +92,19 @@ const LivreurWalletDetailView = ({ extraObject }) => {
     withdrawalsCount: 0,
     withdrawalsAmount: 0,
     bonusCount: 0,
-    bonusAmount: 0,
+    bonusAmount: 0
   });
-  const { transactions, skip, isLoading, noMoreQuery, totalCount } =
-    useSelector((state) => state.transaction);
+  const { transactions, skip, isLoading, noMoreQuery, totalCount } = useSelector(
+    (state) => state.transaction
+  );
 
   const formik = useFormik({
-    initialValues: INITIAL_WALLET_FILTER_OBJ,
+    initialValues: INITIAL_WALLET_FILTER_OBJ
   });
 
   const [dateValue, setDateValue] = useState({
     startDate: formik.values.from,
-    endDate: formik.values.to,
+    endDate: formik.values.to
   });
 
   const handleDatePickerValueChange = (newValue) => {
@@ -111,7 +112,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
     formik.setValues({
       ...formik.values,
       from: newValue.startDate,
-      to: newValue.endDate,
+      to: newValue.endDate
     });
   };
 
@@ -120,37 +121,37 @@ const LivreurWalletDetailView = ({ extraObject }) => {
       // this update will cause useEffect to get executed as there is a lookup on 'formik.values'
       formik.setValues({
         ...formik.values,
-        [key]: value,
+        [key]: value
       });
     },
-    [formik],
+    [formik]
   );
 
   const applyFilter = async (dispatchParams) => {
-    if (activePage === "/my-wallet/transactions") {
+    if (activePage === '/my-wallet/transactions') {
       dispatch(getClientTransactions(dispatchParams)).then(async (res) => {
         if (res?.payload?.transactions) {
           try {
             const { payload } = await dispatch(
               generateStatistics({
                 data: res?.payload?.transactions,
-                clientPhoneNumber,
-              }),
+                clientPhoneNumber
+              })
             );
             setsStatistics((oldStats) => {
               return {
                 ...oldStats,
-                ...payload,
+                ...payload
               };
             });
           } catch (e) {
-            console.log("Could not fetch the statistics");
+            console.log('Could not fetch the statistics');
           }
         }
       });
-    } else if (activePage === "/personal-wallet/rechargements") {
+    } else if (activePage === '/personal-wallet/rechargements') {
       dispatch(getClientRechargements(dispatchParams));
-    } else if (activePage === "/marchant-wallet/requests") {
+    } else if (activePage === '/marchant-wallet/requests') {
       dispatch(getClientRetraits(dispatchParams));
     }
   };
@@ -162,7 +163,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
       from: formik.values.from,
       to: formik.values.to,
       wallet: extraObject?.wallet?.id,
-      skip: 0,
+      skip: 0
     };
     await applyFilter(dispatchParams);
   };
@@ -170,12 +171,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
 
   useEffect(() => {
     onFetchTransactions();
-  }, [
-    formik.values.from,
-    formik.values.to,
-    formik.values.transactionType,
-    activePage,
-  ]);
+  }, [formik.values.from, formik.values.to, formik.values.transactionType, activePage]);
 
   const handleLoadTransactions = async (prevPage) => {
     pageNumberRef.current = prevPage;
@@ -185,7 +181,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
         from: formik.values.from,
         to: formik.values.to,
         wallet: extraObject?.wallet?.id,
-        skip: skip,
+        skip: skip
       };
 
       await applyFilter(dispatchParams);
@@ -204,15 +200,15 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               <Datepicker
                 containerClassName="w-full"
                 value={dateValue}
-                theme={"light"}
+                theme={'light'}
                 inputClassName="input input-bordered w-full"
-                popoverDirection={"down"}
+                popoverDirection={'down'}
                 toggleClassName="invisible"
                 onChange={handleDatePickerValueChange}
                 showShortcuts={true}
-                primaryColor={"white"}
+                primaryColor={'white'}
               />
-              {activePage === "/my-wallet/transactions" ? (
+              {activePage === '/my-wallet/transactions' ? (
                 <SelectBox
                   options={transactionTypeOptionsTransactions}
                   labelTitle="Transaction Type"
@@ -229,13 +225,13 @@ const LivreurWalletDetailView = ({ extraObject }) => {
           </div>
           <div className="w-full">
             <h3 className="text-sm font-light">
-              Actions on{" "}
+              Actions on{' '}
               {/* <span className='mx-2 text-primary'>
 						{extraObject?.client?.country?.prefix ? extraObject?.client?.country?.prefix + ' ' : '+225 '} {extraObject?.client?.phone_number}
 					</span> */}
               {extraObject?.wallet?.wallet_type?.libelle
                 ? extraObject?.wallet?.wallet_type?.libelle?.toLocaleLowerCase()
-                : ""}{" "}
+                : ''}{' '}
               wallet
             </h3>
             {/* Divider */}
@@ -247,8 +243,8 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                   setModalObj((old) => {
                     return {
                       ...old,
-                      action: "credit",
-                      isOpened: true,
+                      action: 'credit',
+                      isOpened: true
                     };
                   })
                 }
@@ -262,8 +258,8 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                   setModalObj((old) => {
                     return {
                       ...old,
-                      action: "debit",
-                      isOpened: true,
+                      action: 'debit',
+                      isOpened: true
                     };
                   })
                 }
@@ -273,20 +269,20 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               </button>
               <button
                 className={`btn btn-sm btn-outline w-full ${
-                  isActive ? "btn-error" : "btn-secondary"
+                  isActive ? 'btn-error' : 'btn-secondary'
                 }`}
                 onClick={() =>
                   setModalObj((old) => {
                     return {
                       ...old,
-                      action: "block",
-                      isOpened: true,
+                      action: 'block',
+                      isOpened: true
                     };
                   })
                 }
               >
                 <LockClosedIcon className="h-4 w-4 mr-3" />
-                {isActive ? "Block" : "Unblock"}
+                {isActive ? 'Block' : 'Unblock'}
               </button>
             </div>
           </div>
@@ -302,12 +298,10 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               <div className="stat">
                 <div className="stat-title">Account Balance</div>
                 <div className={`stat-value text-[1.8rem]`}>
-                  <span className="text-info">
-                    {walletStatus.balance} FCFA{" "}
-                  </span>
+                  <span className="text-info">{walletStatus.balance} FCFA </span>
                 </div>
                 <div className={`stat-desc`}>
-                  Bonus:{" "}
+                  Bonus:{' '}
                   <span>
                     <span className="text-info">{walletStatus.bonus} FCFA</span>
                   </span>
@@ -316,23 +310,16 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               <div className="stat">
                 <div className="stat-title">Transactions (In/Out)</div>
                 <div className={`stat-value text-[1.1rem]`}>
-                  <span className="text-info">
-                    {statistics.transactionsInAmount} FCFA{" "}
-                  </span>{" "}
+                  <span className="text-info">{statistics.transactionsInAmount} FCFA </span>{' '}
                   <span className="text-error font-normal">
                     ({statistics.transactionsOutAmount} FCFA)
                   </span>
                 </div>
                 <div className={`stat-desc`}>
-                  Count:{" "}
+                  Count:{' '}
                   <span>
-                    <span className="text-info">
-                      {statistics.transactionsInCount}{" "}
-                    </span>{" "}
-                    |{" "}
-                    <span className="text-error">
-                      {statistics.transactionsOutCount}{" "}
-                    </span>
+                    <span className="text-info">{statistics.transactionsInCount} </span> |{' '}
+                    <span className="text-error">{statistics.transactionsOutCount} </span>
                   </span>
                 </div>
               </div>
@@ -342,8 +329,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                   {statistics.paymentsAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count:{" "}
-                  <span className="text-info">{statistics.paymentsCount}</span>
+                  Count: <span className="text-info">{statistics.paymentsCount}</span>
                 </div>
               </div>
               <div className="stat">
@@ -352,8 +338,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                   {statistics.topupsAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count:{" "}
-                  <span className="text-info">{statistics.topupsCount}</span>
+                  Count: <span className="text-info">{statistics.topupsCount}</span>
                 </div>
               </div>
               <div className="stat">
@@ -362,10 +347,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                   {statistics.withdrawalsAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count:{" "}
-                  <span className="text-info">
-                    {statistics.withdrawalsCount}
-                  </span>
+                  Count: <span className="text-info">{statistics.withdrawalsCount}</span>
                 </div>
               </div>
               <div className="stat">
@@ -374,8 +356,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                   {statistics.bonusAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count{" "}
-                  <span className="text-info">{statistics.bonusCount}</span>
+                  Count <span className="text-info">{statistics.bonusCount}</span>
                 </div>
               </div>
             </div>
@@ -388,7 +369,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
             accountType={extraObject?.wallet?.wallet_type?.code}
           />
 
-          {activePage === "/my-wallet/transactions" && (
+          {activePage === '/my-wallet/transactions' && (
             <>
               <ClientTransactionsTable
                 currPage={pageNumberRef.current}
@@ -398,7 +379,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               />
             </>
           )}
-          {activePage === "/personal-wallet/rechargements" && (
+          {activePage === '/personal-wallet/rechargements' && (
             <>
               <ClientRechargementsTable
                 currPage={pageNumberRef.current}
@@ -407,7 +388,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               />
             </>
           )}
-          {activePage === "/marchant-wallet/requests" && (
+          {activePage === '/marchant-wallet/requests' && (
             <>
               <ClientRequetesTable
                 currPage={pageNumberRef.current}
@@ -422,33 +403,33 @@ const LivreurWalletDetailView = ({ extraObject }) => {
       {/* TODO: make a component for this */}
       <div
         className={`modal modal-bottom sm:modal-middle ${
-          modalObj?.isOpened && modalObj.action !== "block" ? "modal-open" : ""
+          modalObj?.isOpened && modalObj.action !== 'block' ? 'modal-open' : ''
         }`}
       >
         <div className="modal-box">
           <h3 className="font-bold text-lg">
-            {modalObj.action === "credit" ? (
+            {modalObj.action === 'credit' ? (
               <span>Credit Account</span>
-            ) : modalObj.action === "debit" ? (
+            ) : modalObj.action === 'debit' ? (
               <span>Debit Account</span>
             ) : (
-              ""
+              ''
             )}
           </h3>
-          {modalObj.action === "credit" || modalObj.action === "debit" ? (
+          {modalObj.action === 'credit' || modalObj.action === 'debit' ? (
             <div className="py-4">
               <InputText
                 type="number"
-                labelTitle={"Amount"}
+                labelTitle={'Amount'}
                 defaultValue={0}
-                updateType={""}
+                updateType={''}
                 containerStyle=""
                 updateFormValue={({ key, value }) =>
                   setModalObj((old) => {
                     console.log(value);
                     return {
                       ...old,
-                      amount: value,
+                      amount: value
                     };
                   })
                 }
@@ -457,7 +438,7 @@ const LivreurWalletDetailView = ({ extraObject }) => {
           ) : (
             <></>
           )}
-          {extraObject?.wallet?.wallet_type?.code === "PERSO" ? (
+          {extraObject?.wallet?.wallet_type?.code === 'PERSO' ? (
             <>
               <label className="label cursor-pointer">
                 <span className="label-text">Principal Account</span>
@@ -469,11 +450,11 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                     setModalObj((old) => {
                       return {
                         ...old,
-                        actionType: "principal",
+                        actionType: 'principal'
                       };
                     })
                   }
-                  checked={modalObj?.actionType === "principal"}
+                  checked={modalObj?.actionType === 'principal'}
                 />
               </label>
               <label className="label cursor-pointer">
@@ -486,11 +467,11 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                     setModalObj((old) => {
                       return {
                         ...old,
-                        actionType: "bonus",
+                        actionType: 'bonus'
                       };
                     })
                   }
-                  checked={modalObj?.actionType === "bonus"}
+                  checked={modalObj?.actionType === 'bonus'}
                 />
               </label>
             </>
@@ -503,10 +484,10 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               className="btn btn-outline btn-ghost"
               onClick={() =>
                 setModalObj({
-                  action: "",
+                  action: '',
                   amount: 0,
                   isOpened: false,
-                  actionType: "principal",
+                  actionType: 'principal'
                 })
               }
             >
@@ -516,58 +497,55 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               htmlFor="my-modal-6"
               className="btn btn-outline btn-primary"
               onClick={async () => {
-                if (modalObj.action === "credit") {
-                  console.log("credit");
+                if (modalObj.action === 'credit') {
+                  console.log('credit');
 
                   const response = await dispatch(
                     creditAccountToServer({
                       wallet: extraObject?.wallet?.id,
                       amount: modalObj.amount,
-                      accountType: modalObj?.actionType,
-                    }),
+                      accountType: modalObj?.actionType
+                    })
                   );
 
                   if (response?.error) {
                     console.log(response.error);
                     dispatch(
                       showNotification({
-                        message: "Error while crediting the client account",
-                        status: 0,
-                      }),
+                        message: 'Error while crediting the client account',
+                        status: 0
+                      })
                     );
                   } else {
                     setModalObj((old) => {
                       return {
                         ...old,
-                        action: "",
+                        action: '',
                         amount: 0,
                         isOpened: false,
-                        actionType: "principal",
+                        actionType: 'principal'
                       };
                     });
 
                     dispatch(
                       showNotification({
-                        message: "Successfully credited the client account",
-                        status: 1,
-                      }),
+                        message: 'Successfully credited the client account',
+                        status: 1
+                      })
                     );
 
                     try {
                       const { payload } = await dispatch(
                         generateStatistics({
-                          data: [
-                            response?.payload?.transaction,
-                            ...transactions,
-                          ],
-                          clientPhoneNumber,
-                        }),
+                          data: [response?.payload?.transaction, ...transactions],
+                          clientPhoneNumber
+                        })
                       );
                       console.log(payload);
                       setsStatistics((oldStats) => {
                         return {
                           ...oldStats,
-                          ...payload,
+                          ...payload
                         };
                       });
 
@@ -575,88 +553,81 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                         setWalletStatus((old) => {
                           return {
                             ...old,
-                            balance:
-                              old.balance +
-                              response?.payload?.transaction?.amount,
+                            balance: old.balance + response?.payload?.transaction?.amount
                           };
                         });
                       } else {
                         setWalletStatus((old) => {
                           return {
                             ...old,
-                            bonus:
-                              old.bonus +
-                              response?.payload?.transaction?.amount,
+                            bonus: old.bonus + response?.payload?.transaction?.amount
                           };
                         });
                       }
                     } catch (e) {
-                      console.log("Could not fetch the statistics");
+                      console.log('Could not fetch the statistics');
                     }
 
                     try {
                       const { payload } = await dispatch(
                         replaceLivreurObjectByUpdatedOne({
-                          livreur: response?.payload?.livreur,
-                        }),
+                          livreur: response?.payload?.livreur
+                        })
                       );
                       console.log(payload);
                     } catch (e) {
-                      console.log("Could not update the informations");
+                      console.log('Could not update the informations');
                     }
                   }
-                } else if (modalObj.action === "debit") {
-                  console.log("debit");
+                } else if (modalObj.action === 'debit') {
+                  console.log('debit');
 
                   const response = await dispatch(
                     debitAccountToServer({
                       wallet: extraObject?.wallet?.id,
                       amount: modalObj.amount,
-                      accountType: modalObj?.actionType,
-                    }),
+                      accountType: modalObj?.actionType
+                    })
                   );
 
                   if (response?.error) {
                     console.log(response.error);
                     dispatch(
                       showNotification({
-                        message: "Error while debiting the client account",
-                        status: 0,
-                      }),
+                        message: 'Error while debiting the client account',
+                        status: 0
+                      })
                     );
                   } else {
                     setModalObj((old) => {
                       return {
                         ...old,
-                        action: "",
+                        action: '',
                         amount: 0,
                         isOpened: false,
-                        actionType: "principal",
+                        actionType: 'principal'
                       };
                     });
 
                     dispatch(
                       showNotification({
-                        message: "Successfully debited the client account",
-                        status: 1,
-                      }),
+                        message: 'Successfully debited the client account',
+                        status: 1
+                      })
                     );
 
                     try {
                       const { payload } = await dispatch(
                         generateStatistics({
-                          data: [
-                            response?.payload?.transaction,
-                            ...transactions,
-                          ],
-                          clientPhoneNumber,
-                        }),
+                          data: [response?.payload?.transaction, ...transactions],
+                          clientPhoneNumber
+                        })
                       );
                       console.log(payload);
                       setsStatistics((oldStats) => {
                         return {
                           ...oldStats,
-                          ...payload,
+                          ...payload
                         };
                       });
 
@@ -664,45 +635,41 @@ const LivreurWalletDetailView = ({ extraObject }) => {
                         setWalletStatus((old) => {
                           return {
                             ...old,
-                            balance:
-                              old.balance -
-                              response?.payload?.transaction?.amount,
+                            balance: old.balance - response?.payload?.transaction?.amount
                           };
                         });
                       } else {
                         setWalletStatus((old) => {
                           return {
                             ...old,
-                            bonus:
-                              old.bonus -
-                              response?.payload?.transaction?.amount,
+                            bonus: old.bonus - response?.payload?.transaction?.amount
                           };
                         });
                       }
                     } catch (e) {
-                      console.log("Could not fetch the statistics");
+                      console.log('Could not fetch the statistics');
                     }
 
                     try {
                       const { payload } = await dispatch(
                         replaceLivreurObjectByUpdatedOne({
-                          livreur: response?.payload?.livreur,
-                        }),
+                          livreur: response?.payload?.livreur
+                        })
                       );
                       console.log(payload);
                     } catch (e) {
-                      console.log("Could not update the informations");
+                      console.log('Could not update the informations');
                     }
                   }
                 }
               }}
             >
-              {modalObj.action === "credit" ? (
+              {modalObj.action === 'credit' ? (
                 <span>Credit Now</span>
-              ) : modalObj.action === "debit" ? (
+              ) : modalObj.action === 'debit' ? (
                 <span>Debit Now</span>
               ) : (
-                ""
+                ''
               )}
             </label>
           </div>
@@ -711,14 +678,14 @@ const LivreurWalletDetailView = ({ extraObject }) => {
 
       <div
         className={`modal modal-bottom sm:modal-middle ${
-          modalObj?.isOpened && modalObj.action === "block" ? "modal-open" : ""
+          modalObj?.isOpened && modalObj.action === 'block' ? 'modal-open' : ''
         }`}
       >
         <div className="modal-box">
           <h3 className="font-bold text-lg">
             {isActive
-              ? "Are you sure you want to block this client?"
-              : "Are you sure you want to unblock this client?"}
+              ? 'Are you sure you want to block this client?'
+              : 'Are you sure you want to unblock this client?'}
           </h3>
           <div className="modal-action">
             <label
@@ -726,10 +693,10 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               className="btn btn-outline btn-ghost"
               onClick={() =>
                 setModalObj({
-                  action: "",
+                  action: '',
                   amount: 0,
                   isOpened: false,
-                  actionType: "principal",
+                  actionType: 'principal'
                 })
               }
             >
@@ -740,61 +707,58 @@ const LivreurWalletDetailView = ({ extraObject }) => {
               className="btn btn-outline btn-error"
               onClick={async () => {
                 const response = await dispatch(
-                  switchWalletStatus({ wallet: extraObject?.wallet?.id }),
+                  switchWalletStatus({ wallet: extraObject?.wallet?.id })
                 );
 
                 if (response?.error) {
                   console.log(response.error);
                   dispatch(
                     showNotification({
-                      message: "Error while switching the wallet status",
-                      status: 0,
-                    }),
+                      message: 'Error while switching the wallet status',
+                      status: 0
+                    })
                   );
                 } else {
                   setModalObj((old) => {
                     return {
                       ...old,
-                      action: "",
+                      action: '',
                       amount: 0,
                       isOpened: false,
-                      actionType: "principal",
+                      actionType: 'principal'
                     };
                   });
 
                   dispatch(
                     showNotification({
-                      message:
-                        "Successfully switched the wallet status account",
-                      status: 1,
-                    }),
+                      message: 'Successfully switched the wallet status account',
+                      status: 1
+                    })
                   );
 
                   if (response?.payload?.wallet?.wallet_status_id === 1) {
                     setIsActive(true);
-                  } else if (
-                    response?.payload?.wallet?.wallet_status_id === 3
-                  ) {
+                  } else if (response?.payload?.wallet?.wallet_status_id === 3) {
                     setIsActive(false);
                   }
 
                   try {
                     const { payload } = await dispatch(
                       replaceLivreurObjectByUpdatedOne({
-                        livreur: response?.payload?.livreur,
-                      }),
+                        livreur: response?.payload?.livreur
+                      })
                     );
                     console.log(payload);
                   } catch (e) {
-                    console.log("Could not update the informations");
+                    console.log('Could not update the informations');
                   }
                 }
 
                 setModalObj({
-                  action: "",
+                  action: '',
                   amount: 0,
                   isOpened: false,
-                  actionType: "principal",
+                  actionType: 'principal'
                 });
               }}
             >

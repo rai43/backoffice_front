@@ -1,19 +1,19 @@
-import React, { useCallback, useState } from "react";
-import { v4 as uuidv4, validate, version } from "uuid";
+import React, { useCallback, useState } from 'react';
+import { v4 as uuidv4, validate, version } from 'uuid';
 
-import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { AiOutlineRadiusSetting } from "react-icons/ai";
-import { CiEdit } from "react-icons/ci";
-import TitleCard from "../../../../components/Cards/TitleCard";
-import InputText from "../../../../components/Input/InputText";
+import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon';
+import { AiOutlineRadiusSetting } from 'react-icons/ai';
+import { CiEdit } from 'react-icons/ci';
+import TitleCard from '../../../../components/Cards/TitleCard';
+import InputText from '../../../../components/Input/InputText';
 
 const INITIAL_OBJ = {
-  id: "",
-  name: "",
-  latitude: "",
-  longitude: "",
-  radius: "",
-  details: "",
+  id: '',
+  name: '',
+  latitude: '',
+  longitude: '',
+  radius: '',
+  details: ''
 };
 
 function isUUIDv4(id) {
@@ -58,7 +58,7 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
 
   return (
     <>
-      <TitleCard title={"Locations"} TopSideButtons={<AddNewLocation />}>
+      <TitleCard title={'Locations'} TopSideButtons={<AddNewLocation />}>
         {addNew || editLocation ? (
           <>
             <div className="w-full grid grid-cols-1 md:grid-cols-7 gap-2">
@@ -120,7 +120,7 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
               </button>
               <button
                 className={`btn btn-outline btn-sm w-1/4 ${
-                  editLocation ? "btn-secondary" : "btn-primary"
+                  editLocation ? 'btn-secondary' : 'btn-primary'
                 }`}
                 onClick={() => {
                   if (
@@ -131,7 +131,7 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
                     if (editLocation) {
                       setLocations((oldValues) => {
                         const indexToReplace = oldValues.findIndex(
-                          (loc) => loc?.id === location?.id,
+                          (loc) => loc?.id === location?.id
                         );
                         oldValues[indexToReplace] = location;
                         return oldValues;
@@ -142,9 +142,9 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
                           {
                             ...location,
                             name: location.name.toLocaleUpperCase(),
-                            id: uuidv4(),
+                            id: uuidv4()
                           },
-                          ...oldValues,
+                          ...oldValues
                         ];
                       });
                     }
@@ -155,14 +155,10 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
                   }
                 }}
               >
-                {editLocation ? "Edit Location" : "Add Location"}
+                {editLocation ? 'Edit Location' : 'Add Location'}
               </button>
             </div>
-            {locations?.length ? (
-              <div className={`divider`}>Locations</div>
-            ) : (
-              <></>
-            )}
+            {locations?.length ? <div className={`divider`}>Locations</div> : <></>}
           </>
         ) : (
           <></>
@@ -171,24 +167,16 @@ const Location = ({ formik, clickAction, locations, setLocations }) => {
         {locations.map((location) => (
           <div key={location.id} className="alert shadow-lg my-4">
             <div>
-              <AiOutlineRadiusSetting className={"h-6 w-6"} />
+              <AiOutlineRadiusSetting className={'h-6 w-6'} />
               <div>
                 <h3 className="font-bold">
                   {location.name} - ({location.details})
                 </h3>
                 <div className="text-xs">
-                  Latitude:{" "}
-                  <span className="font-semibold text-primary">
-                    {location.latitude}
-                  </span>
-                  , Longitude:{" "}
-                  <span className="font-semibold text-primary">
-                    {location.longitude}
-                  </span>
-                  , Radius:{" "}
-                  <span className="font-semibold text-primary">
-                    {location.radius} meter(s)
-                  </span>
+                  Latitude: <span className="font-semibold text-primary">{location.latitude}</span>,
+                  Longitude:{' '}
+                  <span className="font-semibold text-primary">{location.longitude}</span>, Radius:{' '}
+                  <span className="font-semibold text-primary">{location.radius} meter(s)</span>
                 </div>
               </div>
             </div>

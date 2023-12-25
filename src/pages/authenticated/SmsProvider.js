@@ -4,13 +4,13 @@ import { setPageTitle } from '../../features/common/headerSlice';
 import SmsPorvider from '../../features/smsPorvider';
 
 function InternalPage() {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(setPageTitle({ title: 'Sms Provider' }));
-	}, []);
+  useEffect(() => {
+    dispatch(setPageTitle({ title: 'Sms Provider' }));
+  }, []);
 
-	return <SmsPorvider />;
+  return <SmsPorvider />;
 }
 
 export default InternalPage;
