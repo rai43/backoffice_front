@@ -1,26 +1,26 @@
-import React from "react";
-import FullCalendar from "@fullcalendar/react";
-import interactionPlugin from "@fullcalendar/interaction";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import moment from "moment";
+import React from 'react';
+import FullCalendar from '@fullcalendar/react';
+import interactionPlugin from '@fullcalendar/interaction';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import moment from 'moment';
 
-import PlusSmallIcon from "@heroicons/react/24/outline/PlusSmallIcon";
-import ImageUpload from "../../../../components/Input/ImageUpload";
-import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { getWeekDateRange } from "../../../../utils/functions/getWeekDateRange";
-import { useDispatch } from "react-redux";
+import PlusSmallIcon from '@heroicons/react/24/outline/PlusSmallIcon';
+import ImageUpload from '../../../../components/Input/ImageUpload';
+import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon';
+import { getWeekDateRange } from '../../../../utils/functions/getWeekDateRange';
+import { useDispatch } from 'react-redux';
 import {
   createMerchantClientAccount,
   createPersonalClientAccount,
   modifyMerchantClientAccount,
   modifyPersonalClientAccount,
-  turnClientIntoMerchantAccount,
-} from "../../clientSlice";
-import { showNotification } from "../../../common/headerSlice";
-import { closeModal } from "../../../common/modalSlice";
+  turnClientIntoMerchantAccount
+} from '../../clientSlice';
+import { showNotification } from '../../../common/headerSlice';
+import { closeModal } from '../../../common/modalSlice';
 
 const transformTime = (_date, _time) => {
-  const datetime = moment.utc(_date + " " + _time);
+  const datetime = moment.utc(_date + ' ' + _time);
 
   return datetime.toDate();
 };
@@ -34,7 +34,7 @@ const Summary = ({
   clickAction,
   actionTypeBool,
   clientToMarchant,
-  client,
+  client
 }) => {
   const dispatch = useDispatch();
 
@@ -45,126 +45,126 @@ const Summary = ({
         clientId: client?.id,
         registration: registrationInfo,
         locations: locationsInfo,
-        workDays: workDaysInfo,
+        workDays: workDaysInfo
       };
       dispatch(turnClientIntoMerchantAccount(data)).then(async (response) => {
-        console.log("response: ", response);
+        console.log('response: ', response);
         if (response?.error) {
           console.log(response.error);
           dispatch(
             showNotification({
-              message: "Error while editing the merchant account",
-              status: 0,
-            }),
+              message: 'Error while editing the merchant account',
+              status: 0
+            })
           );
         } else {
           dispatch(
             showNotification({
-              message: "Succefully editing the merchant account",
-              status: 1,
-            }),
+              message: 'Succefully editing the merchant account',
+              status: 1
+            })
           );
           dispatch(closeModal());
         }
       });
-    } else if (registrationInfo.accountType === "PERSO") {
+    } else if (registrationInfo.accountType === 'PERSO') {
       const data = {
         clientId: client?.id,
-        registration: registrationInfo,
+        registration: registrationInfo
       };
 
       if (actionTypeBool) {
         dispatch(modifyPersonalClientAccount(data)).then(async (response) => {
-          console.log("response: ", response);
+          console.log('response: ', response);
           if (response?.error) {
             console.log(response.error);
             dispatch(
               showNotification({
-                message: "Error while creating the client account",
-                status: 0,
-              }),
+                message: 'Error while creating the client account',
+                status: 0
+              })
             );
           } else {
             dispatch(
               showNotification({
-                message: "Succefully created the client account",
-                status: 1,
-              }),
+                message: 'Succefully created the client account',
+                status: 1
+              })
             );
             dispatch(closeModal());
           }
         });
       } else {
         dispatch(createPersonalClientAccount(data)).then(async (response) => {
-          console.log("response: ", response);
+          console.log('response: ', response);
           if (response?.error) {
             console.log(response.error);
             dispatch(
               showNotification({
-                message: "Error while creating the client account",
-                status: 0,
-              }),
+                message: 'Error while creating the client account',
+                status: 0
+              })
             );
           } else {
             dispatch(
               showNotification({
-                message: "Succefully created the client account",
-                status: 1,
-              }),
+                message: 'Succefully created the client account',
+                status: 1
+              })
             );
             dispatch(closeModal());
           }
         });
       }
-    } else if (registrationInfo.accountType === "MARCH") {
+    } else if (registrationInfo.accountType === 'MARCH') {
       const data = {
         clientId: client?.id,
         merchantId: client?.merchants[0]?.id,
         registration: registrationInfo,
         locations: locationsInfo,
-        workDays: workDaysInfo,
+        workDays: workDaysInfo
       };
-      console.log("data", data);
-      console.log("actionTypeBool", actionTypeBool);
+      console.log('data', data);
+      console.log('actionTypeBool', actionTypeBool);
 
       if (actionTypeBool) {
         dispatch(modifyMerchantClientAccount(data)).then(async (response) => {
-          console.log("response: ", response);
+          console.log('response: ', response);
           if (response?.error) {
             console.log(response.error);
             dispatch(
               showNotification({
-                message: "Error while editing the merchant account",
-                status: 0,
-              }),
+                message: 'Error while editing the merchant account',
+                status: 0
+              })
             );
           } else {
             dispatch(
               showNotification({
-                message: "Succefully editing the merchant account",
-                status: 1,
-              }),
+                message: 'Succefully editing the merchant account',
+                status: 1
+              })
             );
             dispatch(closeModal());
           }
         });
       } else {
         dispatch(createMerchantClientAccount(data)).then(async (response) => {
-          console.log("response: ", response);
+          console.log('response: ', response);
           if (response?.error) {
             console.log(response.error);
             dispatch(
               showNotification({
-                message: "Error while creating the merchant account",
-                status: 0,
-              }),
+                message: 'Error while creating the merchant account',
+                status: 0
+              })
             );
           } else {
             dispatch(
               showNotification({
-                message: "Succefully created the merchant account",
-                status: 1,
-              }),
+                message: 'Succefully created the merchant account',
+                status: 1
+              })
             );
             dispatch(closeModal());
           }
@@ -179,9 +179,7 @@ const Summary = ({
         tabIndex={0}
         className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5"
       >
-        <div className="collapse-title text-xl font-medium">
-          Basic Account Info
-        </div>
+        <div className="collapse-title text-xl font-medium">Basic Account Info</div>
         <div className="collapse-content mx-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="inline-flex items-baseline">
@@ -190,9 +188,7 @@ const Summary = ({
             </div>
             <div className="sm:col-span-2">
               <span className="font-semibold text-primary">
-                {registrationInfo.accountType === "PERSO"
-                  ? "PERSONAL ACCOUNT"
-                  : "MERCHANT ACCOUNT"}
+                {registrationInfo.accountType === 'PERSO' ? 'PERSONAL ACCOUNT' : 'MERCHANT ACCOUNT'}
               </span>
             </div>
 
@@ -201,11 +197,9 @@ const Summary = ({
               <span className="font-semibold">Phone Number</span>
             </div>
             <div className="sm:col-span-2">
-              <span className="font-semibold text-primary">
-                {registrationInfo.phone_number}
-              </span>
+              <span className="font-semibold text-primary">{registrationInfo.phone_number}</span>
             </div>
-            {registrationInfo.accountType === "MARCH" && (
+            {registrationInfo.accountType === 'MARCH' && (
               <>
                 <div className="inline-flex items-baseline">
                   <PlusSmallIcon className="h-3 w-3 mx-3" />
@@ -219,9 +213,7 @@ const Summary = ({
 
                 <div className="inline-flex items-baseline">
                   <PlusSmallIcon className="h-3 w-3 mx-3" />
-                  <span className="font-semibold">
-                    Position (Latitude, Longitude)
-                  </span>
+                  <span className="font-semibold">Position (Latitude, Longitude)</span>
                 </div>
                 <div className="sm:col-span-2">
                   <span className="font-semibold text-primary">
@@ -246,15 +238,13 @@ const Summary = ({
           </div>
         </div>
       </div>
-      {registrationInfo.accountType === "MARCH" && locationsInfo?.length && (
+      {registrationInfo.accountType === 'MARCH' && locationsInfo?.length && (
         <>
           <div
             tabIndex={0}
             className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5"
           >
-            <div className="collapse-title text-xl font-medium">
-              Locations Info
-            </div>
+            <div className="collapse-title text-xl font-medium">Locations Info</div>
             <div className="collapse-content mx-3">
               {locationsInfo.map((location) => (
                 <div key={location.id} className="alert shadow-lg my-4">
@@ -277,15 +267,11 @@ const Summary = ({
                         {location.name} - ({location.details})
                       </h3>
                       <div className="text-xs">
-                        Latitude:{" "}
-                        <span className="font-semibold text-primary">
-                          {location.latitude}
-                        </span>
-                        , Longitude:{" "}
-                        <span className="font-semibold text-primary">
-                          {location.longitude}
-                        </span>
-                        , Radius:{" "}
+                        Latitude:{' '}
+                        <span className="font-semibold text-primary">{location.latitude}</span>,
+                        Longitude:{' '}
+                        <span className="font-semibold text-primary">{location.longitude}</span>,
+                        Radius:{' '}
                         <span className="font-semibold text-primary">
                           {location.radius} meter(s)
                         </span>
@@ -300,50 +286,42 @@ const Summary = ({
             tabIndex={0}
             className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5"
           >
-            <div className="collapse-title text-xl font-medium">
-              Work Days Info
-            </div>
+            <div className="collapse-title text-xl font-medium">Work Days Info</div>
             <div className="collapse-content mx-3">
               <FullCalendar
                 timeZone="UTC"
                 plugins={[timeGridPlugin, interactionPlugin]}
                 initialView="timeGridWeek"
                 eventTimeFormat={({ start, end }) => {
-                  return `${moment.utc(start).format("HH:mm")} - ${moment
+                  return `${moment.utc(start).format('HH:mm')} - ${moment
                     .utc(end)
-                    .format("HH:mm")}`;
+                    .format('HH:mm')}`;
                 }}
                 firstDay={1}
                 headerToolbar={{
-                  left: "title",
-                  right: "timeGridWeek",
+                  left: 'title',
+                  right: 'timeGridWeek'
                 }}
                 // titleFormat'dddd, MMMM D, YYYY'
                 titleFormat={(args) => {
-                  return "The work days";
+                  return 'The work days';
                 }}
                 dayHeaderFormat={(args) => {
-                  return moment.utc(args.date).format("ddd");
+                  return moment.utc(args.date).format('ddd');
                 }}
                 // dateClick={handleDateClick}
                 events={workDaysInfo.map((weekDay) => {
                   return {
                     id: weekDay.id,
                     title: `(${weekDay.status}) - ${weekDay.description}`,
-                    start: transformTime(
-                      weekDatesNamesVsDates[weekDay.day],
-                      weekDay.start_time,
-                    ),
-                    end: transformTime(
-                      weekDatesNamesVsDates[weekDay.day],
-                      weekDay.end_time,
-                    ),
+                    start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
+                    end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time),
                     backgroundColor:
-                      weekDay.status === "OPENED"
-                        ? "#0c8599"
-                        : weekDay.status === "CLOSED"
-                        ? "#fd7e14"
-                        : "#e3e3e3",
+                      weekDay.status === 'OPENED'
+                        ? '#0c8599'
+                        : weekDay.status === 'CLOSED'
+                          ? '#fd7e14'
+                          : '#e3e3e3'
                   };
                 })}
               />
@@ -353,15 +331,12 @@ const Summary = ({
       )}
 
       <div className="flex flex-row-reverse mt-6 mb-2 mx-4 gap-3">
-        <button
-          className="btn btn-outline btn-primary btn-sm"
-          onClick={handleSubmit}
-        >
+        <button className="btn btn-outline btn-primary btn-sm" onClick={handleSubmit}>
           {clientToMarchant
-            ? "Create New Merchant"
+            ? 'Create New Merchant'
             : actionTypeBool
-            ? "Modify Account"
-            : "Create Account"}
+              ? 'Modify Account'
+              : 'Create Account'}
         </button>
         <button
           className=" btn btn-outline btn-ghost btn-sm"

@@ -1,17 +1,17 @@
-import axios from "axios";
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { REQUEST_QUERY_CONSTANTS } from "../../utils/globalConstantUtil";
-import moment from "moment";
+import axios from 'axios';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { REQUEST_QUERY_CONSTANTS } from '../../utils/globalConstantUtil';
+import moment from 'moment';
 
 // this is just to create a commit
 
 export const getSubscriptions = createAsyncThunk(
-  "/subscriptions/get-subscriptions",
+  '/subscriptions/get-subscriptions',
   async (params) => {
-    const response = await axios.get("/api/subscriptions/get-subscriptions");
+    const response = await axios.get('/api/subscriptions/get-subscriptions');
     console.log(response.data);
     return response.data;
-  },
+  }
 );
 
 // export const saveSubscriptions = createAsyncThunk(
@@ -52,13 +52,13 @@ export const getSubscriptions = createAsyncThunk(
 // );
 
 export const subscriptionSlice = createSlice({
-  name: "subscriptions",
+  name: 'subscriptions',
   initialState: {
     isLoading: false,
     subscriptions: [],
     totalCount: 0,
     skip: 0,
-    noMoreQuery: false,
+    noMoreQuery: false
   },
   reducers: {
     resetForm: (state) => {
@@ -67,7 +67,7 @@ export const subscriptionSlice = createSlice({
       state.subscriptions = [];
       state.noMoreQuery = false;
       state.isLoading = false;
-    },
+    }
   },
 
   extraReducers: {
@@ -75,10 +75,7 @@ export const subscriptionSlice = createSlice({
       state.isLoading = true;
     },
     [getSubscriptions.fulfilled]: (state, action) => {
-      state.subscriptions = [
-        ...state.subscriptions,
-        ...action.payload.subscriptions,
-      ];
+      state.subscriptions = [...state.subscriptions, ...action.payload.subscriptions];
       if (state.totalCount !== action?.payload?.totalCount) {
         state.totalCount = action?.payload?.totalCount;
       }
@@ -87,7 +84,7 @@ export const subscriptionSlice = createSlice({
     },
     [getSubscriptions.rejected]: (state) => {
       state.isLoading = false;
-    },
+    }
 
     // [saveOffer.pending]: (state) => {
     //   state.isLoading = true;
@@ -116,7 +113,7 @@ export const subscriptionSlice = createSlice({
     // [deleteOffer.rejected]: (state) => {
     //   state.isLoading = false;
     // },
-  },
+  }
 });
 
 export const { resetForm } = subscriptionSlice.actions;

@@ -1,6 +1,6 @@
-import moment from "moment";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import cliTruncate from "cli-truncate";
+import moment from 'moment';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import cliTruncate from 'cli-truncate';
 import {
   useTable,
   useGlobalFilter,
@@ -8,8 +8,8 @@ import {
   useFilters,
   useSortBy,
   usePagination,
-  useRowSelect,
-} from "react-table";
+  useRowSelect
+} from 'react-table';
 
 import {
   ChevronLeftIcon,
@@ -17,21 +17,21 @@ import {
   ChevronDoubleRightIcon,
   ChevronDoubleLeftIcon,
   XMarkIcon,
-  PencilIcon,
-} from "@heroicons/react/24/outline";
-import { Button, PageButton } from "../Common/Button";
-import { SortDownIcon, SortIcon, SortUpIcon } from "../Common/SortIcons";
-import { classNames } from "../Common/UtilsClassNames";
-import InputCheckbox from "../Input/InputCheckbox";
-import streetLogo from "../../assets/street_logo.jpeg";
-import InfoText from "../Typography/InfoText";
+  PencilIcon
+} from '@heroicons/react/24/outline';
+import { Button, PageButton } from '../Common/Button';
+import { SortDownIcon, SortIcon, SortUpIcon } from '../Common/SortIcons';
+import { classNames } from '../Common/UtilsClassNames';
+import InputCheckbox from '../Input/InputCheckbox';
+import streetLogo from '../../assets/street_logo.jpeg';
+import InfoText from '../Typography/InfoText';
 
 export function IdDisplay({ value, onDetailsClicked }) {
   return (
     // <div className='flex items-center justify-center'>
     <span
       className={
-        "px-3 py-2 uppercase leading-wide font-bold text-md bg-gray-50 text-gray-600 rounded-full shadow-sm hover:cursor-pointer"
+        'px-3 py-2 uppercase leading-wide font-bold text-md bg-gray-50 text-gray-600 rounded-full shadow-sm hover:cursor-pointer'
       }
       onClick={() => onDetailsClicked()}
     >
@@ -45,12 +45,12 @@ export function SimplePill({ value, column, row, color }) {
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-        color?.startsWith("blue") ? "bg-blue-100 text-blue-700" : null,
-        color?.startsWith("green") ? "bg-green-100 text-green-700" : null,
-        color?.startsWith("orange") ? "bg-yellow-100 text-yellow-700" : null,
-        color.startsWith("red") ? "bg-red-100 text-red-700" : null,
-        !color ? "bg-gray-100 text-gray-700" : null,
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+        color?.startsWith('blue') ? 'bg-blue-100 text-blue-700' : null,
+        color?.startsWith('green') ? 'bg-green-100 text-green-700' : null,
+        color?.startsWith('orange') ? 'bg-yellow-100 text-yellow-700' : null,
+        color.startsWith('red') ? 'bg-red-100 text-red-700' : null,
+        !color ? 'bg-gray-100 text-gray-700' : null
       )}
     >
       {value || 0} FCFA
@@ -59,22 +59,22 @@ export function SimplePill({ value, column, row, color }) {
 }
 
 export function DeliveryStatusPill({ value }) {
-  const status = value ? value.toLocaleUpperCase() : "unknown";
+  const status = value ? value.toLocaleUpperCase() : 'unknown';
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-        status?.startsWith("DELIVERED") ? "bg-green-100 text-green-700" : null,
-        status?.startsWith("PENDING") ||
-          status?.startsWith("INPROCESS") ||
-          status?.startsWith("REGISTERED") ||
-          status?.startsWith("INDELIVERY") ||
-          status?.startsWith("INPROGRESS")
-          ? "bg-yellow-100 text-yellow-700"
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+        status?.startsWith('DELIVERED') ? 'bg-green-100 text-green-700' : null,
+        status?.startsWith('PENDING') ||
+          status?.startsWith('INPROCESS') ||
+          status?.startsWith('REGISTERED') ||
+          status?.startsWith('INDELIVERY') ||
+          status?.startsWith('INPROGRESS')
+          ? 'bg-yellow-100 text-yellow-700'
           : null,
-        status.startsWith("unknown") || status.startsWith("CANCELED")
-          ? "bg-red-100 text-red-700"
-          : null,
+        status.startsWith('unknown') || status.startsWith('CANCELED')
+          ? 'bg-red-100 text-red-700'
+          : null
       )}
     >
       {value}
@@ -85,11 +85,7 @@ export function DeliveryStatusPill({ value }) {
 export function BasicPhoneNumber({ value }) {
   return (
     // <div className='flex items-center justify-center'>
-    <span
-      className={
-        "px-3 py-2 uppercase leading-wide font-semibold text-primary text-md"
-      }
-    >
+    <span className={'px-3 py-2 uppercase leading-wide font-semibold text-primary text-md'}>
       +225 {value}
     </span>
     // </div>
@@ -97,17 +93,12 @@ export function BasicPhoneNumber({ value }) {
 }
 
 // Define a default UI for filtering
-function GlobalFilter({
-  preGlobalFilteredRows,
-  globalFilter,
-  setGlobalFilter,
-  setSearchPattern,
-}) {
+function GlobalFilter({ preGlobalFilteredRows, globalFilter, setGlobalFilter, setSearchPattern }) {
   const count = preGlobalFilteredRows?.length;
   const [value, setValue] = React.useState(globalFilter);
   const onChange = useAsyncDebounce((value) => {
-    setGlobalFilter(value || "");
-    setSearchPattern({ key: "searchPattern", value: value || "" });
+    setGlobalFilter(value || '');
+    setSearchPattern({ key: 'searchPattern', value: value || '' });
   }, 200);
 
   return (
@@ -116,7 +107,7 @@ function GlobalFilter({
       <input
         type="text"
         className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-        value={value || ""}
+        value={value || ''}
         onChange={(e) => {
           setValue(e.target.value);
           onChange(e.target.value);
@@ -130,7 +121,7 @@ function GlobalFilter({
 // This is a custom filter UI for selecting
 // a unique option from a list
 export function SelectColumnFilter({
-  column: { filterValue, setFilter, preFilteredRows, id, render },
+  column: { filterValue, setFilter, preFilteredRows, id, render }
 }) {
   // Calculate the options for filtering
   // using the preFilteredRows
@@ -153,7 +144,7 @@ export function SelectColumnFilter({
           setFilter(e.target.value || undefined);
         }}
       >
-        <option value="">{render("Header")}</option>
+        <option value="">{render('Header')}</option>
         {options.map((option, i) => (
           <option key={i} value={option}>
             {option}
@@ -164,47 +155,34 @@ export function SelectColumnFilter({
   );
 }
 
-export function MerchantArticlesAndAccompagnementPill({
-  value,
-  column,
-  row,
-  type,
-}) {
+export function MerchantArticlesAndAccompagnementPill({ value, column, row, type }) {
   const count = value?.length || 0;
 
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm ",
-        type?.startsWith("article") && count > 0
-          ? "bg-green-100 text-green-700"
-          : null,
-        type?.startsWith("accompagnement") && count > 0
-          ? "bg-indigo-100 text-indigo-700"
-          : null,
-        count === 0 ? "bg-stone-100 text-stone-700" : null,
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm ',
+        type?.startsWith('article') && count > 0 ? 'bg-green-100 text-green-700' : null,
+        type?.startsWith('accompagnement') && count > 0 ? 'bg-indigo-100 text-indigo-700' : null,
+        count === 0 ? 'bg-stone-100 text-stone-700' : null
       )}
     >
-      {count} {`${count > 1 ? type : ""}${count > 1 ? "s" : ""}`}
+      {count} {`${count > 1 ? type : ''}${count > 1 ? 's' : ''}`}
     </span>
   );
 }
 
 export function AccountTypePill({ value, column, row }) {
   const TYPE_OBJ = row.original[column.clientTypeAccessor];
-  const status = value ? value.toLowerCase() : "unknown";
+  const status = value ? value.toLowerCase() : 'unknown';
 
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-        TYPE_OBJ?.code?.startsWith("march")
-          ? "bg-green-100 text-green-700"
-          : null,
-        TYPE_OBJ?.code?.startsWith("perso")
-          ? "bg-yellow-100 text-yellow-700"
-          : null,
-        status.startsWith("unknown") ? "bg-red-100 text-red-700" : null,
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+        TYPE_OBJ?.code?.startsWith('march') ? 'bg-green-100 text-green-700' : null,
+        TYPE_OBJ?.code?.startsWith('perso') ? 'bg-yellow-100 text-yellow-700' : null,
+        status.startsWith('unknown') ? 'bg-red-100 text-red-700' : null
       )}
     >
       {status}
@@ -213,15 +191,15 @@ export function AccountTypePill({ value, column, row }) {
 }
 
 export function StatusPill({ value, column, row }) {
-  const status = value ? value.toLowerCase() : "unknown";
+  const status = value ? value.toLowerCase() : 'unknown';
 
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-        status.startsWith("active") ? "bg-green-100 text-green-700" : null,
-        status.startsWith("inactive") ? "bg-yellow-100 text-yellow-700" : null,
-        status.startsWith("offline") ? "bg-red-100 text-red-700" : null,
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+        status.startsWith('active') ? 'bg-green-100 text-green-700' : null,
+        status.startsWith('inactive') ? 'bg-yellow-100 text-yellow-700' : null,
+        status.startsWith('offline') ? 'bg-red-100 text-red-700' : null
       )}
     >
       {status}
@@ -230,17 +208,15 @@ export function StatusPill({ value, column, row }) {
 }
 
 export function StatusRechargementPill({ value }) {
-  const status = value ? value.toLowerCase() : "unknown";
+  const status = value ? value.toLowerCase() : 'unknown';
 
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-        status === "done" || status === "success"
-          ? "bg-green-100 text-green-700"
-          : null,
-        status === "pending" ? "bg-yellow-100 text-yellow-700" : null,
-        status === "failed" ? "bg-red-100 text-red-700" : null,
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+        status === 'done' || status === 'success' ? 'bg-green-100 text-green-700' : null,
+        status === 'pending' ? 'bg-yellow-100 text-yellow-700' : null,
+        status === 'failed' ? 'bg-red-100 text-red-700' : null
       )}
     >
       {status}
@@ -250,7 +226,7 @@ export function StatusRechargementPill({ value }) {
 
 export function OperatorPill({ value, column, row }) {
   const operatorObj = row.original[column.operatorObj];
-  const operator = value ? value.toLowerCase() : "unknown";
+  const operator = value ? value.toLowerCase() : 'unknown';
 
   return (
     <>
@@ -266,13 +242,9 @@ export function OperatorPill({ value, column, row }) {
         <div className="ml-4">
           <div className="text-sm font-medium">{operator}</div>
           <div className={`text-sm text-base-`}>
-            Cash Operation:{" "}
-            <span
-              className={`mx-2 ${
-                operator?.is_cash ? "text-error" : "text-success"
-              }`}
-            >
-              {operator?.is_cash ? "YES" : "NO"}
+            Cash Operation:{' '}
+            <span className={`mx-2 ${operator?.is_cash ? 'text-error' : 'text-success'}`}>
+              {operator?.is_cash ? 'YES' : 'NO'}
             </span>
           </div>
         </div>
@@ -282,57 +254,47 @@ export function OperatorPill({ value, column, row }) {
 }
 
 export function DateCell({ value, column, row }) {
-  let formattedValue = value ? value : "N/A";
+  let formattedValue = value ? value : 'N/A';
 
-  if (formattedValue !== "N/A") {
-    formattedValue = moment.utc(value).format("LLL");
+  if (formattedValue !== 'N/A') {
+    formattedValue = moment.utc(value).format('LLL');
   }
 
-  return (
-    <span className="f text-xs">{formattedValue?.toLocaleUpperCase()}</span>
-  );
+  return <span className="f text-xs">{formattedValue?.toLocaleUpperCase()}</span>;
 }
 
 export function WalletCellBalance({ column, row }) {
   const WALLETS = row.original[column.accessorObj];
 
   return (
-    <div
-      className="flex items-center cursor-pointer"
-      onClick={() => console.log(row.original)}
-    >
+    <div className="flex items-center cursor-pointer" onClick={() => console.log(row.original)}>
       <div className="ml-4">
         {WALLETS.map(
           (wallet) =>
-            wallet?.wallet_type?.libelle !== "CREDIT_SELLER" && (
-              <div
-                key={wallet.id}
-                className="text-sm font-medium text-gray-900 my-2"
-              >
+            wallet?.wallet_type?.libelle !== 'CREDIT_SELLER' && (
+              <div key={wallet.id} className="text-sm font-medium text-gray-900 my-2">
                 <span
                   className={classNames(
-                    "px-3 py-1  uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-                    wallet?.wallet_type?.libelle.startsWith("MERCHANT")
-                      ? "bg-violet-100 text-violet-700"
+                    'px-3 py-1  uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+                    wallet?.wallet_type?.libelle.startsWith('MERCHANT')
+                      ? 'bg-violet-100 text-violet-700'
                       : null,
-                    wallet?.wallet_type?.libelle.startsWith("PERSONAL")
-                      ? "bg-blue-100 text-blue-700"
+                    wallet?.wallet_type?.libelle.startsWith('PERSONAL')
+                      ? 'bg-blue-100 text-blue-700'
                       : null,
-                    wallet?.wallet_type?.libelle.startsWith("LIVREUR")
-                      ? "bg-teal-100 text-teal-700"
-                      : null,
+                    wallet?.wallet_type?.libelle.startsWith('LIVREUR')
+                      ? 'bg-teal-100 text-teal-700'
+                      : null
                     // wallet?.wallet_type?.libelle.startsWith('MERCHANT') && (wallet?.balance || 0) > 0 ? 'bg-violet-100 text-violet-700' : null,
                     // wallet?.wallet_type?.libelle.startsWith('PERSONAL') && (wallet?.balance || 0) > 0 ? 'bg-blue-100 text-blue-700' : null
                   )}
                 >
-                  {wallet?.wallet_type?.libelle + " WALLET: "}{" "}
-                  <span className="font-semibold">
-                    {(wallet?.balance || 0) + " CFA"}
-                  </span>
+                  {wallet?.wallet_type?.libelle + ' WALLET: '}{' '}
+                  <span className="font-semibold">{(wallet?.balance || 0) + ' CFA'}</span>
                 </span>
                 {/*{wallet?.wallet_type?.libelle + " WALLET: "} {}*/}
               </div>
-            ),
+            )
         )}
       </div>
     </div>
@@ -346,36 +308,18 @@ export function RechargementPreviousBalance({ value, column, row }) {
   const wallet = row.original[column.walletAccessor];
 
   return (
-    <div
-      className="flex items-center cursor-pointer"
-      onClick={() => console.log(row.original)}
-    >
+    <div className="flex items-center cursor-pointer" onClick={() => console.log(row.original)}>
       <div className="">
         <div className="text-sm font-medium text-gray-900 my-2">
-          <span
-            className={classNames(
-              " py-1 uppercase leading-wide font-bold text-xs",
-            )}
-          >
-            {amount ? "" : "Balance: "}
-            <span
-              className={
-                "font-semibold " + amount && !previousBonus
-                  ? "text-primary"
-                  : ""
-              }
-            >
-              {wallet ? wallet.balance : amount ? value : previousAmount || 0}{" "}
-              CFA
+          <span className={classNames(' py-1 uppercase leading-wide font-bold text-xs')}>
+            {amount ? '' : 'Balance: '}
+            <span className={'font-semibold ' + amount && !previousBonus ? 'text-primary' : ''}>
+              {wallet ? wallet.balance : amount ? value : previousAmount || 0} CFA
             </span>
           </span>
           {!amount ? (
-            <span
-              className={classNames(
-                "px-3 py-1 uppercase leading-wide font-bold text-xs ",
-              )}
-            >
-              Bonus:{" "}
+            <span className={classNames('px-3 py-1 uppercase leading-wide font-bold text-xs ')}>
+              Bonus:{' '}
               <span className="font-semibold">
                 {wallet ? wallet.bonus : previousBonus || 0} CFA
               </span>
@@ -400,49 +344,38 @@ export function WalletCellBonus({ column, row }) {
       <div className="ml-4">
         {WALLETS.map(
           (wallet) =>
-            wallet?.wallet_type?.libelle !== "CREDIT_SELLER" && (
-              <div
-                key={wallet.id}
-                className="text-sm font-medium text-gray-900 my-2"
-              >
+            wallet?.wallet_type?.libelle !== 'CREDIT_SELLER' && (
+              <div key={wallet.id} className="text-sm font-medium text-gray-900 my-2">
                 <span
                   className={classNames(
-                    "px-3 py-1 bg-base-200 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-                    wallet?.wallet_type?.libelle.startsWith("MERCHANT")
-                      ? "bg-violet-100 text-violet-700"
+                    'px-3 py-1 bg-base-200 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+                    wallet?.wallet_type?.libelle.startsWith('MERCHANT')
+                      ? 'bg-violet-100 text-violet-700'
                       : null,
-                    wallet?.wallet_type?.libelle.startsWith("PERSONAL")
-                      ? "bg-blue-100 text-blue-700"
+                    wallet?.wallet_type?.libelle.startsWith('PERSONAL')
+                      ? 'bg-blue-100 text-blue-700'
                       : null,
-                    wallet?.wallet_type?.libelle.startsWith("LIVREUR")
-                      ? "bg-teal-100 text-teal-700"
-                      : null,
+                    wallet?.wallet_type?.libelle.startsWith('LIVREUR')
+                      ? 'bg-teal-100 text-teal-700'
+                      : null
                     // wallet?.wallet_type?.libelle.startsWith('MERCHANT') && (wallet?.bonus || 0) > 0 ? 'bg-violet-100 text-violet-700' : null,
                     // wallet?.wallet_type?.libelle.startsWith('PERSONAL') && (wallet?.bonus || 0) > 0 ? 'bg-blue-100 text-blue-700' : null
                   )}
                 >
-                  {wallet?.wallet_type?.libelle + " WALLET: "}{" "}
-                  <span className="font-semibold">
-                    {(wallet?.bonus || 0) + " CFA"}
-                  </span>
+                  {wallet?.wallet_type?.libelle + ' WALLET: '}{' '}
+                  <span className="font-semibold">{(wallet?.bonus || 0) + ' CFA'}</span>
                 </span>
                 {/*{wallet?.wallet_type?.libelle + " WALLET: "} {}*/}
               </div>
-            ),
+            )
         )}
       </div>
     </div>
   );
 }
 
-export function ActionButtons({
-  value,
-  column,
-  row,
-  onEditClicked,
-  onDeleteClicked,
-}) {
-  const TYPE_OBJ = row.original[column.clientTypeAccessor.split(".")[0]];
+export function ActionButtons({ value, column, row, onEditClicked, onDeleteClicked }) {
+  const TYPE_OBJ = row.original[column.clientTypeAccessor.split('.')[0]];
   const NAME = row.original[column.nameAccessor];
   const MERCHANT_NAME = row.original[column.merchantNameAccessor];
   return (
@@ -482,13 +415,8 @@ export function BasicAvatarCellNoLink({ value, column, row }) {
   );
 }
 
-export function AvatarCellForMerchant({
-  value,
-  column,
-  row,
-  onDetailsClicked,
-}) {
-  const TYPE_OBJ = row.original[column.clientTypeAccessor.split(".")[0]];
+export function AvatarCellForMerchant({ value, column, row, onDetailsClicked }) {
+  const TYPE_OBJ = row.original[column.clientTypeAccessor.split('.')[0]];
   const NAME = row.original[column.nameAccessor];
   const MERCHANT_NAME = row.original[column.merchantNameAccessor];
   return (
@@ -500,7 +428,7 @@ export function AvatarCellForMerchant({
         <img
           className="h-10 w-10 rounded-full"
           src={
-            row.original?.logo && row.original?.logo?.startsWith("http")
+            row.original?.logo && row.original?.logo?.startsWith('http')
               ? row?.original?.logo
               : streetLogo
           }
@@ -510,7 +438,7 @@ export function AvatarCellForMerchant({
       </div>
       <div className="ml-4">
         <div className="text-sm font-medium text-gray-900">
-          {value} {NAME ? `(${NAME})` : ""}
+          {value} {NAME ? `(${NAME})` : ''}
         </div>
         <div className={`text-sm text-primary`}>MERCHANT</div>
       </div>
@@ -519,7 +447,7 @@ export function AvatarCellForMerchant({
 }
 
 export function AvatarCell({ value, column, row, onDetailsClicked }) {
-  const TYPE_OBJ = row.original[column.clientTypeAccessor.split(".")[0]];
+  const TYPE_OBJ = row.original[column.clientTypeAccessor.split('.')[0]];
   const NAME = row.original[column.nameAccessor];
   const MERCHANT_NAME = row.original[column.merchantNameAccessor];
   return (
@@ -531,7 +459,7 @@ export function AvatarCell({ value, column, row, onDetailsClicked }) {
         <img
           className="h-10 w-10 rounded-full"
           src={
-            row.original?.photo && row.original?.photo?.startsWith("http")
+            row.original?.photo && row.original?.photo?.startsWith('http')
               ? row.original?.photo
               : streetLogo
           }
@@ -541,34 +469,24 @@ export function AvatarCell({ value, column, row, onDetailsClicked }) {
       </div>
       <div className="ml-4">
         <div className="text-sm font-medium text-gray-900">
-          {value} {NAME ? `(${NAME})` : ""}
+          {value} {NAME ? `(${NAME})` : ''}
         </div>
         <div
-          className={`text-sm  ${
-            TYPE_OBJ["code"] === "MARCH" ? "text-primary" : "text-gray-500"
-          }`}
+          className={`text-sm  ${TYPE_OBJ['code'] === 'MARCH' ? 'text-primary' : 'text-gray-500'}`}
         >
           {MERCHANT_NAME
             ? cliTruncate(MERCHANT_NAME.toLocaleUpperCase(), 15)
-            : TYPE_OBJ[column.clientTypeAccessor.split(".")[1]] || "N/A"}
+            : TYPE_OBJ[column.clientTypeAccessor.split('.')[1]] || 'N/A'}
         </div>
       </div>
     </div>
   );
 }
 
-export function ReferenceAndPaymentTypeCell({
-  value,
-  column,
-  row,
-  onDetailsClicked,
-}) {
+export function ReferenceAndPaymentTypeCell({ value, column, row, onDetailsClicked }) {
   let paymentType = row.original[column.paymentTypeObjAccessor];
 
-  const libelle =
-    column.paymentTypeObjAccessor === "type"
-      ? paymentType
-      : paymentType?.libelle;
+  const libelle = column.paymentTypeObjAccessor === 'type' ? paymentType : paymentType?.libelle;
 
   return (
     <div
@@ -577,7 +495,7 @@ export function ReferenceAndPaymentTypeCell({
     >
       <div className="">
         <div className="text-sm text-gray-900 font-semibold">{value}</div>
-        <div className={`text-xs text-primary`}>{libelle || ""}</div>
+        <div className={`text-xs text-primary`}>{libelle || ''}</div>
       </div>
     </div>
   );
@@ -588,12 +506,11 @@ export function CashFlowCell({ value, column, row, phoneNumber }) {
   const receiverObj = row.original[column.ReceiverObjAccessor];
   const transactionTypeObj = row.original[column.transactionTypeObjAccessor];
 
-  const isMobileMoneyTransaction =
-    transactionTypeObj?.code === "RECHARGEMENT_MOBILE_MONEY";
+  const isMobileMoneyTransaction = transactionTypeObj?.code === 'RECHARGEMENT_MOBILE_MONEY';
 
-  const senderPhoneNumber = senderObj?.client?.phone_number || "N/A";
+  const senderPhoneNumber = senderObj?.client?.phone_number || 'N/A';
   const formattedSenderPhoneNumber =
-    (senderPhoneNumber !== "N/A" ? "+225 " : "") + senderPhoneNumber;
+    (senderPhoneNumber !== 'N/A' ? '+225 ' : '') + senderPhoneNumber;
   const receiverPhoneNumber = receiverObj?.client?.phone_number;
 
   return (
@@ -603,16 +520,16 @@ export function CashFlowCell({ value, column, row, phoneNumber }) {
           <div className="badge badge-xs badge-error"></div>
           <span className="mx-3">
             {isMobileMoneyTransaction
-              ? "MOBILE MONEY"
+              ? 'MOBILE MONEY'
               : formattedSenderPhoneNumber
-              ? formattedSenderPhoneNumber
-              : "N/A"}
+                ? formattedSenderPhoneNumber
+                : 'N/A'}
           </span>
         </div>
         <div className="text-sm text-gray-900 font-semibold mt-1">
           <div className="badge badge-xs badge-success"></div>
           <span className="mx-3">
-            {receiverPhoneNumber ? "+225 " + receiverPhoneNumber : "N/A"}
+            {receiverPhoneNumber ? '+225 ' + receiverPhoneNumber : 'N/A'}
           </span>
         </div>
       </div>
@@ -621,8 +538,7 @@ export function CashFlowCell({ value, column, row, phoneNumber }) {
 }
 
 export function AmountCell({ value, client, column, row }) {
-  const senderPhoneNumber =
-    row.original[column.SenderObjAccessor]?.client?.phone_number;
+  const senderPhoneNumber = row.original[column.SenderObjAccessor]?.client?.phone_number;
 
   const originalClientPhoneNumber = client?.phone_number;
 
@@ -631,10 +547,8 @@ export function AmountCell({ value, client, column, row }) {
   return (
     <span
       className={classNames(
-        "px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm",
-        transactionFromClient
-          ? "bg-red-100 text-red-700"
-          : "bg-green-100 text-green-700",
+        'px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm',
+        transactionFromClient ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
       )}
     >
       {value} FCFA
@@ -642,22 +556,20 @@ export function AmountCell({ value, client, column, row }) {
   );
 }
 
-export const IndeterminateCheckbox = React.forwardRef(
-  ({ indeterminate, ...rest }, ref) => {
-    const defaultRef = React.useRef();
-    const resolvedRef = ref || defaultRef;
+export const IndeterminateCheckbox = React.forwardRef(({ indeterminate, ...rest }, ref) => {
+  const defaultRef = React.useRef();
+  const resolvedRef = ref || defaultRef;
 
-    React.useEffect(() => {
-      resolvedRef.current.indeterminate = indeterminate;
-    }, [resolvedRef, indeterminate]);
+  React.useEffect(() => {
+    resolvedRef.current.indeterminate = indeterminate;
+  }, [resolvedRef, indeterminate]);
 
-    return (
-      <>
-        <input type="checkbox" ref={resolvedRef} {...rest} />
-      </>
-    );
-  },
-);
+  return (
+    <>
+      <input type="checkbox" ref={resolvedRef} {...rest} />
+    </>
+  );
+});
 export function Table({
   columns,
   data,
@@ -665,7 +577,7 @@ export function Table({
   onLoad,
   updateFormValue,
   showFilter,
-  firstActionButton,
+  firstActionButton
 }) {
   // Use the state and functions returned from useTable to build your UI
   const {
@@ -686,17 +598,17 @@ export function Table({
     selectedFlatRows,
     state,
     preGlobalFilteredRows,
-    setGlobalFilter,
+    setGlobalFilter
   } = useTable(
     {
       columns,
-      data,
+      data
     },
     useFilters,
     useGlobalFilter,
     useSortBy,
     usePagination,
-    useRowSelect,
+    useRowSelect
   );
   useEffect(() => {
     // setPageSize(5);
@@ -710,9 +622,7 @@ export function Table({
       {showFilter ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-x-5 lg:gap-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="w-full flex items-center justify-center">
-              {firstActionButton}
-            </div>
+            <div className="w-full flex items-center justify-center">{firstActionButton}</div>
           </div>
           <div className="md:col-end-3">
             <GlobalFilter
@@ -732,10 +642,10 @@ export function Table({
           headerGroup.headers.map((column) =>
             column.Filter ? (
               <div className="" key={column.id}>
-                {column.render("Filter")}
+                {column.render('Filter')}
               </div>
-            ) : null,
-          ),
+            ) : null
+          )
         )}
       </div>
       {rows.length ? (
@@ -763,12 +673,10 @@ export function Table({
                                 <th
                                   scope="col"
                                   className="group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  {...column.getHeaderProps(
-                                    column.getSortByToggleProps(),
-                                  )}
+                                  {...column.getHeaderProps(column.getSortByToggleProps())}
                                 >
                                   <div className="flex items-center justify-between">
-                                    {column.render("Header")}
+                                    {column.render('Header')}
                                     {/* Add a sort direction indicator */}
                                     <span>
                                       {column.isSorted ? (
@@ -806,13 +714,12 @@ export function Table({
                                       className="px-6 py-4 whitespace-nowrap"
                                       role="cell"
                                     >
-                                      {cell.column.Cell.name ===
-                                      "defaultRenderer" ? (
+                                      {cell.column.Cell.name === 'defaultRenderer' ? (
                                         <div className="text-sm text-gray-500">
-                                          {cell.render("Cell")}
+                                          {cell.render('Cell')}
                                         </div>
                                       ) : (
-                                        cell.render("Cell")
+                                        cell.render('Cell')
                                       )}
                                     </td>
                                   );
@@ -830,9 +737,7 @@ export function Table({
           </div>
         </>
       ) : (
-        <InfoText styleClasses={"md:grid-cols-2 mt-3"}>
-          No record found ...
-        </InfoText>
+        <InfoText styleClasses={'md:grid-cols-2 mt-3'}>No record found ...</InfoText>
       )}
       {/* Pagination */}
       <div className="py-3 flex items-center justify-between">
@@ -847,7 +752,7 @@ export function Table({
         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div className="flex gap-x-2">
             <span className="text-sm text-gray-700 mt-3">
-              Page <span className="font-medium">{state.pageIndex + 1}</span> of{" "}
+              Page <span className="font-medium">{state.pageIndex + 1}</span> of{' '}
               <span className="font-medium">{pageOptions.length}</span>
             </span>
             <label>
@@ -880,10 +785,7 @@ export function Table({
                 <span className="sr-only">First</span>
                 <ChevronDoubleLeftIcon className="h-5 w-5" aria-hidden="true" />
               </PageButton>
-              <PageButton
-                onClick={() => previousPage()}
-                disabled={!canPreviousPage}
-              >
+              <PageButton onClick={() => previousPage()} disabled={!canPreviousPage}>
                 <span className="sr-only">Previous</span>
                 <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
               </PageButton>
@@ -918,10 +820,7 @@ export function Table({
                 // disabled={!canNextPage}
               >
                 <span className="sr-only">Last</span>
-                <ChevronDoubleRightIcon
-                  className="h-5 w-5"
-                  aria-hidden="true"
-                />
+                <ChevronDoubleRightIcon className="h-5 w-5" aria-hidden="true" />
               </PageButton>
             </nav>
           </div>

@@ -1,58 +1,54 @@
-import { useFormik } from "formik";
-import axios from "axios";
-import moment from "moment";
-import AsyncSelect from "react-select/async";
-import { FaBowlFood } from "react-icons/fa6";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import Datepicker from "react-tailwindcss-datepicker";
-import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.css";
-import { useDispatch } from "react-redux";
-import { saveDiscounts, updateDiscount } from "../discountManagementSlice";
-import { showNotification } from "../../common/headerSlice";
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+import axios from 'axios';
+import flatpickr from 'flatpickr';
+import { useFormik } from 'formik';
+import moment from 'moment';
+import AsyncSelect from 'react-select/async';
+import Datepicker from 'react-tailwindcss-datepicker';
+
+import { FaBowlFood } from 'react-icons/fa6';
+
+import 'flatpickr/dist/flatpickr.css';
+import { useDispatch } from 'react-redux';
+
+import { showNotification } from '../../common/headerSlice';
+import { saveDiscounts, updateDiscount } from '../discountManagementSlice';
 
 const customStyles = {
   control: (base) => ({
-    ...base,
+    ...base
     // height: '3rem',
   }),
   menu: (base) => ({
     ...base,
-    marginBottom: "2rem",
-  }),
+    marginBottom: '2rem'
+  })
 };
 
 const AddOrEditDiscount = ({ extraObject, closeModal }) => {
   const dispatch = useDispatch();
   const datePickerFrom = useRef();
   const datePickerTo = useRef();
-  console.log("extra object", extraObject);
+  console.log('extra object', extraObject);
 
   const INITIAL_FILTER_OBJ = {
     type: extraObject?.discountObject
       ? extraObject?.discountObject?.value_type?.toLocaleLowerCase()
-      : "price",
-    value: extraObject?.discountObject
-      ? parseInt(extraObject?.discountObject?.value)
-      : 0,
-    description: extraObject?.discountObject
-      ? extraObject?.discountObject?.description
-      : "",
-    searchPattern: "",
-    articles: [],
+      : 'price',
+    value: extraObject?.discountObject ? parseInt(extraObject?.discountObject?.value) : 0,
+    description: extraObject?.discountObject ? extraObject?.discountObject?.description : '',
+    searchPattern: '',
+    articles: []
   };
 
   const [dateInterval, setDateInterval] = useState({
     from: extraObject?.discountObject
-      ? moment
-          .utc(extraObject?.discountObject?.start_date)
-          .format("YYYY-MM-DD HH:mm")
-      : moment.utc().format("YYYY-MM-DD HH:mm"),
+      ? moment.utc(extraObject?.discountObject?.start_date).format('YYYY-MM-DD HH:mm')
+      : moment.utc().format('YYYY-MM-DD HH:mm'),
     to: extraObject?.discountObject
-      ? moment
-          .utc(extraObject?.discountObject?.end_date)
-          .format("YYYY-MM-DD HH:mm")
-      : moment.utc().add(1, "days").format("YYYY-MM-DD HH:mm"),
+      ? moment.utc(extraObject?.discountObject?.end_date).format('YYYY-MM-DD HH:mm')
+      : moment.utc().add(1, 'days').format('YYYY-MM-DD HH:mm')
   });
 
   const inputRefFrom = useCallback((node) => {
@@ -60,13 +56,13 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
       datePickerFrom.current = flatpickr(node, {
         enableTime: true,
         defaultDate: dateInterval.from,
-        dateFormat: "Y-m-d H:i",
+        dateFormat: 'Y-m-d H:i',
         time_24hr: true,
         onChange: (date) => {
           setDateInterval((oldValues) => {
             return { ...oldValues, from: moment.utc(date[0]) };
           });
-        },
+        }
       });
     }
   }, []);
@@ -76,19 +72,19 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
       datePickerTo.current = flatpickr(node, {
         enableTime: true,
         defaultDate: dateInterval.to,
-        dateFormat: "Y-m-d H:i",
+        dateFormat: 'Y-m-d H:i',
         time_24hr: true,
         onChange: (date) => {
           setDateInterval((oldValues) => {
             return { ...oldValues, to: moment.utc(date[0]) };
           });
-        },
+        }
       });
     }
   }, []);
 
   const formik = useFormik({
-    initialValues: INITIAL_FILTER_OBJ,
+    initialValues: INITIAL_FILTER_OBJ
   });
 
   useEffect(() => {
@@ -105,10 +101,10 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
     new Promise((resolve) => {
       if (inputValue?.length >= 3) {
         axios
-          .get("/api/articles/get-articles-by-search", {
+          .get('/api/articles/get-articles-by-search', {
             params: {
-              searchPattern: inputValue,
-            },
+              searchPattern: inputValue
+            }
           })
           .then((response) =>
             resolve(
@@ -117,10 +113,10 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
                   value: article?.id,
                   label: `${article?.title} (${
                     article?.id
-                  }) - ${article?.merchant?.name?.toLocaleUpperCase()}`,
+                  }) - ${article?.merchant?.name?.toLocaleUpperCase()}`
                 };
-              }),
-            ),
+              })
+            )
           )
           .catch((error) => {
             console.log(error.message);
@@ -135,29 +131,19 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
       <div className="grid md:grid-cols-4 gap-3 mb-[10rem]">
         <div className={`form-control w-full`}>
           <label className="label">
-            <span className={"label-text text-base-content "}>Start From</span>
+            <span className={'label-text text-base-content '}>Start From</span>
           </label>
-          <input
-            type="date"
-            className="input input-bordered w-full"
-            ref={inputRefFrom}
-          />
+          <input type="date" className="input input-bordered w-full" ref={inputRefFrom} />
         </div>
         <div className={`form-control w-full`}>
           <label className="label">
-            <span className={"label-text text-base-content "}>Upto</span>
+            <span className={'label-text text-base-content '}>Upto</span>
           </label>
-          <input
-            type="date"
-            className="input input-bordered w-full"
-            ref={inputRefTo}
-          />
+          <input type="date" className="input input-bordered w-full" ref={inputRefTo} />
         </div>
         <div className={`form-control w-full`}>
           <label className="label">
-            <span className={"label-text text-base-content "}>
-              Discount Type
-            </span>
+            <span className={'label-text text-base-content '}>Discount Type</span>
           </label>
           <select
             className="select select-bordered w-full max-w-xs"
@@ -165,17 +151,16 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
             onChange={(e) => {
               formik.setValues({
                 ...formik.values,
-                type: e.target.value || "price",
+                type: e.target.value || 'price'
               });
-            }}
-          >
-            <option value={"price"}>Price</option>
-            <option value={"percentage"}>Percentage</option>
+            }}>
+            <option value={'price'}>Price</option>
+            <option value={'percentage'}>Percentage</option>
           </select>
         </div>
         <div className={`form-control w-full`}>
           <label className="label">
-            <span className={"label-text text-base-content "}>Value</span>
+            <span className={'label-text text-base-content '}>Value</span>
           </label>
           <input
             type="number"
@@ -184,14 +169,14 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
             onChange={(e) => {
               formik.setValues({
                 ...formik.values,
-                value: e.target.value,
+                value: e.target.value
               });
             }}
           />
         </div>
         <div className={`form-control col-span-4 w-full`}>
           <label className="label">
-            <span className={"label-text text-base-content "}>Description</span>
+            <span className={'label-text text-base-content '}>Description</span>
           </label>
           <input
             type="text"
@@ -200,14 +185,14 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
             onChange={(e) => {
               formik.setValues({
                 ...formik.values,
-                description: e.target.value,
+                description: e.target.value
               });
             }}
           />
         </div>
         <div className={`form-control w-full col-span-4`}>
           <label className="label">
-            <span className={"label-text text-base-content "}>Articles</span>
+            <span className={'label-text text-base-content '}>Articles</span>
           </label>
           {extraObject?.discountObject ? (
             <>
@@ -239,13 +224,13 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
               updateFormValue={(e) =>
                 formik.setValues({
                   ...formik.values,
-                  searchPattern: e.target.value,
+                  searchPattern: e.target.value
                 })
               }
               onChange={(e) => {
                 formik.setValues({
                   ...formik.values,
-                  articles: [...e.map((article) => article.value)],
+                  articles: [...e.map((article) => article.value)]
                 });
               }}
             />
@@ -262,16 +247,14 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
                 !dateInterval.from ||
                 !dateInterval.to ||
                 !formik.values.description ||
-                (formik.values.type !== "price" &&
-                  formik.values.type !== "percentage") ||
+                (formik.values.type !== 'price' && formik.values.type !== 'percentage') ||
                 parseInt(formik.values.value) === 0
               ) {
                 dispatch(
                   showNotification({
-                    message:
-                      "Could not proceed as some values are not correctly set",
-                    status: 0,
-                  }),
+                    message: 'Could not proceed as some values are not correctly set',
+                    status: 0
+                  })
                 );
               } else {
                 await dispatch(
@@ -281,24 +264,24 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
                     type: formik.values.type,
                     value: parseInt(formik.values.value),
                     description: formik.values.description,
-                    discount: extraObject?.discountObject?.id,
-                  }),
+                    discount: extraObject?.discountObject?.id
+                  })
                 ).then(async (response) => {
                   if (response?.error) {
                     dispatch(
                       showNotification({
-                        message: "Error while update the discount",
-                        status: 0,
-                      }),
+                        message: 'Error while update the discount',
+                        status: 0
+                      })
                     );
                   } else {
                     dispatch(
                       showNotification({
                         message: response?.payload?.rejectedArticles?.length
                           ? `A discount already exists for the article for the specified date range`
-                          : "Succefully created the discounts",
-                        status: 1,
-                      }),
+                          : 'Succefully created the discounts',
+                        status: 1
+                      })
                     );
                     closeModal();
                   }
@@ -310,17 +293,15 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
                 !dateInterval.from ||
                 !dateInterval.to ||
                 !formik.values.description ||
-                (formik.values.type !== "price" &&
-                  formik.values.type !== "percentage") ||
+                (formik.values.type !== 'price' && formik.values.type !== 'percentage') ||
                 parseInt(formik.values.value) === 0 ||
                 formik.values.articles?.length === 0
               ) {
                 dispatch(
                   showNotification({
-                    message:
-                      "Could not proceed as some values are not correctly set",
-                    status: 0,
-                  }),
+                    message: 'Could not proceed as some values are not correctly set',
+                    status: 0
+                  })
                 );
               } else {
                 console.log(formik.values.articles);
@@ -333,15 +314,15 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
                     type: formik.values.type,
                     value: parseInt(formik.values.value),
                     description: formik.values.description,
-                    articles: formik.values.articles,
-                  }),
+                    articles: formik.values.articles
+                  })
                 ).then(async (response) => {
                   if (response?.error) {
                     dispatch(
                       showNotification({
-                        message: "Error while creating the discounts",
-                        status: 0,
-                      }),
+                        message: 'Error while creating the discounts',
+                        status: 0
+                      })
                     );
                   } else {
                     dispatch(
@@ -349,20 +330,19 @@ const AddOrEditDiscount = ({ extraObject, closeModal }) => {
                         message: response?.payload?.rejectedArticles?.length
                           ? `Succefully created some discounts but the following items are already associated to existing discounts (${response?.payload?.rejectedArticles?.reduce(
                               (ac, cur, ind) => ac + ` ` + cur,
-                              "",
+                              ''
                             )})`
-                          : "Succefully created the discounts",
-                        status: 1,
-                      }),
+                          : 'Succefully created the discounts',
+                        status: 1
+                      })
                     );
                     closeModal();
                   }
                 });
               }
             }
-          }}
-        >
-          {extraObject?.discountObject ? "Update Discount" : "Save Discount"}
+          }}>
+          {extraObject?.discountObject ? 'Update Discount' : 'Save Discount'}
         </button>
       </div>
     </div>

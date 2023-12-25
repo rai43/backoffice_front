@@ -1,18 +1,16 @@
-import { lazy, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import FaceFrownIcon from "@heroicons/react/24/solid/FaceFrownIcon";
+import { lazy, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import FaceFrownIcon from '@heroicons/react/24/solid/FaceFrownIcon';
 
-import { setPageTitle } from "../../features/common/headerSlice";
+import { setPageTitle } from '../../features/common/headerSlice';
 
-const AuthenticatedRoute = lazy(() =>
-  import("../../utils/containers/AuthenticatedRoute"),
-);
+const AuthenticatedRoute = lazy(() => import('../../utils/containers/AuthenticatedRoute'));
 
 function InternalPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle({ title: "" }));
+    dispatch(setPageTitle({ title: '' }));
   }, []);
 
   return (

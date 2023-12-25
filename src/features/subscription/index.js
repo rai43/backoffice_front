@@ -1,16 +1,14 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getSubscriptions, resetForm } from "./subscriptionSlice";
-import { showNotification } from "../common/headerSlice";
-import ClientOrdres from "../order/components/ClientOrdres";
-import InfoText from "../../components/Typography/InfoText";
-import SubscriptionList from "./components/SubscriptionList";
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getSubscriptions, resetForm } from './subscriptionSlice';
+import { showNotification } from '../common/headerSlice';
+import ClientOrdres from '../order/components/ClientOrdres';
+import InfoText from '../../components/Typography/InfoText';
+import SubscriptionList from './components/SubscriptionList';
 
 const Subscription = (props) => {
   const dispatch = useDispatch();
-  const { subscriptions, isLoading } = useSelector(
-    (state) => state.subscriptions,
-  );
+  const { subscriptions, isLoading } = useSelector((state) => state.subscriptions);
   console.log(subscriptions);
 
   useEffect(() => {
@@ -23,16 +21,16 @@ const Subscription = (props) => {
         console.log(response.error);
         dispatch(
           showNotification({
-            message: "Error while fetching subscriptions",
-            status: 0,
-          }),
+            message: 'Error while fetching subscriptions',
+            status: 0
+          })
         );
       } else {
         dispatch(
           showNotification({
-            message: "Succefully fetched the subscriptions",
-            status: 1,
-          }),
+            message: 'Succefully fetched the subscriptions',
+            status: 1
+          })
         );
       }
     });
@@ -74,9 +72,7 @@ const Subscription = (props) => {
             // updateFormValue={fetchOrdersOnSearch}
             />
           ) : (
-            <InfoText styleClasses={"md:grid-cols-2"}>
-              No order found ...
-            </InfoText>
+            <InfoText styleClasses={'md:grid-cols-2'}>No order found ...</InfoText>
           )}
         </>
       )}

@@ -1,47 +1,52 @@
-import React, { useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AgGridReact } from "ag-grid-react";
-import { AiOutlineDelete } from "react-icons/ai";
-import { classNames } from "../../../components/Common/UtilsClassNames";
+import React, { useMemo, useRef, useState } from 'react';
+
+import { AgGridReact } from 'ag-grid-react';
+import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { AiOutlineDelete } from 'react-icons/ai';
+
+import { classNames } from '../../../components/Common/UtilsClassNames';
+import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
+import { disableScroll, enableScroll } from '../../../utils/functions/preventAndAllowScroll';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
 import {
-  AG_GRID_DEFAULT_COL_DEF,
-  MODAL_BODY_TYPES,
-} from "../../../utils/globalConstantUtil";
-import moment from "moment";
-import {
-  deleteDiscount,
-  toggleDiscountStatus,
-} from "../discountManagementSlice";
-import { showNotification } from "../../common/headerSlice";
-import { openModal } from "../../common/modalSlice";
-import {
-  disableScroll,
-  enableScroll,
-} from "../../../utils/functions/preventAndAllowScroll";
+  setFilters,
+  setPaginationCurrentPage,
+  setPaginationSize
+} from '../../common/discountManagementTableSlice';
+import { showNotification } from '../../common/headerSlice';
+import { openModal } from '../../common/modalSlice';
+import { deleteDiscount, toggleDiscountStatus } from '../discountManagementSlice';
 
 const containFilterParams = {
-  filterOptions: ["contains", "notContains"],
+  filterOptions: ['contains', 'notContains'],
   debounceMs: 200,
-  maxNumConditions: 1,
+  maxNumConditions: 1
 };
 
-const DiscountList = ({ dateValue }) => {
+const DiscountList = ({ dateValue, gridOptions }) => {
   const dispatch = useDispatch();
+  const gridRef = useRef(null);
+
   const { discounts, isLoading } = useSelector((state) => state.discount);
+
+  const { paginationCurrentPage, filters, paginationSize } = useSelector(
+    (state) => state.discountManagementTable
+  );
 
   const [disableDiscount, setDisableDiscount] = useState(false);
   const [ToBedeletedDiscount, setToBeDeletedDiscount] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState({});
 
   const onDefaultColClicked = async (data) => {
-    console.log(data);
     dispatch(
       openModal({
-        title: "Add Discount",
-        size: "lg",
+        title: 'Add Discount',
+        size: 'lg',
         bodyType: MODAL_BODY_TYPES.DISCOUNT_ADD_OR_EDIT,
-        extraObject: { discountObject: data, dateValue },
-      }),
+        extraObject: { discountObject: data, dateValue }
+      })
     );
   };
 
@@ -59,179 +64,135 @@ const DiscountList = ({ dateValue }) => {
 
   const columnDefs = useMemo(() => [
     {
-      field: "id",
-      headerName: "ID",
+      field: 'id',
+      headerName: 'ID',
       width: 70,
       pinned: true,
       filterParams: containFilterParams,
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
         return (
-          <p
-            className={classNames(
-              "px-3 py-1 uppercase leading-wide font-bold text-primary",
-            )}
-          >
+          <p className={classNames('px-3 py-1 uppercase leading-wide font-bold text-primary')}>
             {value}
           </p>
         );
-      },
+      }
     },
     {
-      field: "article.id",
-      headerName: "Article ID",
+      field: 'article.id',
+      headerName: 'Article ID',
       width: 120,
       pinned: true,
       filterParams: containFilterParams,
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
         return (
-          <p
-            className={classNames(
-              "px-3 py-1 uppercase leading-wide font-bold text-primary",
-            )}
-          >
+          <p className={classNames('px-3 py-1 uppercase leading-wide font-bold text-primary')}>
             {value}
           </p>
         );
-      },
+      }
     },
     {
-      field: "article.merchant.name",
-      headerName: "Merchant",
+      field: 'article.merchant.name',
+      headerName: 'Merchant',
       width: 150,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
-        return (
-          // <div className='flex items-center justify-center'>
-          <p className="uppercase break-all overflow-hidden">{value}</p>
-          // </div>
-        );
-      },
+        return <p className="uppercase break-all overflow-hidden">{value}</p>;
+      }
     },
     {
-      field: "article.title",
-      headerName: "Article",
+      field: 'article.title',
+      headerName: 'Article',
       width: 170,
       filterParams: containFilterParams,
       // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
-        return (
-          // <div className='flex items-center justify-center'>
-          <p className="uppercase break-all overflow-hidden">{value}</p>
-          // </div>
-        );
-      },
+        return <p className="uppercase break-all overflow-hidden">{value}</p>;
+      }
     },
     {
-      field: "value_type",
-      headerName: "Type",
+      field: 'value_type',
+      headerName: 'Type',
       width: 130,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
-        return (
-          // <div className='flex items-center justify-center'>
-          <p className="uppercase break-all overflow-hidden">{value}</p>
-          // </div>
-        );
-      },
+        return <p className="uppercase break-all overflow-hidden">{value}</p>;
+      }
     },
     {
-      // field: "value",
       valueGetter: ({ data }) => {
         const count = data?.article_commandes?.filter((article) => {
-          return article?.commande?.commande_commande_statuses?.some(
-            (status) => {
-              return status?.commande_status?.code === "DELIVERED";
-            },
-          );
+          return article?.commande?.commande_commande_statuses?.some((status) => {
+            return status?.commande_status?.code === 'DELIVERED';
+          });
         }).length;
 
         return count;
-
-        // const status =
-        //   data?.commande_commande_statuses[
-        //     data?.commande_commande_statuses?.length - 1
-        //   ]?.commande_status?.code;
-        // return status; // Adjust this based on your actual structure
       },
-      headerName: "Count",
+      headerName: 'Count',
       width: 100,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ data, value }) => {
         return (
-          // <div className='flex items-center justify-center'>
           <p className="uppercase break-all overflow-hidden">
-            {value + (data?.value_type === "PRICE" ? "" : " %")}
+            {value + (data?.value_type === 'PRICE' ? '' : ' %')}
           </p>
-          // </div>
         );
-      },
+      }
     },
     {
-      field: "value",
-      headerName: "Value",
+      field: 'value',
+      headerName: 'Value',
       width: 100,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ data, value }) => {
         return (
-          // <div className='flex items-center justify-center'>
           <p className="uppercase break-all overflow-hidden">
-            {value + (data?.value_type === "PRICE" ? "" : " %")}
+            {value + (data?.value_type === 'PRICE' ? '' : ' %')}
           </p>
-          // </div>
         );
-      },
+      }
     },
     {
-      field: "start_date",
-      headerName: "Start Date",
+      field: 'start_date',
+      headerName: 'Start Date',
       width: 155,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
         return (
-          // <div className='flex items-center justify-center'>
           <p className="uppercase break-all overflow-hidden">
-            {moment.utc(value).format("DD/MM/YYYY HH:mm")}
+            {moment.utc(value).format('DD/MM/YYYY HH:mm')}
           </p>
-          // </div>
         );
-      },
+      }
     },
     {
-      field: "end_date",
-      headerName: "End Date",
+      field: 'end_date',
+      headerName: 'End Date',
       width: 155,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ value }) => {
         return (
-          // <div className='flex items-center justify-center'>
           <p className="uppercase break-all overflow-hidden">
-            {moment.utc(value).format("DD/MM/YYYY HH:mm")}
+            {moment.utc(value).format('DD/MM/YYYY HH:mm')}
           </p>
-          // </div>
         );
-      },
+      }
     },
     {
-      field: "id",
-      headerName: "Status",
+      field: 'id',
+      headerName: 'Status',
       width: 100,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => toggleStatus(params.data),
       cellRenderer: ({ data, value }) => {
         return (
@@ -246,14 +207,13 @@ const DiscountList = ({ dateValue }) => {
             </label>
           </div>
         );
-      },
+      }
     },
     {
-      field: "id",
-      headerName: "Delete",
+      field: 'id',
+      headerName: 'Delete',
       width: 90,
       filterParams: containFilterParams,
-      // pinned: 'right',
       onCellClicked: (params) => deleteDiscountById(params.data),
       cellRenderer: ({ data, value }) => {
         return (
@@ -263,78 +223,71 @@ const DiscountList = ({ dateValue }) => {
             </button>
           </div>
         );
-      },
+      }
     },
     {
-      field: "id",
-      headerName: "Image",
+      field: 'id',
+      headerName: 'Image',
       width: 90,
       filterParams: containFilterParams,
-      pinned: "right",
+      pinned: 'right',
       onCellClicked: (params) => onDefaultColClicked(params.data),
       cellRenderer: ({ data }) => {
         return (
-          <div className={`avatar ${data?.active ? "online" : "offline"}`}>
+          <div className={`avatar ${data?.active ? 'online' : 'offline'}`}>
             <div className="w-11 h-11 rounded-full">
               <img src={data?.article?.image} alt="food" />
             </div>
           </div>
         );
-      },
-    },
+      }
+    }
   ]);
 
   return (
     <div className="overflow-hidden mt-2">
       <div
-        className={`${
-          ToBedeletedDiscount ? "modal-open" : ""
-        } modal modal-bottom sm:modal-middle`}
-      >
+        className={`${ToBedeletedDiscount ? 'modal-open' : ''} modal modal-bottom sm:modal-middle`}>
         <div className="modal-box">
           <h3 className="font-bold text-lg">
-            Are you sure you want to delete the discount with ID:{" "}
+            Are you sure you want to delete the discount with ID:{' '}
             <span className="text-primary">{selectedDiscount?.id}</span>?
           </h3>
 
           <div className="">
             <div className="divider">Information</div>
             <p>
-              Article:{" "}
+              Article:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.article?.title}
               </span>
             </p>
             <p>
-              Type:{" "}
+              Type:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.value_type}
               </span>
             </p>
             <p>
-              Value:{" "}
+              Value:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.value}
               </span>
             </p>
             <p>
-              Merchant:{" "}
+              Merchant:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.article?.merchant?.name}
               </span>
             </p>
             <p>
-              Interval: From{" "}
+              Interval: From{' '}
               <span className="text-primary font-semibold lowercase">
-                {moment
-                  .utc(selectedDiscount?.start_date)
-                  .format("DD-MM-YYYY HH:mm")}
-              </span>{" "}
-              To{" "}
+                {moment.utc(selectedDiscount?.start_date).format('DD-MM-YYYY HH:mm')}
+              </span>{' '}
+              To{' '}
               <span className="text-primary font-semibold lowercase">
-                {moment
-                  .utc(selectedDiscount?.end_date)
-                  .format("DD-MM-YYYY HH:mm")}
+                {moment.utc(selectedDiscount?.end_date).format('DD-MM-YYYY HH:mm')}
               </span>
             </p>
           </div>
@@ -346,8 +299,7 @@ const DiscountList = ({ dateValue }) => {
                 enableScroll();
                 setToBeDeletedDiscount((_) => false);
                 setSelectedDiscount((_) => {});
-              }}
-            >
+              }}>
               No, Cancel Action
             </button>
             <button
@@ -355,86 +307,76 @@ const DiscountList = ({ dateValue }) => {
               onClick={async () => {
                 await dispatch(
                   deleteDiscount({
-                    discountId: selectedDiscount?.id,
-                  }),
+                    discountId: selectedDiscount?.id
+                  })
                 ).then(async (response) => {
                   if (response?.error) {
                     dispatch(
                       showNotification({
-                        message: "Error while deleting the discount",
-                        status: 0,
-                      }),
+                        message: 'Error while deleting the discount',
+                        status: 0
+                      })
                     );
                   } else {
                     dispatch(
                       showNotification({
-                        message: "Succefully deleted the discount",
-                        status: 1,
-                      }),
+                        message: 'Succefully deleted the discount',
+                        status: 1
+                      })
                     );
                     setToBeDeletedDiscount((_) => false);
                     setSelectedDiscount((_) => {});
                     enableScroll();
                   }
                 });
-              }}
-            >
+              }}>
               PROCEED
             </button>
           </div>
         </div>
       </div>
 
-      <div
-        className={`${
-          disableDiscount ? "modal-open" : ""
-        } modal modal-bottom sm:modal-middle`}
-      >
+      <div className={`${disableDiscount ? 'modal-open' : ''} modal modal-bottom sm:modal-middle`}>
         <div className="modal-box">
           <h3 className="font-bold text-lg">
-            Are you sure you want to{" "}
-            {selectedDiscount?.active ? "disable" : "enable"} the discount with
-            ID: <span className="text-primary">{selectedDiscount?.id}</span>?
+            Are you sure you want to {selectedDiscount?.active ? 'disable' : 'enable'} the discount
+            with ID: <span className="text-primary">{selectedDiscount?.id}</span>?
           </h3>
 
           <div className="">
             <div className="divider">Information</div>
             <p>
-              Article:{" "}
+              Article:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.article?.title}
               </span>
             </p>
             <p>
-              Type:{" "}
+              Type:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.value_type}
               </span>
             </p>
             <p>
-              Value:{" "}
+              Value:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.value}
               </span>
             </p>
             <p>
-              Merchant:{" "}
+              Merchant:{' '}
               <span className="text-primary font-semibold lowercase">
                 {selectedDiscount?.article?.merchant?.name}
               </span>
             </p>
             <p>
-              Interval: From{" "}
+              Interval: From{' '}
               <span className="text-primary font-semibold lowercase">
-                {moment
-                  .utc(selectedDiscount?.start_date)
-                  .format("DD-MM-YYYY HH:mm")}
-              </span>{" "}
-              To{" "}
+                {moment.utc(selectedDiscount?.start_date).format('DD-MM-YYYY HH:mm')}
+              </span>{' '}
+              To{' '}
               <span className="text-primary font-semibold lowercase">
-                {moment
-                  .utc(selectedDiscount?.end_date)
-                  .format("DD-MM-YYYY HH:mm")}
+                {moment.utc(selectedDiscount?.end_date).format('DD-MM-YYYY HH:mm')}
               </span>
             </p>
           </div>
@@ -446,8 +388,7 @@ const DiscountList = ({ dateValue }) => {
                 enableScroll();
                 setDisableDiscount((_) => false);
                 setSelectedDiscount((_) => {});
-              }}
-            >
+              }}>
               No, Cancel Action
             </button>
             <button
@@ -455,15 +396,15 @@ const DiscountList = ({ dateValue }) => {
               onClick={async () => {
                 await dispatch(
                   toggleDiscountStatus({
-                    discountId: selectedDiscount?.id,
-                  }),
+                    discountId: selectedDiscount?.id
+                  })
                 ).then(async (response) => {
                   if (response?.error) {
                     dispatch(
                       showNotification({
-                        message: "Error while toggling the discount status",
-                        status: 0,
-                      }),
+                        message: 'Error while toggling the discount status',
+                        status: 0
+                      })
                     );
                   } else {
                     dispatch(
@@ -471,18 +412,15 @@ const DiscountList = ({ dateValue }) => {
                         message: response?.payload?.discount?.existingDiscount
                           ? `Could not change the discount's status, please check the date range`
                           : "Succefully changed the discount's status",
-                        status: response?.payload?.discount?.existingDiscount
-                          ? 0
-                          : 1,
-                      }),
+                        status: response?.payload?.discount?.existingDiscount ? 0 : 1
+                      })
                     );
                     enableScroll();
                     setDisableDiscount((_) => false);
                     setSelectedDiscount((_) => {});
                   }
                 });
-              }}
-            >
+              }}>
               PROCEED
             </button>
           </div>
@@ -493,15 +431,42 @@ const DiscountList = ({ dateValue }) => {
         <>
           <div className="ag-theme-alpine h-[40rem]">
             <AgGridReact
+              ref={gridRef}
               columnDefs={columnDefs}
               rowData={discounts}
               defaultColDef={AG_GRID_DEFAULT_COL_DEF}
-              // defaultColDef={defaultColDef}
+              gridOptions={gridOptions}
               pagination={true}
-              paginationPageSize={20}
               rowHeight={50}
-              sideBar={"filters"}
+              sideBar={'filters'}
               rowSelection="single"
+              paginationPageSize={paginationSize || 20}
+              onPaginationChanged={async (params) => {
+                adjustGridHeight(params.api);
+                let currentPage = params.api.paginationGetCurrentPage();
+                let totalPages = params.api.paginationGetTotalPages();
+                await dispatch(
+                  setPaginationCurrentPage({
+                    paginationCurrentPage: currentPage
+                  })
+                );
+              }}
+              onFirstDataRendered={(params) => {
+                adjustGridHeight(params.api); // Adjust height
+                params.api.paginationGoToPage(
+                  paginationCurrentPage !== null
+                    ? paginationCurrentPage
+                    : params.api.paginationGetCurrentPage()
+                );
+                params.api.setFilterModel(filters);
+              }}
+              onFilterChanged={async (params) => {
+                await dispatch(
+                  setFilters({
+                    filters: params?.api?.getFilterModel() || {}
+                  })
+                );
+              }}
             />
           </div>
         </>

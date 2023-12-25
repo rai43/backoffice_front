@@ -1,7 +1,7 @@
-import "react-phone-number-input/style.css";
-import { useState } from "react";
-import PhoneInput from "react-phone-number-input";
-import flags from "react-phone-number-input/flags";
+import 'react-phone-number-input/style.css';
+import { useState } from 'react';
+import PhoneInput from 'react-phone-number-input';
+import flags from 'react-phone-number-input/flags';
 
 const InputPhoneNumber = ({
   labelTitle,
@@ -12,7 +12,7 @@ const InputPhoneNumber = ({
   placeholder,
   updateFormValue,
   updateType,
-  inputStyle,
+  inputStyle
 }) => {
   const [value, setValue] = useState(defaultValue);
   const updateInputValue = (val) => {
@@ -23,9 +23,7 @@ const InputPhoneNumber = ({
   return (
     <div className={`form-control w-full ${containerStyle}`}>
       <label className="label">
-        <span className={"label-text text-base-content " + labelStyle}>
-          {labelTitle}
-        </span>
+        <span className={'label-text text-base-content ' + labelStyle}>{labelTitle}</span>
       </label>
 
       <PhoneInput

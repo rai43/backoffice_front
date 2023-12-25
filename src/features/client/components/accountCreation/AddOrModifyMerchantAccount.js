@@ -1,7 +1,7 @@
-import React from "react";
-import InputPhoneNumber from "../../../../components/Input/InputPhoneNumber";
-import InputText from "../../../../components/Input/InputText";
-import ImageUpload from "../../../../components/Input/ImageUpload";
+import React from 'react';
+import InputPhoneNumber from '../../../../components/Input/InputPhoneNumber';
+import InputText from '../../../../components/Input/InputText';
+import ImageUpload from '../../../../components/Input/ImageUpload';
 
 const AddOrModifyMerchantAccount = ({
   formik,
@@ -9,25 +9,23 @@ const AddOrModifyMerchantAccount = ({
   clickAction,
   firstLoad,
   preventGoBack,
-  clientToMarchant,
+  clientToMarchant
 }) => {
   console.log(formik.values);
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <InputPhoneNumber
-          defaultCountry={"CI"}
+          defaultCountry={'CI'}
           defaultValue={formik.values.phone_number}
           updateType="phone_number"
           containerStyle="mt-3"
           labelTitle="Phone number"
           updateFormValue={updateFormValue}
           inputStyle={`${
-            !formik.isValid &&
-            formik.touched.phone_number &&
-            formik.errors.phone_number
-              ? "input-error"
-              : ""
+            !formik.isValid && formik.touched.phone_number && formik.errors.phone_number
+              ? 'input-error'
+              : ''
           } `}
         />
         <InputText
@@ -39,11 +37,9 @@ const AddOrModifyMerchantAccount = ({
           labelTitle="Merchant Name"
           updateFormValue={updateFormValue}
           inputStyle={`${
-            !formik.isValid &&
-            formik.touched.merchant_name &&
-            formik.errors.merchant_name
-              ? "input-error"
-              : ""
+            !formik.isValid && formik.touched.merchant_name && formik.errors.merchant_name
+              ? 'input-error'
+              : ''
           } `}
         />
         <InputText
@@ -56,8 +52,8 @@ const AddOrModifyMerchantAccount = ({
           updateFormValue={updateFormValue}
           inputStyle={`${
             !formik.isValid && formik.touched.latitude && formik.errors.latitude
-              ? "input-error"
-              : ""
+              ? 'input-error'
+              : ''
           } `}
         />
         <InputText
@@ -69,11 +65,9 @@ const AddOrModifyMerchantAccount = ({
           labelTitle="Longitude"
           updateFormValue={updateFormValue}
           inputStyle={`${
-            !formik.isValid &&
-            formik.touched.longitude &&
-            formik.errors.longitude
-              ? "input-error"
-              : ""
+            !formik.isValid && formik.touched.longitude && formik.errors.longitude
+              ? 'input-error'
+              : ''
           } `}
         />
         <div className="md:col-span-2">
@@ -96,19 +90,21 @@ const AddOrModifyMerchantAccount = ({
           onClick={() =>
             clickAction((old) => {
               console.log(formik.values);
-              console.log("!clientToMerchant", !clientToMarchant);
-              console.log("preventGoBack", preventGoBack);
+              console.log('!clientToMerchant', !clientToMarchant);
+              console.log('preventGoBack', preventGoBack);
               console.log(
-                "formik.values.profile_picture !== null",
-                formik.values.profile_picture !== null,
+                'formik.values.profile_picture !== null',
+                formik.values.profile_picture !== null
+              );
+              console.log(
+                'formik?.values?.profile_picture?.includes(https://res.cloudinary.com/',
+                formik?.values?.profile_picture?.includes('https://res.cloudinary.com/')
               );
               if (
-                (!clientToMarchant &&
-                  preventGoBack &&
-                  formik.values.profile_picture !== null) ||
+                (!clientToMarchant && preventGoBack && formik.values.profile_picture !== null) ||
                 (!firstLoad &&
                   formik.isValid &&
-                  formik.values.profile_picture !== "" &&
+                  formik.values.profile_picture !== '' &&
                   formik.values.profile_picture !== undefined &&
                   formik.values.profile_picture !== null)
               ) {

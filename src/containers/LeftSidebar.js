@@ -1,10 +1,10 @@
-import { NavLink, Routes, Link, useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import { NavLink, Routes, Link, useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon';
 
-import SidebarSubmenu from "./SidebarSubmenu";
-import routes from "../routes/sidebar";
-import streetLogo from "../assets/street_logo.jpeg";
+import SidebarSubmenu from './SidebarSubmenu';
+import routes from '../routes/sidebar';
+import streetLogo from '../assets/street_logo.jpeg';
 
 const LeftSidebar = () => {
   const location = useLocation();
@@ -12,7 +12,7 @@ const LeftSidebar = () => {
   const dispatch = useDispatch();
 
   const close = (e) => {
-    document.getElementById("left-sidebar-drawer").click();
+    document.getElementById('left-sidebar-drawer').click();
   };
 
   return (
@@ -27,14 +27,10 @@ const LeftSidebar = () => {
         </button>
 
         <li className="mb-2 font-semibold text-xl">
-          <Link to={"/app/dashboard"}>
-            <img
-              className="mask mask-squircle w-10"
-              src={streetLogo}
-              alt="Street Logo"
-            />
+          <Link to={'/app/dashboard'}>
+            <img className="mask mask-squircle w-10" src={streetLogo} alt="Street Logo" />
             Street CI
-          </Link>{" "}
+          </Link>{' '}
         </li>
         {routes.map((route, k) => {
           return (
@@ -46,9 +42,7 @@ const LeftSidebar = () => {
                   end
                   to={route.path}
                   className={({ isActive }) =>
-                    `${
-                      isActive ? "font-semibold  bg-base-200 " : "font-normal"
-                    }`
+                    `${isActive ? 'font-semibold  bg-base-200 ' : 'font-normal'}`
                   }
                 >
                   {route.icon} {route.name}

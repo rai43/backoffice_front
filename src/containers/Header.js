@@ -1,42 +1,35 @@
-import moment from "moment";
-import { themeChange } from "theme-change";
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import BellIcon from "@heroicons/react/24/outline/BellIcon";
-import Bars3Icon from "@heroicons/react/24/outline/Bars3Icon";
-import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
-import SunIcon from "@heroicons/react/24/outline/SunIcon";
-import UserCircleIcon from "@heroicons/react/24/outline/UserCircleIcon";
-import { BsChevronCompactLeft, BsChevronCompactRight } from "react-icons/bs";
-import auth from "../app/auth";
+import moment from 'moment';
+import { themeChange } from 'theme-change';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import BellIcon from '@heroicons/react/24/outline/BellIcon';
+import Bars3Icon from '@heroicons/react/24/outline/Bars3Icon';
+import MoonIcon from '@heroicons/react/24/outline/MoonIcon';
+import SunIcon from '@heroicons/react/24/outline/SunIcon';
+import UserCircleIcon from '@heroicons/react/24/outline/UserCircleIcon';
+import { BsChevronCompactLeft, BsChevronCompactRight } from 'react-icons/bs';
+import auth from '../app/auth';
 // import { openRightDrawer } from '../features/common/rightDrawerSlice';
-import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
+import { RIGHT_DRAWER_TYPES } from '../utils/globalConstantUtil';
 
-import { NavLink, Routes, Link, useLocation } from "react-router-dom";
-import { toggleSideBarStatus } from "../features/common/headerSlice";
+import { NavLink, Routes, Link, useLocation } from 'react-router-dom';
+import { toggleSideBarStatus } from '../features/common/headerSlice';
 
 function Header() {
   const dispatch = useDispatch();
-  const { noOfNotifications, pageTitle, isSideBarOpened } = useSelector(
-    (state) => state.header,
-  );
-  const [currentTheme, setCurrentTheme] = useState(
-    localStorage.getItem("theme"),
-  );
+  const { noOfNotifications, pageTitle, isSideBarOpened } = useSelector((state) => state.header);
+  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('theme'));
 
   useEffect(() => {
     themeChange(false);
     if (currentTheme === null) {
-      if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        setCurrentTheme("dark");
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setCurrentTheme('dark');
       } else {
-        setCurrentTheme("light");
+        setCurrentTheme('light');
       }
     }
-    setCurrentTheme("light");
+    setCurrentTheme('light');
     // 👆 false parameter is required for react project
   }, []);
 
@@ -52,7 +45,7 @@ function Header() {
   };
 
   const close = (e) => {
-    document.getElementById("left-sidebar-drawer").click();
+    document.getElementById('left-sidebar-drawer').click();
   };
 
   return (
@@ -92,7 +85,7 @@ function Header() {
         <div className="order-last">
           {/* The date */}
           <span className="text-primary font-bold mr-2 hidden md:block">
-            {moment.utc().format("DD-MM-YYYY HH:mm")}
+            {moment.utc().format('DD-MM-YYYY HH:mm')}
           </span>
 
           {/* Multiple theme selection, uncomment this if you want to enable multiple themes selection,
@@ -114,25 +107,20 @@ function Header() {
               data-set-theme="light"
               data-act-class="ACTIVECLASS"
               className={
-                "fill-current w-6 h-6 " +
-                (currentTheme === "dark" ? "swap-on" : "swap-off")
+                'fill-current w-6 h-6 ' + (currentTheme === 'dark' ? 'swap-on' : 'swap-off')
               }
             />
             <MoonIcon
               data-set-theme="dark"
               data-act-class="ACTIVECLASS"
               className={
-                "fill-current w-6 h-6 " +
-                (currentTheme === "light" ? "swap-on" : "swap-off")
+                'fill-current w-6 h-6 ' + (currentTheme === 'light' ? 'swap-on' : 'swap-off')
               }
             />
           </label>
 
           {/* Notification icon */}
-          <button
-            className="btn btn-ghost ml-4  btn-circle"
-            onClick={() => openNotification()}
-          >
+          <button className="btn btn-ghost ml-4  btn-circle" onClick={() => openNotification()}>
             <div className="indicator">
               <BellIcon className="h-6 w-6" />
               {noOfNotifications > 0 ? (
@@ -155,13 +143,13 @@ function Header() {
               className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
             >
               <li className="justify-between">
-                <Link to={"/app/settings-profile"}>
+                <Link to={'/app/settings-profile'}>
                   Profile Settings
                   <span className="badge">New</span>
                 </Link>
               </li>
               <li className="">
-                <Link to={"/app/settings-billing"}>Bill History</Link>
+                <Link to={'/app/settings-billing'}>Bill History</Link>
               </li>
               <div className="divider mt-0 mb-0"></div>
               <li>

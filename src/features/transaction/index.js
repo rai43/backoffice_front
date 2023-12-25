@@ -1,36 +1,31 @@
-import { useFormik } from "formik";
-import moment from "moment";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
-import {
-  generateStatistics,
-  getClientsTransactions,
-  resetForm,
-} from "./transactionSlice";
-import Datepicker from "react-tailwindcss-datepicker";
-import SelectBox from "../../components/Input/SelectBox";
-import InputText from "../../components/Input/InputText";
-import InfoText from "../../components/Typography/InfoText";
-import UsersTransactions from "./components/UsersTransactions";
+import { useCallback, useEffect, useState } from 'react';
 
-const INITIAL_WALLET_FILTER_OBJ = {
-  transactionType: "ALL",
-  from: moment.utc().subtract(30, "d").format("YYYY-MM-DD"),
-  to: moment.utc().add(1, "days").format("YYYY-MM-DD"),
-  minAmount: 0,
-  maxAmount: 0,
-  searchPattern: "",
-};
+import { useFormik } from 'formik';
+import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+import Datepicker from 'react-tailwindcss-datepicker';
+
+import UsersTransactions from './components/UsersTransactions';
+import { generateStatistics, getClientTransactions, resetForm } from './transactionSlice';
+import InputText from '../../components/Input/InputText';
+import SelectBox from '../../components/Input/SelectBox';
+import InfoText from '../../components/Typography/InfoText';
+import {
+  resetTableTransactionSettings,
+  setMaxAmount,
+  setMinAmount,
+  setSettings,
+  setTransactionType
+} from '../common/transactionsTableSlice';
 
 const transactionTypeOptionsTransactions = [
-  { name: "ALL", value: "ALL" },
-  { name: "BONUS", value: "BONUS" },
-  { name: "PAYMENT", value: "PAYMENT" },
-  { name: "RECHARGEMENT", value: "RECHARGEMENT" },
-  { name: "RECHARGEMENT_MOBILE_MONEY", value: "RECHARGEMENT_MOBILE_MONEY" },
-  { name: "RECHARGEMENT_STREET", value: "RECHARGEMENT_STREET" },
-  { name: "RETRAIT", value: "RETRAIT" },
+  { name: 'ALL', value: 'ALL' },
+  { name: 'BONUS', value: 'BONUS' },
+  { name: 'PAYMENT', value: 'PAYMENT' },
+  { name: 'RECHARGEMENT', value: 'RECHARGEMENT' },
+  { name: 'RECHARGEMENT_MOBILE_MONEY', value: 'RECHARGEMENT_MOBILE_MONEY' },
+  { name: 'RECHARGEMENT_STREET', value: 'RECHARGEMENT_STREET' },
+  { name: 'RETRAIT', value: 'RETRAIT' }
 ];
 
 const Transactions = () => {
@@ -46,43 +41,51 @@ const Transactions = () => {
     withdrawalsCount: 0,
     withdrawalsAmount: 0,
     bonusCount: 0,
-    bonusAmount: 0,
+    bonusAmount: 0
   });
 
+  const { transactionType, minAmount, maxAmount } = useSelector((state) => state.transactionsTable);
+
+  const INITIAL_WALLET_FILTER_OBJ = {
+    transactionType: transactionType ? transactionType : 'ALL',
+    from: moment.utc().subtract(30, 'd').format('YYYY-MM-DD'),
+    to: moment.utc().add(1, 'days').format('YYYY-MM-DD'),
+    minAmount: minAmount ? minAmount : 0,
+    maxAmount: maxAmount ? maxAmount : 0,
+    searchPattern: ''
+  };
+
   const formik = useFormik({
-    initialValues: INITIAL_WALLET_FILTER_OBJ,
+    initialValues: INITIAL_WALLET_FILTER_OBJ
   });
   const dispatch = useDispatch();
-  const pageNumberRef = useRef(0);
   const [openFilter, setOpenFilter] = useState(false);
 
   const [dateValue, setDateValue] = useState({
     startDate: formik.values.from,
-    endDate: formik.values.to,
+    endDate: formik.values.to
   });
 
-  const { transactions, skip, isLoading, noMoreQuery } = useSelector(
-    (state) => state.transaction,
-  );
+  const { transactions, skip, isLoading, noMoreQuery } = useSelector((state) => state.transaction);
 
   const applyFilter = async (dispatchParams) => {
-    dispatch(getClientsTransactions(dispatchParams)).then(async (res) => {
+    dispatch(getClientTransactions(dispatchParams)).then(async (res) => {
       if (res?.payload?.transactions) {
         try {
           const { payload } = await dispatch(
             generateStatistics({
               data: [...transactions, ...res?.payload?.transactions],
-              clientPhoneNumber: "",
-            }),
+              clientPhoneNumber: ''
+            })
           );
           setsStatistics((oldStats) => {
             return {
               ...oldStats,
-              ...payload,
+              ...payload
             };
           });
         } catch (e) {
-          console.log("Could not fetch the statistics");
+          console.log('Could not fetch the statistics');
         }
       }
     });
@@ -90,33 +93,17 @@ const Transactions = () => {
 
   const onFetchTransactions = async () => {
     dispatch(resetForm());
-    console.log(formik.values);
-    updateFormValue({ key: "searchPattern", value: "" });
+    dispatch(resetTableTransactionSettings());
+    updateFormValue({ key: 'searchPattern', value: '' });
     const dispatchParams = {
       transactionType: formik.values.transactionType,
       from: formik.values.from,
       to: formik.values.to,
       minAmount: formik.values.minAmount,
       maxAmount: formik.values.maxAmount,
-      searchPattern: "",
-      skip: 0,
+      searchPattern: '',
+      skip: 0
     };
-    await applyFilter(dispatchParams);
-  };
-
-  const onSearchTransactions = async () => {
-    dispatch(resetForm());
-
-    const dispatchParams = {
-      transactionType: formik.values.transactionType,
-      from: formik.values.from,
-      to: formik.values.to,
-      minAmount: formik.values.minAmount,
-      maxAmount: formik.values.maxAmount,
-      searchPattern: formik.values.searchPattern,
-      skip: 0,
-    };
-    console.log(dispatchParams);
     await applyFilter(dispatchParams);
   };
 
@@ -124,7 +111,7 @@ const Transactions = () => {
     onFetchTransactions();
   }, [formik.values.from, formik.values.to]);
 
-  const handleLoadTransactions = async (prevPage) => {
+  const handleLoadTransactions = async () => {
     if (!noMoreQuery && !isLoading) {
       const dispatchParams = {
         transactionType: formik.values.transactionType,
@@ -133,13 +120,11 @@ const Transactions = () => {
         minAmount: formik.values.minAmount,
         maxAmount: formik.values.maxAmount,
         searchPattern: formik.values.searchPattern,
-        skip: skip,
+        skip: skip
       };
 
       await applyFilter(dispatchParams);
     }
-
-    pageNumberRef.current = prevPage;
   };
 
   const handleDatePickerValueChange = (newValue) => {
@@ -147,19 +132,18 @@ const Transactions = () => {
     formik.setValues({
       ...formik.values,
       from: newValue.startDate,
-      to: newValue.endDate,
+      to: newValue.endDate
     });
   };
 
   const updateFormValue = useCallback(
     ({ key, value }) => {
-      console.log("key, value", key, value);
       formik.setValues({
         ...formik.values,
-        [key]: value,
+        [key]: value
       });
     },
-    [formik],
+    [formik]
   );
 
   return (
@@ -168,14 +152,9 @@ const Transactions = () => {
         <>
           <div className="mb-4">
             <h3 className="text-sm font-light">
-              Transactions History from{" "}
-              <span className="font-semibold">
-                {moment.utc(formik.values.from).format("LL")}
-              </span>{" "}
-              to{" "}
-              <span className="font-semibold">
-                {moment.utc(formik.values.to).format("LL")}
-              </span>
+              Transactions History from{' '}
+              <span className="font-semibold">{moment.utc(formik.values.from).format('LL')}</span>{' '}
+              to <span className="font-semibold">{moment.utc(formik.values.to).format('LL')}</span>
             </h3>
 
             <div className="divider m-0"></div>
@@ -183,23 +162,16 @@ const Transactions = () => {
               <div className="stat">
                 <div className="stat-title">Transactions (In/Out)</div>
                 <div className={`stat-value text-[1.1rem]`}>
-                  <span className="text-info">
-                    {statistics.transactionsInAmount} FCFA{" "}
-                  </span>{" "}
+                  <span className="text-info">{statistics.transactionsInAmount} FCFA </span>{' '}
                   <span className="text-error font-normal">
                     ({statistics.transactionsOutAmount} FCFA)
                   </span>
                 </div>
                 <div className={`stat-desc`}>
-                  Count:{" "}
+                  Count:{' '}
                   <span>
-                    <span className="text-info">
-                      {statistics.transactionsInCount}{" "}
-                    </span>{" "}
-                    |{" "}
-                    <span className="text-error">
-                      {statistics.transactionsOutCount}{" "}
-                    </span>
+                    <span className="text-info">{statistics.transactionsInCount} </span> |{' '}
+                    <span className="text-error">{statistics.transactionsOutCount} </span>
                   </span>
                 </div>
               </div>
@@ -209,8 +181,7 @@ const Transactions = () => {
                   {statistics.paymentsAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count:{" "}
-                  <span className="text-info">{statistics.paymentsCount}</span>
+                  Count: <span className="text-info">{statistics.paymentsCount}</span>
                 </div>
               </div>
               <div className="stat">
@@ -219,8 +190,7 @@ const Transactions = () => {
                   {statistics.topupsAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count:{" "}
-                  <span className="text-info">{statistics.topupsCount}</span>
+                  Count: <span className="text-info">{statistics.topupsCount}</span>
                 </div>
               </div>
               <div className="stat">
@@ -229,10 +199,7 @@ const Transactions = () => {
                   {statistics.withdrawalsAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count:{" "}
-                  <span className="text-info">
-                    {statistics.withdrawalsCount}
-                  </span>
+                  Count: <span className="text-info">{statistics.withdrawalsCount}</span>
                 </div>
               </div>
               <div className="stat">
@@ -241,8 +208,7 @@ const Transactions = () => {
                   {statistics.bonusAmount} FCFA
                 </div>
                 <div className="stat-desc">
-                  Count{" "}
-                  <span className="text-info">{statistics.bonusCount}</span>
+                  Count <span className="text-info">{statistics.bonusCount}</span>
                 </div>
               </div>
             </div>
@@ -252,47 +218,45 @@ const Transactions = () => {
             <Datepicker
               containerClassName="w-full"
               value={dateValue}
-              theme={"light"}
+              theme={'light'}
               inputClassName="input input-bordered w-full"
-              popoverDirection={"down"}
+              popoverDirection={'down'}
               toggleClassName="invisible"
               onChange={handleDatePickerValueChange}
               showShortcuts={true}
-              primaryColor={"white"}
+              primaryColor={'white'}
             />
-            <div className="md:col-span-2">
-              <div className="grid grid-cols-8 gap-2">
-                <InputText
-                  type="text"
-                  defaultValue={formik.values.searchPattern}
-                  updateType="searchPattern"
-                  placeholder="Type to search"
-                  containerStyle="col-start-2 col-span-6"
-                  labelTitle="Search Pattern"
-                  updateFormValue={updateFormValue}
-                  showLabel={false}
-                />
-                <div className="flex items-center justify-center">
-                  <button
-                    className="btn btn-outline w-2/3 btn-sm btn-ghost"
-                    onClick={onSearchTransactions}
-                  >
-                    <MagnifyingGlassIcon className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            {/*<div className="md:col-span-2">*/}
+            {/*  <div className="grid grid-cols-8 gap-2">*/}
+            {/*    <InputText*/}
+            {/*      type="text"*/}
+            {/*      defaultValue={formik.values.searchPattern}*/}
+            {/*      updateType="searchPattern"*/}
+            {/*      placeholder="Type to search"*/}
+            {/*      containerStyle="col-start-2 col-span-6"*/}
+            {/*      labelTitle="Search Pattern"*/}
+            {/*      updateFormValue={updateFormValue}*/}
+            {/*      showLabel={false}*/}
+            {/*    />*/}
+            {/*    <div className="flex items-center justify-center">*/}
+            {/*      <button*/}
+            {/*        className="btn btn-outline w-2/3 btn-sm btn-ghost"*/}
+            {/*        onClick={onSearchTransactions}*/}
+            {/*      >*/}
+            {/*        <MagnifyingGlassIcon className="w-6 h-6" />*/}
+            {/*      </button>*/}
+            {/*    </div>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
           </div>
           <div
             tabIndex={0}
             className={`collapse rounded-lg collapse-plus border bg-white ${
-              openFilter ? "collapse-open" : "collapse-close"
-            }`}
-          >
+              openFilter ? 'collapse-open' : 'collapse-close'
+            }`}>
             <div
               className="collapse-title text-xl font-medium"
-              onClick={() => setOpenFilter((oldVal) => !oldVal)}
-            >
+              onClick={() => setOpenFilter((oldVal) => !oldVal)}>
               Filters
             </div>
             <div className="collapse-content">
@@ -323,8 +287,17 @@ const Transactions = () => {
                 />
                 <button
                   className="btn btn-outline btn-ghost md:col-start-2"
-                  onClick={onFetchTransactions}
-                >
+                  onClick={async () => {
+                    dispatch(
+                      setTransactionType({
+                        transactionType: formik.values?.transactionType
+                      })
+                    );
+                    dispatch(setMinAmount({ minAmount: formik.values?.minAmount }));
+                    dispatch(setMaxAmount({ maxAmount: formik.values?.maxAmount }));
+
+                    await onFetchTransactions();
+                  }}>
                   Apply Filters
                 </button>
               </div>
@@ -332,22 +305,9 @@ const Transactions = () => {
           </div>
 
           {transactions.length ? (
-            // <div
-            //   // className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 md:p-5 h-screen md:h-[39rem] overflow-auto"
-            //   id={"clientsContainer"}
-            // >
-
-            <UsersTransactions
-              transactions={transactions}
-              currPage={pageNumberRef.current}
-              onLoad={handleLoadTransactions}
-              updateFormValue={() => {}}
-            />
+            <UsersTransactions onLoad={handleLoadTransactions} />
           ) : (
-            // </div>
-            <InfoText styleClasses={"md:grid-cols-2"}>
-              No client found ...
-            </InfoText>
+            <InfoText styleClasses={'md:grid-cols-2'}>No client found ...</InfoText>
           )}
         </>
       )}

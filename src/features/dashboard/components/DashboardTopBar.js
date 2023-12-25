@@ -1,25 +1,25 @@
-import SelectBox from "../../../components/Input/SelectBox";
-import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
-import ShareIcon from "@heroicons/react/24/outline/ShareIcon";
-import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
-import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
-import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
-import { useState } from "react";
-import Datepicker from "react-tailwindcss-datepicker";
+import SelectBox from '../../../components/Input/SelectBox';
+import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon';
+import ShareIcon from '@heroicons/react/24/outline/ShareIcon';
+import EnvelopeIcon from '@heroicons/react/24/outline/EnvelopeIcon';
+import EllipsisVerticalIcon from '@heroicons/react/24/outline/EllipsisVerticalIcon';
+import ArrowPathIcon from '@heroicons/react/24/outline/ArrowPathIcon';
+import { useState } from 'react';
+import Datepicker from 'react-tailwindcss-datepicker';
 
 const periodOptions = [
-  { name: "Today", value: "TODAY" },
-  { name: "Yesterday", value: "YESTERDAY" },
-  { name: "This Week", value: "THIS_WEEK" },
-  { name: "Last Week", value: "LAST_WEEK" },
-  { name: "This Month", value: "THIS_MONTH" },
-  { name: "Last Month", value: "LAST_MONTH" },
+  { name: 'Today', value: 'TODAY' },
+  { name: 'Yesterday', value: 'YESTERDAY' },
+  { name: 'This Week', value: 'THIS_WEEK' },
+  { name: 'Last Week', value: 'LAST_WEEK' },
+  { name: 'This Month', value: 'THIS_MONTH' },
+  { name: 'Last Month', value: 'LAST_MONTH' }
 ];
 
 function DashboardTopBar({ updateDashboardPeriod }) {
   const [dateValue, setDateValue] = useState({
     startDate: new Date(),
-    endDate: new Date(),
+    endDate: new Date()
   });
 
   const handleDatePickerValueChange = (newValue) => {
@@ -33,13 +33,13 @@ function DashboardTopBar({ updateDashboardPeriod }) {
         <Datepicker
           containerClassName="w-72 "
           value={dateValue}
-          theme={"light"}
+          theme={'light'}
           inputClassName="input input-bordered w-72"
-          popoverDirection={"down"}
+          popoverDirection={'down'}
           toggleClassName="invisible"
           onChange={handleDatePickerValueChange}
           showShortcuts={true}
-          primaryColor={"white"}
+          primaryColor={'white'}
         />
         {/* <SelectBox
                 options={periodOptions}
@@ -62,10 +62,7 @@ function DashboardTopBar({ updateDashboardPeriod }) {
         </button>
 
         <div className="dropdown dropdown-bottom dropdown-end  ml-2">
-          <label
-            tabIndex={0}
-            className="btn btn-ghost btn-sm normal-case btn-square "
-          >
+          <label tabIndex={0} className="btn btn-ghost btn-sm normal-case btn-square ">
             <EllipsisVerticalIcon className="w-5" />
           </label>
           <ul

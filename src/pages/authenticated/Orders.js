@@ -2,15 +2,17 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../features/common/headerSlice';
 import Order from '../../features/order';
+import { resetTableOrdersSettings } from '../../features/common/ordersTableSlice';
 
 function InternalPage() {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-	useEffect(() => {
-		dispatch(setPageTitle({ title: 'Orders' }));
-	}, []);
+  useEffect(() => {
+    dispatch(resetTableOrdersSettings());
+    dispatch(setPageTitle({ title: 'Orders' }));
+  }, []);
 
-	return <Order />;
+  return <Order />;
 }
 
 export default InternalPage;

@@ -1,27 +1,27 @@
-import { useFormik } from "formik";
-import * as _ from "lodash";
-import React, { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useFormik } from 'formik';
+import * as _ from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import FunnelIcon from "@heroicons/react/24/outline/FunnelIcon";
-import FilterLg from "../../components/Filters/FilterLg";
-import FilterSm from "../../components/Filters/FilterSm";
-import InputCheckbox from "../../components/Input/InputCheckbox";
-import Search from "../../components/Input/Search";
-import InfoText from "../../components/Typography/InfoText";
+import FunnelIcon from '@heroicons/react/24/outline/FunnelIcon';
+import FilterLg from '../../components/Filters/FilterLg';
+import FilterSm from '../../components/Filters/FilterSm';
+import InputCheckbox from '../../components/Input/InputCheckbox';
+import Search from '../../components/Input/Search';
+import InfoText from '../../components/Typography/InfoText';
 import {
   MODAL_BODY_TYPES,
   CONFIRMATION_MODAL_CLOSE_TYPES,
-  RIGHT_DRAWER_TYPES,
-} from "../../utils/globalConstantUtil";
-import { openModal } from "../common/modalSlice";
-import { openRightDrawer } from "../common/rightDrawerSlice";
-import User from "./components/User";
-import { getUsersContent, resetFrom } from "./userSlice";
+  RIGHT_DRAWER_TYPES
+} from '../../utils/globalConstantUtil';
+import { openModal } from '../common/modalSlice';
+import { openRightDrawer } from '../common/rightDrawerSlice';
+import User from './components/User';
+import { getUsersContent, resetFrom } from './userSlice';
 
 const INITIAL_USER_FILTER_OBJ = {
   activeUsers: true,
-  inactiveUsers: false,
+  inactiveUsers: false
 };
 
 const TopSideButtons = ({ extraClasses, containerStyle }) => {
@@ -30,15 +30,15 @@ const TopSideButtons = ({ extraClasses, containerStyle }) => {
   const openAddNewUserModal = () => {
     dispatch(
       openModal({
-        title: "Add User",
-        size: "lg",
-        bodyType: MODAL_BODY_TYPES.USER_ADD_OR_EDIT,
-      }),
+        title: 'Add User',
+        size: 'lg',
+        bodyType: MODAL_BODY_TYPES.USER_ADD_OR_EDIT
+      })
     );
   };
 
   return (
-    <div className={`${containerStyle ? containerStyle : "my-4"}`}>
+    <div className={`${containerStyle ? containerStyle : 'my-4'}`}>
       <button
         className={`btn px-6 normal-case btn-primary btn-outline w-full ${extraClasses}`}
         onClick={() => openAddNewUserModal()}
@@ -50,23 +50,21 @@ const TopSideButtons = ({ extraClasses, containerStyle }) => {
 };
 const Users = () => {
   const dispatch = useDispatch();
-  const { users, from, isLoading, noMoreQuery } = useSelector(
-    (state) => state.user,
-  );
-  const [search, setSearch] = useState("");
+  const { users, from, isLoading, noMoreQuery } = useSelector((state) => state.user);
+  const [search, setSearch] = useState('');
   const [openMobileFilter, setOpenMobileFilter] = useState(false);
 
   const openDeleteUserModal = (user) => {
     dispatch(
       openModal({
-        title: "Confirmation to delete user",
+        title: 'Confirmation to delete user',
         bodyType: MODAL_BODY_TYPES.CONFIRMATION,
         extraObject: {
           message: `Are you sure you want to delete the user: ${user.email} ?`,
           type: CONFIRMATION_MODAL_CLOSE_TYPES.USER_DELETE,
-          id: user.id,
-        },
-      }),
+          id: user.id
+        }
+      })
     );
   };
   const openEditUserModal = (extraObj) => {
@@ -77,15 +75,15 @@ const Users = () => {
       telephone: extraObj.telephone,
       email: extraObj.email,
       adresse: extraObj.adresse,
-      userType: extraObj?.user_type,
+      userType: extraObj?.user_type
     };
     dispatch(
       openModal({
-        title: "Edit User",
-        size: "lg",
+        title: 'Edit User',
+        size: 'lg',
         bodyType: MODAL_BODY_TYPES.USER_ADD_OR_EDIT,
-        extraObject,
-      }),
+        extraObject
+      })
     );
   };
 
@@ -95,13 +93,13 @@ const Users = () => {
       openRightDrawer({
         header: `Details View [${user.nom}]`,
         bodyType: RIGHT_DRAWER_TYPES.USER_DETAILS,
-        extraObject: user,
-      }),
+        extraObject: user
+      })
     );
   };
 
   const formik = useFormik({
-    initialValues: INITIAL_USER_FILTER_OBJ,
+    initialValues: INITIAL_USER_FILTER_OBJ
   });
 
   const updateFormValue = useCallback(
@@ -109,10 +107,10 @@ const Users = () => {
       // this update will cause useEffect to get executed as there is a lookup on 'formik.values'
       formik.setValues({
         ...formik.values,
-        [key]: value,
+        [key]: value
       });
     },
-    [formik],
+    [formik]
   );
 
   const applyFilter = async (dispatchParams) => {
@@ -125,25 +123,21 @@ const Users = () => {
       from: 0,
       active: formik.values.activeUsers,
       inactive: formik.values.inactiveUsers,
-      searchPattern: search,
+      searchPattern: search
     };
 
     applyFilter(dispatchParams);
   }, [formik.values]);
 
   const handleScroll = async () => {
-    const usersContainer = document.getElementById("usersContainer");
+    const usersContainer = document.getElementById('usersContainer');
     const { scrollHeight, scrollTop, clientHeight } = usersContainer;
-    if (
-      !noMoreQuery &&
-      scrollHeight - scrollTop <= clientHeight + 100 &&
-      !isLoading
-    ) {
+    if (!noMoreQuery && scrollHeight - scrollTop <= clientHeight + 100 && !isLoading) {
       const dispatchParams = {
         from: from,
         active: formik.values.activeUsers,
         inactive: formik.values.inactiveUsers,
-        searchPattern: search,
+        searchPattern: search
       };
 
       await applyFilter(dispatchParams);
@@ -159,7 +153,7 @@ const Users = () => {
 
   const setScrollPosition = (newPosition) => {
     setTimeout(() => {
-      document.getElementById("usersContainer")?.scrollTo(0, newPosition);
+      document.getElementById('usersContainer')?.scrollTo(0, newPosition);
     }, 0);
   };
 
@@ -171,7 +165,7 @@ const Users = () => {
       from: 0,
       active: formik.values.activeUsers,
       inactive: formik.values.inactiveUsers,
-      searchPattern: value,
+      searchPattern: value
     };
 
     await applyFilter(dispatchParams);
@@ -214,15 +208,15 @@ const Users = () => {
 
           <div className="md:col-span-5 md:h-[43rem]">
             <Search
-              containerStyle={"px-5 py-2"}
-              placeholder={"Search user name ..."}
+              containerStyle={'px-5 py-2'}
+              placeholder={'Search user name ...'}
               defaultValue={search}
               updateFormValue={getUpdateFormValue}
             />
             {users.length ? (
               <div
                 className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 md:p-5 h-screen md:h-[39rem] overflow-auto"
-                id={"usersContainer"}
+                id={'usersContainer'}
                 onScroll={delayedHandleScroll}
               >
                 {users.map((user) => (
@@ -236,9 +230,7 @@ const Users = () => {
                 ))}
               </div>
             ) : (
-              <InfoText styleClasses={"md:grid-cols-2"}>
-                No user found ...
-              </InfoText>
+              <InfoText styleClasses={'md:grid-cols-2'}>No user found ...</InfoText>
             )}
           </div>
 
@@ -246,12 +238,7 @@ const Users = () => {
             filterStatus={openMobileFilter}
             onOpenFilter={setOpenMobileFilter}
             title={<span className="font-semibold">User Filter</span>}
-            actionButton={
-              <TopSideButtons
-                extraClasses="btn-sm w-1/2"
-                containerStyle="my-0"
-              />
-            }
+            actionButton={<TopSideButtons extraClasses="btn-sm w-1/2" containerStyle="my-0" />}
           >
             <FilterLg
               activeUsers={formik.values.activeUsers}

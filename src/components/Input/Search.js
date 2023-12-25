@@ -1,12 +1,7 @@
-import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
-import { useEffect, useRef, useState } from "react";
+import MagnifyingGlassIcon from '@heroicons/react/24/outline/MagnifyingGlassIcon';
+import { useEffect, useRef, useState } from 'react';
 
-const Search = ({
-  updateFormValue,
-  placeholder,
-  containerStyle,
-  defaultValue,
-}) => {
+const Search = ({ updateFormValue, placeholder, containerStyle, defaultValue }) => {
   const inputEl = useRef(null);
 
   useEffect(() => {
@@ -20,7 +15,7 @@ const Search = ({
       </label>
       <div className="relative w-full">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <MagnifyingGlassIcon className={"h-4 w-4"} />
+          <MagnifyingGlassIcon className={'h-4 w-4'} />
         </div>
         <input
           type="text"

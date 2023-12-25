@@ -1,22 +1,18 @@
-import moment from "moment";
-import streetLogo from "../../assets/street_logo.jpeg";
-import clientCard from "../../assets/client_card.png";
-import merchantCard from "../../assets/merchant_card.png";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import moment from 'moment';
+import streetLogo from '../../assets/street_logo.jpeg';
+import clientCard from '../../assets/client_card.png';
+import merchantCard from '../../assets/merchant_card.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
-  const { clients, from, isLoading, noMoreQuery } = useSelector(
-    (state) => state.client,
-  );
+  const { clients, from, isLoading, noMoreQuery } = useSelector((state) => state.client);
   useEffect(
     () =>
       console.log(
-        clients
-          .find((cl) => cl?.id === client?.id)
-          ?.wallets?.find((w) => w?.id === wallet?.id),
+        clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
       ),
-    [],
+    []
   );
 
   return (
@@ -25,19 +21,15 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
       onClick={() =>
         onWalletClicked(
           client,
-          clients
-            .find((cl) => cl?.id === client?.id)
-            ?.wallets?.find((w) => w?.id === wallet?.id),
+          clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
         )
       }
     >
       <img
         className="relative object-cover w-full h-full rounded-xl"
         src={
-          clients
-            .find((cl) => cl?.id === client?.id)
-            ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_type?.code !==
-          "MARCH"
+          clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
+            ?.wallet_type?.code !== 'MARCH'
             ? clientCard
             : merchantCard
         }
@@ -52,17 +44,16 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
               {
                 clients
                   .find((cl) => cl?.id === client?.id)
-                  ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_type
-                  ?.libelle
+                  ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_type?.libelle
               }
               <span
                 className={`mx-2 inline-grid rounded-lg w-3 h-3 justify-items-center self-center items-center ${
                   clients
                     .find((cl) => cl?.id === client?.id)
-                    ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_status
-                    ?.code === "ACTIVATED"
-                    ? "bg-success"
-                    : "bg-red-900"
+                    ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_status?.code ===
+                  'ACTIVATED'
+                    ? 'bg-success'
+                    : 'bg-red-900'
                 }`}
               ></span>
             </p>
@@ -76,9 +67,7 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
         </div>
         <div className="pt-1">
           <p className="font-light">Client Number</p>
-          <p className="font-medium tracking-more-wider">
-            {phone_number || "N/A"}
-          </p>
+          <p className="font-medium tracking-more-wider">{phone_number || 'N/A'}</p>
         </div>
         <div className="pt-6 pr-6">
           <div className="flex justify-between">
@@ -89,7 +78,7 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
                   clients
                     .find((cl) => cl?.id === client?.id)
                     ?.wallets?.find((w) => w?.id === wallet?.id)?.balance
-                }{" "}
+                }{' '}
                 CFA
               </p>
             </div>
@@ -100,7 +89,7 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
                   clients
                     .find((cl) => cl?.id === client?.id)
                     ?.wallets?.find((w) => w?.id === wallet?.id)?.bonus
-                }{" "}
+                }{' '}
                 CFA
               </p>
             </div>
@@ -112,9 +101,9 @@ const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
                   .utc(
                     clients
                       .find((cl) => cl?.id === client?.id)
-                      ?.wallets?.find((w) => w?.id === wallet?.id)?.created_at,
+                      ?.wallets?.find((w) => w?.id === wallet?.id)?.created_at
                   )
-                  .format("ll")}
+                  .format('ll')}
               </p>
             </div>
           </div>

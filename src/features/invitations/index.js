@@ -1,11 +1,13 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getInvitations, resetForm } from "./invitationSlice";
-import { showNotification } from "../common/headerSlice";
-import InfoText from "../../components/Typography/InfoText";
-import InvitationList from "./components/invitationList";
+import React, { useEffect } from 'react';
 
-const Invitations = (props) => {
+import { useDispatch, useSelector } from 'react-redux';
+
+import InvitationList from './components/invitationList';
+import { getInvitations, resetForm } from './invitationSlice';
+import InfoText from '../../components/Typography/InfoText';
+import { showNotification } from '../common/headerSlice';
+
+const Invitations = () => {
   const dispatch = useDispatch();
   const { invitations, isLoading } = useSelector((state) => state.invitations);
 
@@ -19,16 +21,16 @@ const Invitations = (props) => {
         console.log(response.error);
         dispatch(
           showNotification({
-            message: "Error while fetching invitations",
-            status: 0,
-          }),
+            message: 'Error while fetching invitations',
+            status: 0
+          })
         );
       } else {
         dispatch(
           showNotification({
-            message: "Succefully fetched the invitations",
-            status: 1,
-          }),
+            message: 'Succefully fetched the invitations',
+            status: 1
+          })
         );
       }
     });
@@ -70,9 +72,7 @@ const Invitations = (props) => {
             // updateFormValue={fetchOrdersOnSearch}
             />
           ) : (
-            <InfoText styleClasses={"md:grid-cols-2"}>
-              No order found ...
-            </InfoText>
+            <InfoText styleClasses={'md:grid-cols-2'}>No order found ...</InfoText>
           )}
         </>
       )}

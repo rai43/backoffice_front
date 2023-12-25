@@ -1,18 +1,15 @@
-import axios from "axios";
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { REQUEST_QUERY_CONSTANTS } from "../../utils/globalConstantUtil";
-import moment from "moment";
+import axios from 'axios';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { REQUEST_QUERY_CONSTANTS } from '../../utils/globalConstantUtil';
+import moment from 'moment';
 
 // this is just to create a commit
 
-export const getInvitations = createAsyncThunk(
-  "/invitations/get-invitations",
-  async (params) => {
-    const response = await axios.get("/api/invitations/get-invitations");
-    console.log(response.data);
-    return response.data;
-  },
-);
+export const getInvitations = createAsyncThunk('/invitations/get-invitations', async (params) => {
+  const response = await axios.get('/api/invitations/get-invitations');
+  console.log(response.data);
+  return response.data;
+});
 
 // export const saveInvitations = createAsyncThunk(
 //   "/offers/save-offer",
@@ -52,13 +49,13 @@ export const getInvitations = createAsyncThunk(
 // );
 
 export const invitationSlice = createSlice({
-  name: "invitations",
+  name: 'invitations',
   initialState: {
     isLoading: false,
     invitations: [],
     totalCount: 0,
     skip: 0,
-    noMoreQuery: false,
+    noMoreQuery: false
   },
   reducers: {
     resetForm: (state) => {
@@ -67,7 +64,7 @@ export const invitationSlice = createSlice({
       state.invitations = [];
       state.noMoreQuery = false;
       state.isLoading = false;
-    },
+    }
   },
 
   extraReducers: {
@@ -84,7 +81,7 @@ export const invitationSlice = createSlice({
     },
     [getInvitations.rejected]: (state) => {
       state.isLoading = false;
-    },
+    }
 
     // [saveOffer.pending]: (state) => {
     //   state.isLoading = true;
@@ -113,7 +110,7 @@ export const invitationSlice = createSlice({
     // [deleteOffer.rejected]: (state) => {
     //   state.isLoading = false;
     // },
-  },
+  }
 });
 
 export const { resetForm } = invitationSlice.actions;

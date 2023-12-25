@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 const InputCheckbox = ({
   labelTitle,
@@ -8,7 +8,7 @@ const InputCheckbox = ({
   defaultValue,
   updateFormValue,
   updateType,
-  inputStyle,
+  inputStyle
 }) => {
   const [value, setValue] = useState(defaultValue);
   const updateInputValue = () => {
@@ -23,12 +23,12 @@ const InputCheckbox = ({
         <div className="form-control">
           <label className="label cursor-pointer">
             <input
-              type={type || "checkbox"}
+              type={type || 'checkbox'}
               checked={value}
               onChange={updateInputValue}
               className={`checkbox checkbox-primary ${inputStyle}`}
             />
-            <span className={"label-text" + labelStyle}>{labelTitle}</span>
+            <span className={'label-text' + labelStyle}>{labelTitle}</span>
           </label>
         </div>
       </div>
