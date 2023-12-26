@@ -26,7 +26,8 @@ import {
   getClientTransactions,
   getOperatorTypes,
   resetForm,
-  switchWalletStatus
+  switchWalletStatus,
+  withdrawFromAccount
 } from '../../transaction/transactionSlice';
 import { replaceClientObjectByUpdatedOne } from '../clientSlice';
 import PersonalCardTransactionsNav from '../containers/PersonalCardTransactionsNav';
@@ -416,7 +417,12 @@ const ClientWalletDetailView = ({ extraObject }) => {
       <WithdrawModal
         modalObj={modalObj}
         extraObject={extraObject}
+        transactions={transactions}
+        clientPhoneNumber={clientPhoneNumber}
         setModalObj={setModalObj}
+        setsStatistics={setsStatistics}
+        walletStatus={walletStatus}
+        setWalletStatus={setWalletStatus}
         operator_operation_types={operator_operation_types}
         closeModal={handleCloseModal}
       />
@@ -669,23 +675,39 @@ const BlockUnblockModal = ({
 const WithdrawModal = ({
   modalObj,
   extraObject,
+  transactions,
+  clientPhoneNumber,
   setModalObj,
+  setsStatistics,
+  walletStatus,
+  setWalletStatus,
   operator_operation_types,
   closeModal
 }) => {
   const dispatch = useDispatch();
-  const handleWithdraw = () => {
+  const [submitted, setSubmitted] = useState(false);
+  const handleWithdraw = async (finalAmount) => {
     // Implement the withdraw functionality here
     console.log('Withdrawal Process');
+    setSubmitted(() => true);
     const operatorId = operator_operation_types?.find(
       (elt) => elt?.id === modalObj?.operatorOperationId
     )?.operator?.id;
+    const amount = finalAmount;
+    const phoneNumber = modalObj?.mobileMoneyNumber;
+    const operatorFee =
+      operator_operation_types?.find(
+        (elt) => parseInt(elt?.id) === parseInt(modalObj?.operatorOperationId)
+      )?.fee || 0;
+    const walletId = extraObject?.wallet?.id;
 
+    // Validate required fields
     if (
-      !modalObj?.amount ||
+      !amount ||
+      !operatorFee ||
       !operatorId ||
-      !modalObj?.mobileMoneyNumber ||
-      (modalObj?.mobileMoneyNumber?.length && modalObj?.mobileMoneyNumber?.length !== 10)
+      !walletId ||
+      (phoneNumber && phoneNumber.length !== 10)
     ) {
       dispatch(
         showNotification({
@@ -693,6 +715,86 @@ const WithdrawModal = ({
           status: 0
         })
       );
+      console.log({
+        amount,
+        phoneNumber,
+        operatorId,
+        operatorFee,
+        walletId
+      });
+      return;
+    }
+
+    try {
+      // Dispatching the withdrawal action
+      const response = await dispatch(
+        withdrawFromAccount({
+          amount,
+          phoneNumber,
+          operatorId,
+          operatorFee,
+          walletId
+        })
+      ).unwrap();
+
+      // Check if there's an error in the response
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Dispatch success notification
+      dispatch(
+        showNotification({
+          message: `Successfully withdrawn from the client account`,
+          status: 1
+        })
+      );
+
+      console.log({ response });
+      if (response?.firebaseTransaction?.status === 'SUCCESS') {
+        // Logic after successful withdrawal
+        try {
+          // const statsResponse = await dispatch(
+          //   generateStatistics({
+          //     data: [response?.transaction, ...transactions],
+          //     clientPhoneNumber
+          //   })
+          // );
+          // setsStatistics((oldStats) => ({ ...oldStats, ...statsResponse.payload }));
+
+          setWalletStatus((old) => ({
+            ...old,
+            balance:
+              old.balance -
+              (response?.payload?.withdrawalTransaction
+                ? parseInt(response?.withdrawalTransaction?.debit)
+                : parseInt(amount))
+          }));
+
+          await dispatch(
+            replaceClientObjectByUpdatedOne({
+              client: response?.client
+            })
+          );
+        } catch (e) {
+          throw new Error('Error updating the status');
+        }
+
+        // Reset modal object in case of success
+        closeModal();
+      }
+    } catch (error) {
+      // Handle errors during withdrawal process
+      console.error('Error during withdrawal:', error);
+      dispatch(
+        showNotification({
+          message: `Error while withdrawing the amount from the account: ${error.message}`,
+          status: 0
+        })
+      );
+    } finally {
+      // Reset modal object regardless of success or failure
+      setSubmitted(() => false);
     }
   };
 
@@ -708,16 +810,6 @@ const WithdrawModal = ({
     return pattern.test(price);
   };
 
-  // Update total calculation based on selected operator and amount
-  const getTotal = () => {
-    if (!modalObj?.operatorOperationId || !modalObj?.amount) return 0;
-
-    const feePercentage =
-      operator_operation_types?.find((elt) => elt?.id === modalObj?.operatorOperationId)?.fee || 0;
-    return (
-      parseInt(modalObj?.amount) - (parseInt(modalObj?.amount) * parseInt(feePercentage)) / 100
-    );
-  };
   const getPercentage = () => {
     // if (!modalObj?.operatorOperationId) return 0;
 
@@ -725,12 +817,14 @@ const WithdrawModal = ({
       operator_operation_types?.find(
         (elt) => parseInt(elt?.id) === parseInt(modalObj?.operatorOperationId)
       )?.fee || 0;
-    console.log({
-      feePercentage,
-      feePercentage2: parseInt(feePercentage),
-      to: parseInt(modalObj?.amount) * (parseInt(feePercentage) / 100)
-    });
-    return parseInt(modalObj?.amount) * (parseInt(feePercentage) / 100);
+
+    return Math.ceil(parseInt(modalObj?.amount) * (parseFloat(feePercentage) / 100));
+  };
+
+  const getTotal = () => {
+    if (!modalObj?.operatorOperationId || !modalObj?.amount) return 0;
+
+    return parseInt(modalObj?.amount) - getPercentage();
   };
 
   return (
@@ -767,6 +861,7 @@ const WithdrawModal = ({
                     ? 'input-error'
                     : ''
                 }`}
+                disabled={submitted}
               />
             </div>
 
@@ -784,7 +879,8 @@ const WithdrawModal = ({
                     ...prevState,
                     operatorOperationId: parseInt(e.target.value)
                   }));
-                }}>
+                }}
+                disabled={submitted}>
                 <option value="pickOne" disabled selected>
                   Pick one
                 </option>
@@ -829,6 +925,7 @@ const WithdrawModal = ({
                   setModalObj((old) => ({ ...old, amount: value }));
                 }}
                 className={`input input-bordered w-full`}
+                disabled={submitted}
               />
             </div>
 
@@ -847,18 +944,33 @@ const WithdrawModal = ({
                 <div className="font-semibold text-primary mt-3">{getPercentage()} CFA</div>
                 <div className="font-semibold mt-3">Total:</div>
                 <div className="font-semibold text-primary mt-3">{getTotal()} CFA</div>
+                {walletStatus?.balance < getTotal() + getPercentage() && getTotal() > 0 ? (
+                  <div className="font-bold text-error text-center mt-3 col-span-2">
+                    Insufficient balance
+                  </div>
+                ) : (
+                  <></>
+                )}
               </>
             )}
           </div>
         </div>
-        <div className="modal-action">
-          <button className="btn btn-outline btn-ghost" onClick={closeModal}>
-            Close
-          </button>
-          <button className="btn btn-outline btn-primary" onClick={handleWithdraw}>
-            Withdraw
-          </button>
-        </div>
+        {!submitted && (
+          <div className="modal-action">
+            <button className="btn btn-outline btn-ghost" onClick={closeModal}>
+              Close
+            </button>
+            {walletStatus?.balance >= getTotal() + getPercentage() && getTotal() > 0 ? (
+              <button
+                className="btn btn-outline btn-primary"
+                onClick={() => handleWithdraw(getTotal() + getPercentage())}>
+                Withdraw
+              </button>
+            ) : (
+              <></>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

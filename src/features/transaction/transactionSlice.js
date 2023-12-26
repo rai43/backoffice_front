@@ -61,6 +61,40 @@ export const debitAccountToServer = createAsyncThunk(
   }
 );
 
+/**
+ * Asynchronously withdraws an amount from a specified wallet.
+ *
+ * @param {Object} payload - The data needed for the withdrawal transaction.
+ * @param {number} payload.amount - The amount to be withdrawn.
+ * @param {string} payload.phoneNumber - The phone number associated with the transaction.
+ * @param {string} payload.operatorId - The ID of the operator handling the transaction.
+ * @param {number} payload.operatorFee - The fee charged by the operator.
+ * @param {string} payload.walletId - The unique identifier of the wallet.
+ * @returns {Promise<Object>} The response data from the server.
+ */
+export const withdrawFromAccount = createAsyncThunk(
+  '/transaction/withdraw-account',
+  async ({ amount, phoneNumber, operatorId, operatorFee, walletId }) => {
+    // Constructing the API endpoint with the walletId in the URL
+    const endpoint = `/api/wallet/actions/withdraw/${walletId}`;
+
+    try {
+      // Performing the withdrawal operation via a POST request
+      const response = await axios.post(endpoint, {
+        amount: parseInt(amount),
+        phone: phoneNumber,
+        oid: parseInt(operatorId),
+        fee: parseFloat(operatorFee)
+      });
+      // Returning the data received from the server
+      return response.data;
+    } catch (e) {
+      // Throwing an error with the response's status text or a default message
+      throw new Error(e.response?.statusText || e.message);
+    }
+  }
+);
+
 export const switchWalletStatus = createAsyncThunk(
   '/transaction/wallet/switch-status',
   async (payload) => {
@@ -194,6 +228,18 @@ export const transactionSlice = createSlice({
       state.isLoading = false;
     },
     [debitAccountToServer.rejected]: (state) => {
+      state.isLoading = false;
+    },
+
+    [withdrawFromAccount.pending]: (state) => {
+      state.isLoading = true;
+    },
+    [withdrawFromAccount.fulfilled]: (state, action) => {
+      // state.transactions = [action.payload.transaction, ...state.transactions];
+      // state.totalCount += 1;
+      state.isLoading = false;
+    },
+    [withdrawFromAccount.rejected]: (state) => {
       state.isLoading = false;
     },
 
