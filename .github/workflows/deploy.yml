@@ -24,9 +24,6 @@ jobs:
     - name: Build Project
       run: npm run build
 
-    - name: Install expect
-      run: sudo apt-get install expect
-
     - name: Setup SSH Key
       uses: shimataro/ssh-key-action@v2
       with:
@@ -34,42 +31,67 @@ jobs:
         name: id_rsa # optional
         passphrase: ${{ secrets.SSH_PASSPHRASE }} # Here we use the passphrase
 
-    - name: Add SSH key to agent with passphrase
-      env:
-        SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
-      run: |
-        #!/usr/bin/expect -f
-        spawn ssh-add /home/runner/.ssh/known_hosts
-        expect "Enter passphrase for /home/runner/.ssh/known_hosts:"
-        send "$SSH_PASSPHRASE\r"
-        expect eof
-
-
-    - name: SSH and Deploy
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} << 'EOF'
-          # Commands to execute on your server
-
-          # Connect as sudo user
+    - name: Executing remote SSH commands using password
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        password: ${{ secrets.SSH_PASSPHRASE }}
+        script: |
+          whoami
           sudo su
-
-          # Move to the project directory
           cd /var/www/back-office/htdocs/frontend/
-
-          # Timestamp for the build
           TIMESTAMP=$(date +%F-%T)
-
-          # Create a directory for old builds if it doesn't exist
-          mkdir -p old_builds
-
-          # Move the current build to the old_builds directory
+          mkdir -p test_old_builds
           if [ -d "build" ]; then
-            mv build "old_builds/old_build_$TIMESTAMP"
+            cp -R build "test_old_builds/old_build_$TIMESTAMP"
+            # mv build "old_builds/old_build_$TIMESTAMP"
           fi
+          mv build ./test_build
 
-          # Since the entire repo (including the build directory) is transferred
-          # to the server by the ssh-action, the 'build' directory will be in the
-          # root directory where the SSH command is executed.
-          # Now, move the new 'build' directory to the desired location
-          mv build ./build
-        EOF
+
+
+
+
+    
+
+    # - name: Add SSH key to agent with passphrase
+    #   env:
+    #     SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+    #   run: |
+    #     #!/usr/bin/expect -f
+    #     spawn ssh-add /home/runner/.ssh/known_hosts
+    #     expect "Enter passphrase for /home/runner/.ssh/known_hosts:"
+    #     send "$SSH_PASSPHRASE\r"
+    #     expect eof
+
+
+  
+    # - name: SSH and Deploy
+    #   run: |
+    #     ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} << 'EOF'
+    #       # Commands to execute on your server
+
+    #       # Connect as sudo user
+    #       sudo su
+
+    #       # Move to the project directory
+    #       cd /var/www/back-office/htdocs/frontend/
+
+    #       # Timestamp for the build
+    #       TIMESTAMP=$(date +%F-%T)
+
+    #       # Create a directory for old builds if it doesn't exist
+    #       mkdir -p old_builds
+
+    #       # Move the current build to the old_builds directory
+    #       if [ -d "build" ]; then
+    #         mv build "old_builds/old_build_$TIMESTAMP"
+    #       fi
+
+    #       # Since the entire repo (including the build directory) is transferred
+    #       # to the server by the ssh-action, the 'build' directory will be in the
+    #       # root directory where the SSH command is executed.
+    #       # Now, move the new 'build' directory to the desired location
+    #       mv build ./build
+    #     EOF
