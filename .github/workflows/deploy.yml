@@ -28,6 +28,7 @@ jobs:
       uses: shimataro/ssh-key-action@v2
       with:
         key: ${{ secrets.SERVER_SSH_KEY }}
+        known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
         name: id_rsa # optional
         passphrase: ${{ secrets.SSH_PASSPHRASE }} # Here we use the passphrase
 
