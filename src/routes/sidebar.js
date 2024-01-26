@@ -1,11 +1,13 @@
+import React from 'react';
+
 /** Icons are imported separatly to reduce build time */
-import { AiFillDashboard } from 'react-icons/ai';
-import { AiOutlinePartition } from 'react-icons/ai';
+import { AiFillDashboard, AiOutlinePartition } from 'react-icons/ai';
 import { BiSolidOffer } from 'react-icons/bi';
 import { CiDiscount1 } from 'react-icons/ci';
 import { FaSlideshare } from 'react-icons/fa6';
 import { FcSms } from 'react-icons/fc';
-import { GiPartyPopper } from 'react-icons/gi';
+import { GiPartyPopper, GiReturnArrow } from 'react-icons/gi';
+import { GrMoney } from 'react-icons/gr';
 import { LuPackageCheck } from 'react-icons/lu';
 import {
   MdOutlineDiscount,
@@ -23,7 +25,6 @@ import {
 import { VscSettings } from 'react-icons/vsc';
 
 import ArrowsRightLeftIcon from '@heroicons/react/24/outline/ArrowsRightLeftIcon';
-import Cog6ToothIcon from '@heroicons/react/24/outline/Cog6ToothIcon';
 import GlobeAltIcon from '@heroicons/react/24/outline/GlobeAltIcon';
 import Squares2X2Icon from '@heroicons/react/24/outline/Squares2X2Icon';
 import UserGroupIcon from '@heroicons/react/24/outline/UserGroupIcon';
@@ -103,7 +104,17 @@ const routes = [
         path: '/app/logistics-center/parcels', // url
         icon: <MdOutlineDeliveryDining className={submenuIconClasses} />, // icon component
         name: 'Parcels Management' // name that appear in Sidebar
+      },
+      {
+        path: '/app/logistics-center/return-parcels', // url
+        icon: <GiReturnArrow className={submenuIconClasses} />, // icon component
+        name: 'Return Management' // name that appear in Sidebar
       }
+      // {
+      //   path: '/app/logistics-center/colis-fees', // url
+      //   icon: <GrMoney className={submenuIconClasses} />, // icon component
+      //   name: 'Colis Fees' // name that appear in Sidebar
+      // }
     ]
   },
   {

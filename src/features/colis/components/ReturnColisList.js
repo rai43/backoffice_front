@@ -4,10 +4,8 @@ import { AgGridReact } from 'ag-grid-react';
 import moment from 'moment/moment';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { CiEdit, CiNoWaitingSign } from 'react-icons/ci';
-import { FaAmazonPay } from 'react-icons/fa';
+import { CiEdit } from 'react-icons/ci';
 import { GiCardExchange } from 'react-icons/gi';
-import { IoIosCheckmarkCircleOutline } from 'react-icons/io';
 
 import { classNames } from '../../../components/Common/UtilsClassNames';
 import { STATUS_ACTIONS } from '../../../utils/colisUtils';
@@ -15,7 +13,10 @@ import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
 import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
 import { showNotification } from '../../common/headerSlice';
 import { openModal } from '../../common/modalSlice';
-import { setFilters, setPaginationCurrentPage } from '../../common/parcelsManagementTableSlice';
+import {
+  setFilters,
+  setPaginationCurrentPage
+} from '../../common/returnParcelsManagementTableSlice';
 
 const containFilterParams = {
   filterOptions: ['contains', 'notContains'],
@@ -23,14 +24,14 @@ const containFilterParams = {
   maxNumConditions: 1
 };
 
-const ColisList = ({ onLoad, gridOptions }) => {
+const ReturnColisList = ({ gridOptions }) => {
   const dispatch = useDispatch();
   const gridRef = useRef(null);
 
-  const { colis, isLoading } = useSelector((state) => state.parcelsManagement);
+  const { returnedColis } = useSelector((state) => state.parcelsManagement);
 
   const { paginationCurrentPage, filters, paginationSize } = useSelector(
-    (state) => state.parcelsManagementTable
+    (state) => state.returnParcelsManagementTable
   );
 
   const onColumnClicked = async (data) => {
@@ -64,23 +65,6 @@ const ColisList = ({ onLoad, gridOptions }) => {
     }
   };
 
-  const onPayMerchantClicked = async ({ data, value }) => {
-    if (
-      (value === 'DELIVERED' || value === 'LOST') &&
-      parseInt(data?.price) > 0 &&
-      data?.payment === 'PENDING'
-    ) {
-      dispatch(
-        openModal({
-          title: 'MERCHANT PAYMENT',
-          size: '',
-          bodyType: MODAL_BODY_TYPES.COLIS_PAY_MERCHANT,
-          extraObject: { colis: data }
-        })
-      );
-    }
-  };
-
   const onEditClicked = async ({ data }) => {
     dispatch(
       openModal({
@@ -93,20 +77,6 @@ const ColisList = ({ onLoad, gridOptions }) => {
   };
 
   const columnDefs = useMemo(() => [
-    // {
-    //   field: 'id',
-    //   valueGetter: ({ data }) => {
-    //     return data?.id + '';
-    //   },
-    //   headerName: 'ID',
-    //   width: 70,
-    //   pinned: true,
-    //   filterParams: containFilterParams,
-    //   onCellClicked: (params) => onColumnClicked(params.data),
-    //   cellRenderer: ({ value }) => {
-    //     return <p className={classNames('px-3 py-1 uppercase leading-wide font-bold')}>{value}</p>;
-    //   }
-    // },
     {
       field: 'code',
       valueGetter: ({ data }) => {
@@ -159,71 +129,6 @@ const ColisList = ({ onLoad, gridOptions }) => {
         );
       }
     },
-    {
-      field: 'pickup_longitude',
-      valueGetter: ({ data }) => {
-        return data?.colis_statuses?.length
-          ? data?.colis_statuses[
-              data?.colis_statuses?.length - 1
-            ]?.colis_status?.code?.toUpperCase()
-          : 'N/A';
-      },
-      headerName: 'Pay',
-      width: 80,
-      // filter: containFilterParams,
-      pinned: 'left',
-      onCellClicked: ({ data }) =>
-        onPayMerchantClicked({
-          data: data,
-          value: data?.colis_statuses?.length
-            ? data?.colis_statuses[
-                data?.colis_statuses?.length - 1
-              ]?.colis_status?.code?.toUpperCase()
-            : 'N/A'
-        }),
-      cellRenderer: ({ value, data }) => {
-        return (
-          <div className="flex items-center justify-center ">
-            {(value === 'DELIVERED' || value === 'LOST') &&
-            parseInt(data?.price) > 0 &&
-            data?.payment === 'PENDING' ? (
-              <span className="text-gray-600 mt-2">
-                <FaAmazonPay className={'h-6 w-6'} />
-              </span>
-            ) : (
-              <span className="text-gray-600 mt-2">-</span>
-            )}
-          </div>
-        );
-      }
-    },
-    // {
-    //   field: 'pickup_longitude',
-    //   valueGetter: ({ data }) => {
-    //     return data?.versement_received;
-    //   },
-    //   headerName: 'Livreur Deposit',
-    //   width: 80,
-    //   // filter: containFilterParams,
-    //   pinned: 'left',
-    //   onCellClicked: ({ data }) =>
-    //     onEditClicked({
-    //       data: data
-    //     }),
-    //   cellRenderer: ({ value }) => {
-    //     return (
-    //       <div className="flex items-center justify-center ">
-    //         <span className="text-gray-600 mt-2">
-    //           {value ? (
-    //             <IoIosCheckmarkCircleOutline className={'h-6 w-6 text-info'} />
-    //           ) : (
-    //             <CiNoWaitingSign className={'h-6 w-6 text-ghost'} />
-    //           )}
-    //         </span>
-    //       </div>
-    //     );
-    //   }
-    // },
     {
       field: 'pickup_longitude',
       valueGetter: ({ data }) => {
@@ -549,53 +454,49 @@ const ColisList = ({ onLoad, gridOptions }) => {
 
   return (
     <div className="overflow-hidden mt-2">
-      {!isLoading && (
-        <>
-          <div className="ag-theme-alpine h-[40rem]">
-            <AgGridReact
-              ref={gridRef}
-              columnDefs={columnDefs}
-              rowData={colis}
-              defaultColDef={AG_GRID_DEFAULT_COL_DEF}
-              gridOptions={gridOptions}
-              // defaultColDef={defaultColDef}
-              pagination={true}
-              rowHeight={50}
-              sideBar={'filters'}
-              rowSelection="single"
-              paginationPageSize={paginationSize || 20}
-              onPaginationChanged={async (params) => {
-                adjustGridHeight(params.api);
-                let currentPage = params.api.paginationGetCurrentPage();
-                let totalPages = params.api.paginationGetTotalPages();
-                await dispatch(
-                  setPaginationCurrentPage({
-                    paginationCurrentPage: currentPage
-                  })
-                );
-              }}
-              onFirstDataRendered={(params) => {
-                adjustGridHeight(params.api); // Adjust height
-                params.api.paginationGoToPage(
-                  paginationCurrentPage !== null
-                    ? paginationCurrentPage
-                    : params.api.paginationGetCurrentPage()
-                );
-                params.api.setFilterModel(filters);
-              }}
-              onFilterChanged={async (params) => {
-                await dispatch(
-                  setFilters({
-                    filters: params?.api?.getFilterModel() || {}
-                  })
-                );
-              }}
-            />
-          </div>
-        </>
-      )}
+      <div className="ag-theme-alpine h-[40rem]">
+        <AgGridReact
+          ref={gridRef}
+          columnDefs={columnDefs}
+          rowData={returnedColis}
+          defaultColDef={AG_GRID_DEFAULT_COL_DEF}
+          gridOptions={gridOptions}
+          // defaultColDef={defaultColDef}
+          pagination={true}
+          rowHeight={50}
+          sideBar={'filters'}
+          rowSelection="single"
+          paginationPageSize={paginationSize || 20}
+          onPaginationChanged={async (params) => {
+            adjustGridHeight(params.api);
+            let currentPage = params.api.paginationGetCurrentPage();
+            let totalPages = params.api.paginationGetTotalPages();
+            await dispatch(
+              setPaginationCurrentPage({
+                paginationCurrentPage: currentPage
+              })
+            );
+          }}
+          onFirstDataRendered={(params) => {
+            adjustGridHeight(params.api); // Adjust height
+            params.api.paginationGoToPage(
+              paginationCurrentPage !== null
+                ? paginationCurrentPage
+                : params.api.paginationGetCurrentPage()
+            );
+            params.api.setFilterModel(filters);
+          }}
+          onFilterChanged={async (params) => {
+            await dispatch(
+              setFilters({
+                filters: params?.api?.getFilterModel() || {}
+              })
+            );
+          }}
+        />
+      </div>
     </div>
   );
 };
 
-export default ColisList;
+export default ReturnColisList;

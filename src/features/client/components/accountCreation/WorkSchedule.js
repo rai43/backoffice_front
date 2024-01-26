@@ -1,23 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import FullCalendar from '@fullcalendar/react';
+
 import interactionPlugin from '@fullcalendar/interaction';
+import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import moment, { weekdays } from 'moment';
+import { useDispatch } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
+
 import { AiOutlineDelete } from 'react-icons/ai';
 
-import TitleCard from '../../../../components/Cards/TitleCard';
-import InputText from '../../../../components/Input/InputText';
-
-import moment, { weekdays } from 'moment';
 import InputAsyncSelect from '../../../../components/Input/InputAsyncSelect';
+import InputText from '../../../../components/Input/InputText';
 import { getWeekDateRange } from '../../../../utils/functions/getWeekDateRange';
-import { isNaN } from 'lodash';
-import { useDispatch } from 'react-redux';
+import { enableScroll } from '../../../../utils/functions/preventAndAllowScroll';
 import { showNotification } from '../../../common/headerSlice';
 import { closeModal } from '../../../common/modalSlice';
 import { updateMerchantSchedule } from '../../clientSlice';
-import { disableScroll, enableScroll } from '../../../../utils/functions/preventAndAllowScroll';
 
+// Define an array of week day options.
 const week_days_options = [
   { value: 'MONDAY', label: 'MONDAY' },
   { value: 'TUESDAY', label: 'TUESDAY' },
@@ -28,11 +28,13 @@ const week_days_options = [
   { value: 'SUNDAY', label: 'SUNDAY' }
 ];
 
+// Define an array of status options.
 const status_options = [
-  { value: 'OPENED', label: 'OPENED' },
-  { value: 'CLOSED', label: 'CLOSED' }
+  { value: true, label: 'OPEN' },
+  { value: false, label: 'CLOSED' }
 ];
 
+// Define an initial object with empty properties.
 const INITIAL_OBJ = {
   id: '',
   day: '',
@@ -42,14 +44,36 @@ const INITIAL_OBJ = {
   description: ''
 };
 
-const { startingDate, endingDate, weekDatesNamesVsDates } = getWeekDateRange();
+/**
+ * Represents a mapping of week dates to their names.
+ * @type {Object}
+ */
+const { weekDatesNamesVsDates } = getWeekDateRange();
 
+/**
+ * Transforms a date and time into a JavaScript Date object.
+ * @param {string} _date - The date in string format (e.g., 'YYYY-MM-DD').
+ * @param {string} _time - The time in string format (e.g., 'HH:mm').
+ * @returns {Date} - The JavaScript Date object representing the combined date and time.
+ */
 const transformTime = (_date, _time) => {
+  // Combine the date and time and convert it to a Date object using moment.js.
   const datetime = moment.utc(_date + ' ' + _time);
-
   return datetime.toDate();
 };
 
+/**
+ * Represents the WorkSchedule component.
+ * This component allows the user to manage and edit work schedules.
+ *
+ * @component
+ * @param {Object} props - The component's props.
+ * @param {function} props.clickAction - The click action function.
+ * @param {Array} props.workDays - An array of work days.
+ * @param {function} props.setWorkDays - A function to set work days.
+ * @param {boolean} props.isEditCustomerSchedule - Indicates if editing a customer's schedule.
+ * @param {string} props.merchantId - The ID of the merchant.
+ */
 const WorkSchedule = ({
   clickAction,
   workDays,
@@ -64,43 +88,80 @@ const WorkSchedule = ({
   const [addNew, setAddNew] = useState(false);
   const [isDelteWorkSchOpened, setIsDelteWorkSchOpened] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
-  const [workDay, setWorkDay] = useState(INITIAL_OBJ);
-  const [firstDayOfMonth, setFirstDayOfMonth] = useState(moment.utc().startOf('month'));
 
+  /**
+   * Represents the initial state of a work day object.
+   * @type {Object}
+   */
+  const [workDay, setWorkDay] = useState(INITIAL_OBJ);
+
+  const [firstDayOfMonth] = useState(moment.utc().startOf('month'));
+
+  /**
+   * Filters the week days based on the input value.
+   * @param {string} inputValue - The input value to filter by.
+   * @returns {Array} - An array of filtered week day options.
+   */
   const filterWeekDays = (inputValue) => {
     return week_days_options.filter((i) =>
       i.label.toLowerCase().includes(inputValue.toLowerCase())
     );
   };
 
+  /**
+   * Asynchronously returns promise options for week days.
+   * @param {string} inputValue - The input value to filter by.
+   * @returns {Promise} - A promise that resolves to filtered week day options.
+   */
   const weekDaysPromiseOptions = (inputValue) =>
     new Promise((resolve) => {
       resolve(filterWeekDays(inputValue));
     });
 
+  /**
+   * Filters the status options based on the input value.
+   * @param {string} inputValue - The input value to filter by.
+   * @returns {Array} - An array of filtered status options.
+   */
   const filterStatus = (inputValue) => {
     return status_options.filter((i) => i.label.toLowerCase().includes(inputValue.toLowerCase()));
   };
 
+  /**
+   * Asynchronously returns promise options for status.
+   * @param {string} inputValue - The input value to filter by.
+   * @returns {Promise} - A promise that resolves to filtered status options.
+   */
   const statusPromiseOptions = (inputValue) =>
     new Promise((resolve) => {
       resolve(filterStatus(inputValue));
     });
 
+  /**
+   * Updates the form value with a key-value pair.
+   * @param {Object} param - The key and value to update.
+   * @param {string} param.key - The key to update.
+   * @param {string} param.value - The value to update.
+   */
   const updateFormValue = useCallback(({ key, value }) => {
     return setWorkDay((oldValues) => {
       return { ...oldValues, [key]: value };
     });
   }, []);
 
+  /**
+   * Handles a date click event by opening the add/edit form.
+   * @param {Object} param - The event object.
+   * @param {number|string} param.event.id - The ID of the event.
+   */
   const handleDateClick = ({ event }) => {
     console.log(event.id);
     console.log(event.title);
     // Close before opening
     setTimeout(() => {
-      setAddNew((_) => false);
-      setIsUpdate((_) => false);
-      setWorkDay((_) => INITIAL_OBJ);
+      setAddNew(() => false);
+      setIsUpdate(() => false);
+      setWorkDay(() => INITIAL_OBJ);
     }, 5);
 
     const weekEvent = workDays.find((wd) => {
@@ -121,49 +182,197 @@ const WorkSchedule = ({
     }
   };
 
-  useEffect(() => {
-    console.log(
-      workDays.map((weekDay) => {
-        return {
-          id: weekDay.id,
-          title: `(${weekDay.status}) - ${weekDay.description}`,
-          start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
-          end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time)
-        };
-      })
-    );
-  }, [workDays]);
-
+  /**
+   * A hook that sets the initial values of workDay based on conditions.
+   */
   useEffect(() => {
     if (workDay.id) {
-      return setWorkDay((oldValues) => {
-        return {
-          ...oldValues,
-          day: workDay.day,
-          status: workDay.status
-        };
-      });
+      setWorkDay((oldValues) => ({
+        ...oldValues,
+        day: workDay.day,
+        status: workDay.status
+      }));
     } else {
-      return setWorkDay((oldValues) => {
-        return {
-          ...oldValues,
-          day: week_days_options[0]?.value || '',
-          status: status_options[0]?.value || ''
-        };
-      });
+      setWorkDay((oldValues) => ({
+        ...oldValues,
+        day: week_days_options[0]?.value || '',
+        status: status_options[0]?.value || ''
+      }));
     }
   }, [addNew]);
 
-  const handleSubmit = () => {
+  /**
+   * Handles the addition or update of a work schedule.
+   * Performs validation, clash detection, and dispatches notifications.
+   */
+  const handleAddOrUpdate = () => {
+    // Check if required fields are filled
+    if (
+      workDay.day.length &&
+      // workDay.status.length &&
+      workDay.start_time.length &&
+      workDay.end_time.length
+    ) {
+      if (isUpdate) {
+        // Handle update logic
+        if (
+          moment.utc(workDay.end_time, 'HH:mm').isBefore(moment.utc(workDay.start_time, 'HH:mm'))
+        ) {
+          // Show notification for invalid time range
+          dispatch(
+            showNotification({
+              message: 'Start time cannot be after end time',
+              status: 0
+            })
+          );
+        } else {
+          let tempWorkDays = [];
+          const existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
+
+          if (existingIndex !== -1) {
+            tempWorkDays = [...workDays.filter((elt) => elt?.id !== workDays[existingIndex]?.id)];
+          }
+
+          const clash = tempWorkDays.some((obj) => {
+            return (
+              obj.day === workDay.day &&
+              ((moment
+                .utc(obj.start_time, 'HH:mm')
+                .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
+                moment
+                  .utc(obj.end_time, 'HH:mm')
+                  .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))) ||
+                (moment
+                  .utc(obj.start_time, 'HH:mm')
+                  .isSameOrBefore(moment.utc(workDay.end_time, 'HH:mm')) &&
+                  moment
+                    .utc(obj.end_time, 'HH:mm')
+                    .isSameOrAfter(moment.utc(workDay.end_time, 'HH:mm'))))
+            );
+          });
+
+          if (clash) {
+            // Show notification for clash with existing schedule
+            dispatch(
+              showNotification({
+                message: 'Could not update schedule as it clashes with an existing one',
+                status: 0
+              })
+            );
+          } else {
+            // Update the work schedule
+            console.log(workDay);
+            setWorkDays(() => {
+              return [{ ...workDay, id: uuidv4() }, ...tempWorkDays];
+            });
+            setWorkDay(INITIAL_OBJ);
+            setAddNew((old) => !old);
+            setIsUpdate(false);
+          }
+        }
+      } else {
+        // Handle add logic
+        if (
+          moment.utc(workDay.end_time, 'HH:mm').isBefore(moment.utc(workDay.start_time, 'HH:mm'))
+        ) {
+          // Show notification for invalid time range
+          dispatch(
+            showNotification({
+              message: 'Start time cannot be after end time',
+              status: 0
+            })
+          );
+        } else {
+          const clash = workDays.some((obj) => {
+            return (
+              obj.day === workDay.day &&
+              ((moment
+                .utc(obj.start_time, 'HH:mm')
+                .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
+                moment
+                  .utc(obj.end_time, 'HH:mm')
+                  .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))) ||
+                (moment
+                  .utc(obj.start_time, 'HH:mm')
+                  .isSameOrBefore(moment.utc(workDay.end_time, 'HH:mm')) &&
+                  moment
+                    .utc(obj.end_time, 'HH:mm')
+                    .isSameOrAfter(moment.utc(workDay.end_time, 'HH:mm'))))
+            );
+          });
+
+          if (clash) {
+            // Show notification for clash with existing schedule
+            dispatch(
+              showNotification({
+                message: 'Could not add schedule as it clashes with an existing one',
+                status: 0
+              })
+            );
+          } else {
+            // Add the work schedule
+            setWorkDays((oldValues) => {
+              let existingIndex = -1;
+              if (workDay?.id?.length) {
+                existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
+              }
+
+              if (existingIndex !== -1) {
+                workDays[existingIndex] = workDay;
+                return workDays;
+              } else {
+                return [{ ...workDay, id: uuidv4() }, ...oldValues];
+              }
+            });
+            setWorkDay(INITIAL_OBJ);
+            setAddNew((old) => !old);
+            setIsUpdate(false);
+          }
+        }
+      }
+    }
+  };
+
+  /**
+   * Handles the cancellation of the delete confirmation modal.
+   */
+  const handleCancelDelete = () => {
+    enableScroll();
+    setIsDelteWorkSchOpened(false);
+  };
+
+  /**
+   * Handles the deletion of a work day schedule.
+   */
+  const handleDeleteWorkDay = () => {
+    if (workDay.day.length && workDay.start_time.length && workDay.end_time.length) {
+      const existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
+      if (existingIndex !== -1) {
+        setWorkDays((oldData) => oldData.filter((elt) => elt?.id !== workDays[existingIndex]?.id));
+      }
+
+      setWorkDay(INITIAL_OBJ);
+      setAddNew((old) => !old);
+      setIsUpdate(false);
+    }
+    enableScroll();
+    setIsDelteWorkSchOpened(false);
+  };
+
+  /**
+   * Handles the submission of the merchant's workday schedule for saving.
+   */
+  const handleSaveSchedule = () => {
+    // Prepare the data for submission
     const data = {
       merchantId: merchantId,
       workDays: workDays
     };
 
+    // Dispatch the action to update the merchant's schedule
     dispatch(updateMerchantSchedule(data)).then(async (response) => {
-      console.log('response: ', response);
       if (response?.error) {
-        console.log(response.error);
+        // Show an error notification if there was an issue
         dispatch(
           showNotification({
             message: 'Error while updating the merchant workdays',
@@ -171,9 +380,10 @@ const WorkSchedule = ({
           })
         );
       } else {
+        // Show a success notification and close the modal on success
         dispatch(
           showNotification({
-            message: 'Succefully updated the merchant workdays',
+            message: 'Successfully updated the merchant workdays',
             status: 1
           })
         );
@@ -184,427 +394,231 @@ const WorkSchedule = ({
 
   return (
     <div className="w-full my-3" ref={mainContentRef}>
-      <div
-        className={`${isDelteWorkSchOpened ? 'modal-open' : ''} modal modal-bottom sm:modal-middle`}
-      >
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">
-            Are you sure you want to delete the work day schedule with ID:{' '}
-            <span className="text-primary">{workDay?.id}</span>?
-          </h3>
-
-          <div className="">
-            <div className="divider">Information</div>
-            <p>
-              Day: <span className="text-primary font-semibold lowercase">{workDay?.day}</span>
-            </p>
-            <p>
-              Interval: From{' '}
-              <span className="text-primary font-semibold lowercase">{workDay?.start_time}</span> To{' '}
-              <span className="text-primary font-semibold lowercase">{workDay?.end_time}</span>
-            </p>
-            <p>
-              Status:{' '}
-              <span className="text-primary font-semibold lowercase">{workDay?.status}</span>
-            </p>
-            <p>
-              Description:{' '}
-              <span className="text-primary font-semibold lowercase">{workDay?.description}</span>
-            </p>
-          </div>
-          <div className="divider">Actions</div>
-          <div className="modal-action">
-            {/* {actionButton} */}
-            <button
-              className="btn btn-sm btn-outline btn-success"
-              onClick={() => {
-                enableScroll();
-                setIsDelteWorkSchOpened((_) => false);
-              }}
-            >
-              No, Cancel Action
-            </button>
-            <button
-              className="btn btn-sm btn-outline btn-error"
-              onClick={() => {
-                if (
-                  workDay.day.length &&
-                  workDay.status.length &&
-                  workDay.start_time.length &&
-                  workDay.end_time.length
-                ) {
-                  console.log('data:', workDay);
-                  const existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
-                  console.log('existingIndex: ', existingIndex);
-                  if (existingIndex !== -1) {
-                    setWorkDays((oldData) =>
-                      oldData.filter((elt) => elt?.id !== workDays[existingIndex]?.id)
-                    );
-                  }
-
-                  // setWorkDays((oldValues) => {
-                  // 	let existingIndex = -1;
-                  // 	if (workDay?.id?.length) {
-                  // 		existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
-                  // 	}
-
-                  // 	console.log('existingIndex', existingIndex);
-
-                  // 	// if (existingIndex !== -1) {
-                  // 	// 	workDays[existingIndex] = workDay;
-                  // 	// 	return workDays;
-                  // 	// } else {
-                  // 	// 	return [{ ...workDay, id: uuidv4() }, ...oldValues];
-                  // 	// }
-                  // 	return oldValues;
-                  // });
-                  setWorkDay(INITIAL_OBJ);
-                  setAddNew((old) => !old);
-                  setIsUpdate(false);
-                }
-                enableScroll();
-                setIsDelteWorkSchOpened((_) => false);
-              }}
-            >
-              PROCEED
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex  justify-normal gap-2 sm:gap-4">
-          <p className="font-semibold text-xl w-48">
+      <DeleteConfirmationModal
+        isOpen={isDelteWorkSchOpened}
+        workDay={workDay}
+        onClose={handleCancelDelete}
+        onDelete={handleDeleteWorkDay}
+      />
+      <div className="flex items-center justify-between bg-blue-500 p-4 rounded-lg shadow-lg">
+        <div className="text-white">
+          <p className="text-xl font-semibold">
             {moment.utc(firstDayOfMonth).format('MMMM yyyy').toString()}
-            <span className="text-xs ml-2 ">Street</span>
           </p>
+          <p className="text-sm text-gray-200">Street</p>
         </div>
         <div>
           <button
-            className="btn  btn-sm btn-ghost btn-outline normal-case"
-            onClick={() => setAddNew(true)}
-          >
+            className="px-4 py-2 bg-white text-blue-500 rounded-full hover:bg-blue-100 hover:text-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+            onClick={() => setAddNew(true)}>
             Add New Work Day
           </button>
         </div>
       </div>
-      <div className="mb-0 divider" />
-      {addNew ? (
-        <>
-          <div className="w-full grid grid-cols-1 md:grid-cols-7 gap-2">
-            <InputAsyncSelect
-              type="text"
-              updateType="day"
-              containerStyle="mt-3 md:col-span-2"
-              labelTitle="Day"
-              updateFormValue={updateFormValue}
-              loadOptions={weekDaysPromiseOptions}
-              defaultValue={
-                workDay.id
-                  ? {
-                      label: workDay.day,
-                      value: workDay.day
-                    }
-                  : {
-                      ...week_days_options[0]
-                    }
-              }
-            />
-            <InputText
-              type="time"
-              defaultValue={workDay.start_time}
-              updateType="start_time"
-              placeholder="From"
-              containerStyle="mt-3"
-              labelTitle="From"
-              updateFormValue={updateFormValue}
-            />
-            <InputText
-              type="time"
-              defaultValue={workDay.end_time}
-              updateType="end_time"
-              placeholder="To"
-              containerStyle="mt-3"
-              labelTitle="To"
-              updateFormValue={updateFormValue}
-            />
-            <InputAsyncSelect
-              type="text"
-              updateType="status"
-              containerStyle="mt-3"
-              labelTitle="Status"
-              updateFormValue={updateFormValue}
-              loadOptions={statusPromiseOptions}
-              defaultValue={
-                workDay.id
-                  ? {
-                      label: workDay.status,
-                      value: workDay.status
-                    }
-                  : {
-                      ...status_options[0]
-                    }
-              }
-            />
-            <InputText
-              type="text"
-              defaultValue={workDay.description}
-              updateType="description"
-              placeholder="Description"
-              containerStyle="mt-3 md:col-span-2"
-              labelTitle="Description"
-              updateFormValue={updateFormValue}
-            />
+
+      {addNew && (
+        <div className="bg-white p-4 rounded-lg shadow-[inset_-12px_-8px_40px_#46464620] my-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="md:col-span-2 lg:col-span-1">
+              <InputAsyncSelect
+                type="text"
+                updateType="day"
+                labelTitle="Day"
+                updateFormValue={updateFormValue}
+                loadOptions={weekDaysPromiseOptions}
+                defaultValue={
+                  workDay.id
+                    ? { label: workDay.day, value: workDay.day }
+                    : { ...week_days_options[0] }
+                }
+              />
+            </div>
+            <div>
+              <InputText
+                type="time"
+                defaultValue={workDay.start_time}
+                updateType="start_time"
+                placeholder="From"
+                labelTitle="From"
+                updateFormValue={updateFormValue}
+              />
+            </div>
+            <div>
+              <InputText
+                type="time"
+                defaultValue={workDay.end_time}
+                updateType="end_time"
+                placeholder="To"
+                labelTitle="To"
+                updateFormValue={updateFormValue}
+              />
+            </div>
+            <div>
+              <InputAsyncSelect
+                type="text"
+                updateType="status"
+                labelTitle="Status"
+                updateFormValue={updateFormValue}
+                loadOptions={statusPromiseOptions}
+                defaultValue={
+                  workDay.id
+                    ? {
+                        label: workDay.status ? 'OPEN' : 'CLOSED',
+                        value: workDay.status
+                      }
+                    : { ...status_options[0] }
+                }
+              />
+            </div>
+            <div className="md:col-span-2 lg:col-span-4">
+              <InputText
+                type="text"
+                defaultValue={workDay.description}
+                updateType="description"
+                placeholder="Description"
+                labelTitle="Description"
+                updateFormValue={updateFormValue}
+              />
+            </div>
           </div>
-          <div className="flex items-center justify-center my-3 gap-3">
+
+          <div className="flex items-center justify-center mt-4 space-x-3">
             {isUpdate && (
               <button
                 className="btn btn-sm border-red-800 bg-white text-red-800 hover:border-white hover:bg-red-800 hover:text-white"
                 onClick={() => {
-                  disableScroll();
-                  setIsDelteWorkSchOpened((_) => true);
-                }}
-              >
+                  setIsDelteWorkSchOpened(true);
+                }}>
                 <AiOutlineDelete className="w-6 h-6" />
               </button>
             )}
             <button
-              className="btn btn-outline btn-sm btn-secondary w-1/4"
+              className="btn btn-outline btn-sm btn-secondary"
               onClick={() => {
-                setAddNew((old) => !old);
+                setAddNew(false);
                 setIsUpdate(false);
                 setWorkDay(INITIAL_OBJ);
-              }}
-            >
+              }}>
               Cancel
             </button>
             <button
-              className={`btn btn-outline btn-sm ${isUpdate ? 'btn-ghost' : 'btn-primary'} w-1/4`}
-              onClick={() => {
-                console.log(workDay);
-
-                if (
-                  workDay.day.length &&
-                  workDay.status.length &&
-                  workDay.start_time.length &&
-                  workDay.end_time.length
-                ) {
-                  console.log('data:', workDay);
-                  if (isUpdate) {
-                    console.log('isUpdate:', isUpdate);
-                    if (
-                      moment
-                        .utc(workDay?.end_time, 'HH:mm')
-                        .isBefore(moment.utc(workDay?.start_time, 'HH:mm'))
-                    ) {
-                      dispatch(
-                        showNotification({
-                          message: 'Start time can not be after end time',
-                          status: 0
-                        })
-                      );
-                    } else {
-                      console.log('isUpdate else:', isUpdate);
-                      let tempWorkDays = [];
-                      const existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
-                      console.log('existingIndex: ', existingIndex);
-                      if (existingIndex !== -1) {
-                        tempWorkDays = [
-                          ...workDays.filter((elt) => elt?.id !== workDays[existingIndex]?.id)
-                        ];
-                      }
-                      console.log('tempWorkDays: ', tempWorkDays);
-                      const clash = tempWorkDays.some((obj) => {
-                        console.log(
-                          'tempWorkDays: ',
-                          moment
-                            .utc(obj.start_time, 'HH:mm')
-                            .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
-                            moment
-                              .utc(obj.end_time, 'HH:mm')
-                              .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))
-                        );
-                        return (
-                          obj.day === workDay.day &&
-                          ((moment
-                            .utc(obj.start_time, 'HH:mm')
-                            .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
-                            moment
-                              .utc(obj.end_time, 'HH:mm')
-                              .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))) ||
-                            (moment
-                              .utc(obj.start_time, 'HH:mm')
-                              .isSameOrBefore(moment.utc(workDay.end_time, 'HH:mm')) &&
-                              moment
-                                .utc(obj.end_time, 'HH:mm')
-                                .isSameOrAfter(moment.utc(workDay.end_time, 'HH:mm'))))
-                        );
-                      });
-                      console.log('clash', clash);
-
-                      if (clash) {
-                        dispatch(
-                          showNotification({
-                            message:
-                              'Could not add this schedule as it clashes with an existing one',
-                            status: 0
-                          })
-                        );
-                      } else {
-                        console.log('here');
-                        // setWorkDays((oldData) => oldData.filter((elt) => elt?.id !== workDays[existingIndex]?.id));
-                        setWorkDays((oldValues) => {
-                          return [{ ...workDay, id: uuidv4() }, ...tempWorkDays];
-                        });
-                        setWorkDay((_) => INITIAL_OBJ);
-                        setAddNew((old) => !old);
-                        setIsUpdate((_) => false);
-                      }
-                    }
-                  } else {
-                    if (
-                      moment
-                        .utc(workDay?.end_time, 'HH:mm')
-                        .isBefore(moment.utc(workDay?.start_time, 'HH:mm'))
-                    ) {
-                      dispatch(
-                        showNotification({
-                          message: 'Start time can not be after end time',
-                          status: 0
-                        })
-                      );
-                    } else {
-                      // Check if there's a clash for the selected day
-                      // const clash = workDays.some((obj) => {
-                      // 	return (
-                      // 		obj.day === workDay.day &&
-                      // 		((obj.start_time <= workDay.start_time && obj.end_time >= workDay.start_time) ||
-                      // 			(obj.start_time <= workDay.end_time && obj.end_time > workDay.end_time))
-                      // 	);
-                      // });
-                      const clash = workDays.some((obj) => {
-                        return (
-                          obj.day === workDay.day &&
-                          ((moment
-                            .utc(obj.start_time, 'HH:mm')
-                            .isSameOrBefore(moment.utc(workDay.start_time, 'HH:mm')) &&
-                            moment
-                              .utc(obj.end_time, 'HH:mm')
-                              .isSameOrAfter(moment.utc(workDay.start_time, 'HH:mm'))) ||
-                            (moment
-                              .utc(obj.start_time, 'HH:mm')
-                              .isSameOrBefore(moment.utc(workDay.end_time, 'HH:mm')) &&
-                              moment
-                                .utc(obj.end_time, 'HH:mm')
-                                .isSameOrAfter(moment.utc(workDay.end_time, 'HH:mm'))))
-                        );
-                      });
-                      console.log('clash', clash);
-
-                      if (clash) {
-                        dispatch(
-                          showNotification({
-                            message:
-                              'Could not add this schedule as it clashes with an existing one',
-                            status: 0
-                          })
-                        );
-                      } else {
-                        setWorkDays((oldValues) => {
-                          let existingIndex = -1;
-                          if (workDay?.id?.length) {
-                            existingIndex = workDays.findIndex((obj) => obj.id === workDay.id);
-                          }
-
-                          console.log('existingIndex', existingIndex);
-
-                          if (existingIndex !== -1) {
-                            workDays[existingIndex] = workDay;
-                            return workDays;
-                          } else {
-                            return [{ ...workDay, id: uuidv4() }, ...oldValues];
-                          }
-                        });
-                        setWorkDay(INITIAL_OBJ);
-                        setAddNew((old) => !old);
-                        setIsUpdate(false);
-                      }
-                    }
-                  }
-                }
-              }}
-            >
+              className={`btn btn-outline btn-sm ${isUpdate ? 'btn-ghost' : 'btn-primary'}`}
+              onClick={handleAddOrUpdate}>
               {isUpdate ? 'Update' : 'Add'}
             </button>
           </div>
-        </>
-      ) : (
-        <></>
+        </div>
       )}
-      <div className="w-full  bg-base-100 p-4 rounded-lg">
+
+      <div className="w-full bg-white p-4 rounded-lg shadow-lg">
         <FullCalendar
           timeZone="UTC"
-          eventTimeFormat={({ start, end }) => {
-            return `${moment.utc(start).format('HH:mm')} - ${moment.utc(end).format('HH:mm')}`;
-          }}
           plugins={[timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           firstDay={1}
           headerToolbar={{
-            left: 'title',
-            right: 'timeGridWeek'
+            left: '',
+            center: '',
+            right: ''
           }}
-          // titleFormat'dddd, MMMM D, YYYY'
-          titleFormat={(args) => {
-            return moment.utc().format('dddd');
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false // Set to false to use 24-hour format
           }}
-          dayHeaderFormat={(args) => {
-            return moment.utc(args.date).format('ddd');
+          slotLabelFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false // Display in 24-hour format
           }}
-          // dateClick={handleDateClick}
           eventClick={handleDateClick}
           events={workDays.map((weekDay) => {
             return {
               id: weekDay.id,
-              title: `(${weekDay.status}) - ${weekDay.description}`,
+              title: weekDay.status === true || weekDay.status === 'OPEN' ? 'Open' : 'Closed',
               start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
               end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time),
               backgroundColor:
-                weekDay.status === 'OPENED'
-                  ? '#0c8599'
-                  : weekDay.status === 'CLOSED'
-                    ? '#fd7e14'
-                    : '#e3e3e3'
-              // backgroundColor: weekDay.status === 'OPENED' ? '#049407' : weekDay.status === 'CLOSED' ? '#940404' : '#e3e3e3',
+                weekDay.status === true || weekDay.status === 'OPEN' ? '#009688' : '#777777'
             };
           })}
         />
       </div>
-      {/* </TitleCard> */}
 
-      {isEditCustomerSchedule ? (
-        <div className="grid grid-cols-3">
-          <button className="btn btn-outline btn-primary btn-sm col-start-2" onClick={handleSubmit}>
+      <div
+        className={`mt-4 ${
+          isEditCustomerSchedule ? 'grid grid-cols-3' : 'flex flex-row-reverse mt-6 mb-2 mx-4 gap-3'
+        }`}>
+        {isEditCustomerSchedule ? (
+          <button className="btn btn-primary btn-sm col-start-2" onClick={handleSaveSchedule}>
             Save Schedule
           </button>
-        </div>
-      ) : (
-        <div className="flex flex-row-reverse mt-6 mb-2 mx-4 gap-3">
-          <button
-            className="btn btn-outline btn-primary btn-sm"
-            onClick={() => clickAction((old) => old + 1)}
-          >
-            Next
-          </button>
-          <button
-            className=" btn btn-outline btn-ghost btn-sm"
-            onClick={() => clickAction((old) => old - 1)}
-          >
-            Back
-          </button>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-row-reverse mt-6 mb-2 mx-4 gap-3">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => clickAction((old) => old + 1)}>
+              Next
+            </button>
+            <button
+              className="btn btn-outline btn-secondary btn-sm"
+              onClick={() => clickAction((old) => old - 1)}>
+              Back
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default WorkSchedule;
+
+const DeleteConfirmationModal = ({ isOpen, workDay, onClose, onDelete }) => {
+  const handleClose = () => {
+    onClose();
+  };
+
+  const handleDelete = () => {
+    onDelete();
+  };
+
+  return (
+    <div className={`modal ${isOpen ? 'modal-open' : ''}`}>
+      <div className="modal-box">
+        <h3 className="font-semibold text-2xl mb-4">Confirm Deletion</h3>
+
+        <div className="p-4 bg-gray-100 rounded-lg mb-4">
+          <p className="text-lg">
+            Are you sure you want to delete the work day schedule with ID{' '}
+            <span className="text-primary">{workDay?.id}</span>?
+          </p>
+          <div className="mt-4">
+            <p>
+              <span className="font-semibold">Day:</span> {workDay?.day}
+            </p>
+            <p>
+              <span className="font-semibold">Interval:</span> {workDay?.start_time} -{' '}
+              {workDay?.end_time}
+            </p>
+            <p>
+              <span className="font-semibold">Status:</span> {workDay?.status}
+            </p>
+            <p>
+              <span className="font-semibold">Description:</span> {workDay?.description}
+            </p>
+          </div>
+        </div>
+
+        <div className="modal-action flex justify-end mt-4">
+          <button className="btn btn-sm btn-outline btn-secondary mr-2" onClick={handleClose}>
+            Cancel
+          </button>
+          <button className="btn btn-sm btn-outline btn-danger" onClick={handleDelete}>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

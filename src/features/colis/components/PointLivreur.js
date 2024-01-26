@@ -121,7 +121,7 @@ const PointLivreurContent = ({ livreurInfo, data, from, to, onCopy }) => {
               <div className="stat">
                 <div className="stat-title">Montant Total</div>
                 <div className="stat-value text-[1.5rem]">{data?.totalAmountToBePaid} CFA</div>
-                <div className="stat-desc">Montant total à payer</div>
+                <div className="stat-desc">Pour le marchant</div>
               </div>
 
               <div className="stat">
@@ -196,7 +196,7 @@ const PointLivreurContent = ({ livreurInfo, data, from, to, onCopy }) => {
                 </tr>
               </tbody>
             </table>
-            <table className="table table-compact table-zebra w-full">
+            <table className="table table-compact w-full">
               <thead>
                 <tr>
                   <th>Code</th>
@@ -204,6 +204,7 @@ const PointLivreurContent = ({ livreurInfo, data, from, to, onCopy }) => {
                   <th>Lieu De Livraison</th>
                   <th>Prix</th>
                   <th>Livraison</th>
+                  <th>Payment Method</th>
                   <th>Prix Marchand</th>
                   <th>Status</th>
                 </tr>
@@ -216,14 +217,17 @@ const PointLivreurContent = ({ livreurInfo, data, from, to, onCopy }) => {
                   const statusColor = getStatusColor(status);
 
                   return (
-                    <tr key={colis?.id}>
+                    <tr
+                      key={colis?.id}
+                      className={status === 'DELIVERED' || status === 'LOST' ? 'active' : ''}>
                       <td>{colis?.code}</td>
                       <td>{colis?.delivery_phone_number}</td>
                       <td>{colis?.delivery_address_name}</td>
                       <td>{parseInt(colis?.price)}</td>
                       <td>{parseInt(colis?.fee)}</td>
+                      <td className="font-semibold">{colis?.fee_payment}</td>
                       <td className="text-primary font-semibold">
-                        {colis?.fee_payment === 'PREPAID'
+                        {colis?.fee_payment === 'PREPAID' && status !== 'LOST'
                           ? parseInt(colis?.price) - parseInt(colis?.fee)
                           : parseInt(colis?.price)}
                       </td>

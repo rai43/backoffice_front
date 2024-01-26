@@ -135,7 +135,6 @@ export const createMerchantClientAccount = createAsyncThunk(
           'Content-type': 'multipart/form-data'
         }
       });
-      console.log(response);
       return response.data;
     } catch (e) {
       throw new Error(e.statusText);
@@ -248,6 +247,22 @@ export const updateMerchantSchedule = createAsyncThunk(
   }
 );
 
+export const resetClientPassword = createAsyncThunk(
+  '/clients/reset-client-password',
+  async (payload, { rejectWithValue }) => {
+    const { clientId, newPassword } = payload;
+    try {
+      const response = await axios.patch(`/api/client/reset-client-password/${clientId}`, {
+        newPassword
+      });
+      return response.data;
+    } catch (error) {
+      // Using rejectWithValue to handle errors in createAsyncThunk
+      return rejectWithValue(error.response?.data || 'Unknown error occurred');
+    }
+  }
+);
+
 export const clientSlice = createSlice({
   name: 'clients',
   initialState: {
@@ -265,15 +280,24 @@ export const clientSlice = createSlice({
     },
 
     replaceClientObjectByUpdatedOne: (state, action) => {
-      const indexToRemoved = state.clients.findIndex(
+      const indexToReplace = state.clients.findIndex(
         (client) => client.id === action.payload?.client?.id
       );
 
       // If the object is found, replace it with the new object
-      if (indexToRemoved !== -1) {
-        state.clients[indexToRemoved] = action.payload.client;
+      if (indexToReplace !== -1) {
+        const updatedClients = [...state.clients]; // Create a shallow copy of clients array
+        updatedClients[indexToReplace] = action.payload.client;
+
+        return {
+          ...state,
+          clients: updatedClients,
+          isLoading: false
+        };
       }
-      state.isLoading = false;
+
+      // If the object is not found, return the current state without modifications
+      return state;
     }
   },
 
@@ -431,6 +455,17 @@ export const clientSlice = createSlice({
       state.isLoading = false;
     },
     [createMerchantClientAccount.rejected]: (state) => {
+      state.isLoading = false;
+    },
+
+    [resetClientPassword.pending]: (state) => {
+      state.isLoading = true;
+    },
+    [resetClientPassword.fulfilled]: (state) => {
+      // No need to change the client object has the object does not change
+      state.isLoading = false;
+    },
+    [resetClientPassword.rejected]: (state) => {
       state.isLoading = false;
     }
     // ========= ooooo =========

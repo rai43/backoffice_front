@@ -2,19 +2,19 @@ import React, { useEffect } from 'react';
 
 import { useDispatch } from 'react-redux';
 
-import ParcelsManagement from '../../features/colis';
+import ReturnParcelsManagement from '../../features/colis/ReturnParcels';
 import { setPageTitle } from '../../features/common/headerSlice';
-import { resetTableParcelsManagementSettings } from '../../features/common/parcelsManagementTableSlice';
+import { resetTableParcelsManagementSettings } from '../../features/common/returnParcelsManagementTableSlice';
 
 function InternalPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(resetTableParcelsManagementSettings());
-    dispatch(setPageTitle({ title: 'Parcels Management' }));
+    dispatch(setPageTitle({ title: 'Return Parcels Management' }));
   }, []);
 
-  return <ParcelsManagement />;
+  return <ReturnParcelsManagement />;
 }
 
 export default InternalPage;

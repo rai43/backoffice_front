@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+
 import { useDispatch } from 'react-redux';
+
+import CustomersManager from '../../features/client';
 import { setPageTitle } from '../../features/common/headerSlice';
-import Customers from '../../features/client';
 import Offers from '../../features/offers';
 
 function InternalPage() {

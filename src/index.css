@@ -53,3 +53,9 @@
   height: 120px;
   animation: spin 2s linear infinite;
 }
+
+.PhoneInputInput:focus {
+  outline: none; /* Removes the default focus outline */
+  /* Add any additional styles you want on focus, e.g., a different border or shadow */
+  border: none; /* Example: setting a custom border color */
+}

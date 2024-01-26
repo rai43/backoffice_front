@@ -52,6 +52,11 @@ export const customersTableSlice = createSlice({
       state.paginationSize = paginationSize;
     },
 
+    setFieldValue: (state, action) => {
+      const { field, value } = action.payload;
+      state[field] = value;
+    },
+
     setPersonal: (state, action) => {
       const { personal } = action.payload;
       state.personal = personal;
@@ -167,6 +172,7 @@ export const {
   setFilters,
   setMerchant,
   setMerchantId,
+  setFieldValue,
   setMerchantName,
   setPaginationSize,
   setTotalPages,

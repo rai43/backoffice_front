@@ -1,14 +1,20 @@
 import React from 'react';
-import FullCalendar from '@fullcalendar/react';
+
 import interactionPlugin from '@fullcalendar/interaction';
+import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import moment from 'moment';
+import { useDispatch } from 'react-redux';
+
+import { FiEdit2, FiMapPin, FiTrash2 } from 'react-icons/fi';
 
 import PlusSmallIcon from '@heroicons/react/24/outline/PlusSmallIcon';
-import ImageUpload from '../../../../components/Input/ImageUpload';
 import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon';
+
+import ImageUpload from '../../../../components/Input/ImageUpload';
 import { getWeekDateRange } from '../../../../utils/functions/getWeekDateRange';
-import { useDispatch } from 'react-redux';
+import { showNotification } from '../../../common/headerSlice';
+import { closeModal } from '../../../common/modalSlice';
 import {
   createMerchantClientAccount,
   createPersonalClientAccount,
@@ -16,8 +22,6 @@ import {
   modifyPersonalClientAccount,
   turnClientIntoMerchantAccount
 } from '../../clientSlice';
-import { showNotification } from '../../../common/headerSlice';
-import { closeModal } from '../../../common/modalSlice';
 
 const transformTime = (_date, _time) => {
   const datetime = moment.utc(_date + ' ' + _time);
@@ -48,7 +52,6 @@ const Summary = ({
         workDays: workDaysInfo
       };
       dispatch(turnClientIntoMerchantAccount(data)).then(async (response) => {
-        console.log('response: ', response);
         if (response?.error) {
           console.log(response.error);
           dispatch(
@@ -141,7 +144,7 @@ const Summary = ({
           } else {
             dispatch(
               showNotification({
-                message: 'Succefully editing the merchant account',
+                message: 'Successfully editing the merchant account',
                 status: 1
               })
             );
@@ -177,8 +180,7 @@ const Summary = ({
     <>
       <div
         tabIndex={0}
-        className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5"
-      >
+        className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5">
         <div className="collapse-title text-xl font-medium">Basic Account Info</div>
         <div className="collapse-content mx-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -220,10 +222,6 @@ const Summary = ({
                     {registrationInfo.latitude}, {registrationInfo.longitude}
                   </span>
                 </div>
-                {/* <div className='inline-flex items-baseline'>
-									<PlusSmallIcon className='h-3 w-3 mx-3' />
-									<span className='font-semibold'>Profile Picture</span>
-								</div> */}
                 <div className="sm:col-span-3">
                   <ImageUpload
                     id="image"
@@ -242,86 +240,74 @@ const Summary = ({
         <>
           <div
             tabIndex={0}
-            className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5"
-          >
+            className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5">
             <div className="collapse-title text-xl font-medium">Locations Info</div>
             <div className="collapse-content mx-3">
-              {locationsInfo.map((location) => (
-                <div key={location.id} className="alert shadow-lg my-4">
-                  <div>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="stroke-current flex-shrink-0 h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <div>
-                      <h3 className="font-bold">
-                        {location.name} - ({location.details})
-                      </h3>
-                      <div className="text-xs">
-                        Latitude:{' '}
-                        <span className="font-semibold text-primary">{location.latitude}</span>,
-                        Longitude:{' '}
-                        <span className="font-semibold text-primary">{location.longitude}</span>,
-                        Radius:{' '}
-                        <span className="font-semibold text-primary">
-                          {location.radius} meter(s)
-                        </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-3">
+                {locationsInfo.map((location) => (
+                  <div
+                    key={location.id}
+                    className="bg-white rounded-lg shadow-[0_3px_10px_rgb(0,0,0,0.2)] p-6">
+                    <div className="mb-4 flex items-center">
+                      <div className="text-4xl text-primary mr-4">
+                        <FiMapPin />
                       </div>
+                      <h3 className="text-2xl font-semibold">{location.name}</h3>
+                    </div>
+                    <p className="text-gray-600 mb-4">
+                      {location.details ? location.details : 'No description'}
+                    </p>
+                    <div className="text-gray-600">
+                      <p>
+                        <span className="font-semibold">Latitude:</span>{' '}
+                        {parseFloat(location.latitude).toFixed(8)}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Longitude:</span>{' '}
+                        {parseFloat(location.longitude).toFixed(8)}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Radius:</span> {location.radius} meter(s)
+                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
           <div
             tabIndex={0}
-            className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5"
-          >
+            className="collapse collapse-open border border-base-300 bg-base-100 rounded-box mx-5 mt-5">
             <div className="collapse-title text-xl font-medium">Work Days Info</div>
             <div className="collapse-content mx-3">
               <FullCalendar
                 timeZone="UTC"
                 plugins={[timeGridPlugin, interactionPlugin]}
                 initialView="timeGridWeek"
-                eventTimeFormat={({ start, end }) => {
-                  return `${moment.utc(start).format('HH:mm')} - ${moment
-                    .utc(end)
-                    .format('HH:mm')}`;
-                }}
                 firstDay={1}
                 headerToolbar={{
-                  left: 'title',
-                  right: 'timeGridWeek'
+                  left: '',
+                  center: '',
+                  right: ''
                 }}
-                // titleFormat'dddd, MMMM D, YYYY'
-                titleFormat={(args) => {
-                  return 'The work days';
+                eventTimeFormat={{
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false // Set to false to use 24-hour format
                 }}
-                dayHeaderFormat={(args) => {
-                  return moment.utc(args.date).format('ddd');
+                slotLabelFormat={{
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false // Display in 24-hour format
                 }}
-                // dateClick={handleDateClick}
                 events={workDaysInfo.map((weekDay) => {
                   return {
                     id: weekDay.id,
-                    title: `(${weekDay.status}) - ${weekDay.description}`,
+                    title: weekDay.status === true || weekDay.status === 'OPEN' ? 'Open' : 'Closed',
                     start: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.start_time),
                     end: transformTime(weekDatesNamesVsDates[weekDay.day], weekDay.end_time),
                     backgroundColor:
-                      weekDay.status === 'OPENED'
-                        ? '#0c8599'
-                        : weekDay.status === 'CLOSED'
-                          ? '#fd7e14'
-                          : '#e3e3e3'
+                      weekDay.status === true || weekDay.status === 'OPEN' ? '#009688' : '#777777'
                   };
                 })}
               />
@@ -335,13 +321,12 @@ const Summary = ({
           {clientToMarchant
             ? 'Create New Merchant'
             : actionTypeBool
-              ? 'Modify Account'
-              : 'Create Account'}
+            ? 'Modify Account'
+            : 'Create Account'}
         </button>
         <button
           className=" btn btn-outline btn-ghost btn-sm"
-          onClick={() => clickAction((old) => old - 1)}
-        >
+          onClick={() => clickAction((old) => old - 1)}>
           Back
         </button>
       </div>

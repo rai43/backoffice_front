@@ -1,5 +1,6 @@
 import 'react-phone-number-input/style.css';
-import { useState } from 'react';
+import React, { useState } from 'react';
+
 import PhoneInput from 'react-phone-number-input';
 import flags from 'react-phone-number-input/flags';
 
@@ -33,6 +34,7 @@ const InputPhoneNumber = ({
         defaultCountry={defaultCountry}
         onChange={(number) => updateInputValue(number)}
         flags={flags}
+        style={{ borderColor: value ? '#red' : '#ccc' }}
       />
     </div>
   );

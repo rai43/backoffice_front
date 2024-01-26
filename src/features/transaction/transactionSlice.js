@@ -1,22 +1,34 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { useDispatch } from 'react-redux';
-
-import { replaceClientObjectByUpdatedOne } from '../client/clientSlice';
 
 export const getClientTransactions = createAsyncThunk('/transactions/client', async (params) => {
-  const wallet = params.wallet;
-  const transactionType = params.transactionType;
+  const walletId = params.walletId;
+  const from = params.fromDate;
+  const to = params.toDate;
+  const skip = params.skip;
+  const limit = params.limit || 20;
+
+  const response = await axios.get(`/api/transactions/get-transactions/${walletId}`, {
+    params: {
+      to,
+      from,
+      skip,
+      limit
+    }
+  });
+
+  return response.data;
+});
+
+export const getTransactions = createAsyncThunk('/all-transactions', async (params) => {
   const from = params.from;
   const to = params.to;
   const skip = params.skip;
-
-  const response = await axios.get(`/api/transaction/get-transactions/${wallet}`, {
+  const limit = params.limit || 20;
+  const response = await axios.get(`/api/transactions/get-transactions`, {
     params: {
-      transactionType,
-      to,
       from,
-      skip
+      to
     }
   });
 
@@ -24,7 +36,7 @@ export const getClientTransactions = createAsyncThunk('/transactions/client', as
 });
 
 export const getOperatorTypes = createAsyncThunk('/transactions/get-operator-types', async () => {
-  const response = await axios.get(`/api/transaction/get-operator-types`, {});
+  const response = await axios.get(`/api/transactions/get-operator-types`, {});
 
   return response.data;
 });
@@ -192,18 +204,27 @@ export const transactionSlice = createSlice({
       state.isLoading = true;
     },
     [getClientTransactions.fulfilled]: (state, action) => {
+      const oldTransactionsLength = state.transactions?.length;
       state.transactions = [...state.transactions, ...action.payload.transactions];
-      if (state.totalCount !== action.payload.totalCount) {
-        state.totalCount = action.payload.totalCount;
-      }
-      if (state.skip === action.payload.skip) {
+
+      if (oldTransactionsLength === state.transactions?.length) {
         state.noMoreQuery = true;
-      } else {
-        state.skip = action.payload.skip;
       }
       state.isLoading = false;
     },
     [getClientTransactions.rejected]: (state) => {
+      state.isLoading = false;
+    },
+
+    [getTransactions.pending]: (state) => {
+      state.isLoading = true;
+    },
+    [getTransactions.fulfilled]: (state, action) => {
+      state.transactions = [...action.payload.transactions];
+
+      state.isLoading = false;
+    },
+    [getTransactions.rejected]: (state) => {
       state.isLoading = false;
     },
 

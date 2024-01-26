@@ -7,12 +7,11 @@ import moment from 'moment/moment';
 import { useDispatch, useSelector } from 'react-redux';
 import Datepicker from 'react-tailwindcss-datepicker';
 
-import { AiOutlineFileDone } from 'react-icons/ai';
 import { BiHide, BiShow } from 'react-icons/bi';
 import { CiShoppingTag } from 'react-icons/ci';
 import { FaAmazonPay } from 'react-icons/fa';
 import { IoCreateOutline } from 'react-icons/io5';
-import { MdDoneAll, MdOutlineDeliveryDining, MdOutlineAssignmentInd } from 'react-icons/md';
+import { MdOutlineDeliveryDining } from 'react-icons/md';
 
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon';
 import ArrowPathIcon from '@heroicons/react/24/outline/ArrowPathIcon';
@@ -57,14 +56,8 @@ const ParcelsManagement = () => {
 
     pendingCount,
     registeredCount,
-    assignedForCollectionCount,
-    collectionInProgressCount,
     articleToReturnCount,
-    deliveredCount,
-    warehousedCount,
-    assignedForDeliveryCount,
-    waitingForDeliveryCount,
-    deliveryInProgressCount
+    deliveredCount
   } = useSelector((state) => state.parcelsManagement);
 
   const INITIAL_WALLET_FILTER_OBJ = {
@@ -136,7 +129,6 @@ const ParcelsManagement = () => {
       });
     }
 
-    console.log(groupedData);
     return groupedData;
   };
 
@@ -307,10 +299,6 @@ const ParcelsManagement = () => {
       return isDeliveredOrLost && hasPositivePrice && isPaymentPending;
     });
 
-    console.log({
-      count: elementsToBePaid.length,
-      elements: elementsToBePaid
-    });
     return {
       count: elementsToBePaid.length,
       elements: elementsToBePaid
@@ -402,8 +390,6 @@ const ParcelsManagement = () => {
         a.pickup_phone_number.localeCompare(b.pickup_phone_number)
       );
     }
-
-    console.log(groupedByDeliveryLivreur);
 
     return { groupedData: groupedByDeliveryLivreur, summary: summaryData };
   };
