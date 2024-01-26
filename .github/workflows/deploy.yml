@@ -40,15 +40,16 @@ jobs:
         password: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           whoami
-          sudo su
-          cd /var/www/back-office/htdocs/frontend/
-          TIMESTAMP=$(date +%F-%T)
-          mkdir -p test_old_builds
-          if [ -d "build" ]; then
-            cp -R build "test_old_builds/old_build_$TIMESTAMP"
-            # mv build "old_builds/old_build_$TIMESTAMP"
-          fi
-          mv build ./test_build
+          ls -al
+          # sudo su
+          # cd /var/www/back-office/htdocs/frontend/
+          # TIMESTAMP=$(date +%F-%T)
+          # mkdir -p test_old_builds
+          # if [ -d "build" ]; then
+          #   cp -R build "test_old_builds/old_build_$TIMESTAMP"
+          #   # mv build "old_builds/old_build_$TIMESTAMP"
+          # fi
+          # mv build ./test_build
 
 
 
