@@ -13,10 +13,10 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18' # Set this to your node version or the project version
+    # - name: Set up Node.js
+    #   uses: actions/setup-node@v2
+    #   with:
+    #     node-version: '18' # Set this to your node version or the project version
         
     - name: multiple command
       uses: appleboy/ssh-action@v1.0.3
@@ -24,6 +24,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        password: ${{ secrets.SSH_PASSPHRASE }}
         port: 22
         script: |
           whoami
