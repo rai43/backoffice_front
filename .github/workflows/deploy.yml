@@ -24,10 +24,15 @@ jobs:
     - name: Build Project
       run: npm run build
 
-    - name: Setup SSH Agent
-      uses: webfactory/ssh-agent@v0.5.3
+    - name: Install expect
+      run: sudo apt-get install expect
+
+    - name: Setup SSH Key
+      uses: shimataro/ssh-key-action@v2
       with:
-        ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        name: id_rsa # optional
+        passphrase: ${{ secrets.SSH_PASSPHRASE }} # Here we use the passphrase
 
     - name: Add SSH key to agent with passphrase
       env:
