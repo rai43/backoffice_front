@@ -21,6 +21,9 @@ const Invitations = lazy(() => import('../pages/authenticated/Invitations'));
 const LiveLocations = lazy(() => import('../pages/authenticated/LiveLocations'));
 const LogisticsControlPanel = lazy(() => import('../pages/authenticated/LogisticsControlPanel'));
 const ParcelsManagement = lazy(() => import('../pages/authenticated/ParcelsManagement'));
+const ReturnParcelsManagement = lazy(() =>
+  import('../pages/authenticated/ReturnParcelsManagement')
+);
 
 const routes = [
   {
@@ -94,6 +97,14 @@ const routes = [
   {
     path: 'logistics-center/parcels',
     component: ParcelsManagement
+  },
+  {
+    path: 'logistics-center/return-parcels',
+    component: ReturnParcelsManagement
+  },
+  {
+    path: 'logistics-center/colis-fees',
+    component: ReturnParcelsManagement
   }
 ];
 

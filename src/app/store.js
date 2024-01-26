@@ -15,6 +15,7 @@ import merchantSettingsTableSlice from '../features/common/merchantSettingsTable
 import modalSlice from '../features/common/modalSlice';
 import ordersTableSlice from '../features/common/ordersTableSlice';
 import parcelsManagementTableSlice from '../features/common/parcelsManagementTableSlice';
+import returnParcelsManagementTableSlice from '../features/common/returnParcelsManagementTableSlice';
 import rightDrawerSlice from '../features/common/rightDrawerSlice';
 import transactionsTableSlice from '../features/common/transactionsTableSlice';
 import discountManagementSlice from '../features/discountManagement/discountManagementSlice';
@@ -44,6 +45,7 @@ const combinedReducer = {
   discountManagementTable: discountManagementTableSlice,
   colisControlPanelTable: colisControlPanelTableSlice,
   parcelsManagementTable: parcelsManagementTableSlice,
+  returnParcelsManagementTable: returnParcelsManagementTableSlice,
   codeManagementTable: codeManagementTableSlice,
   rightDrawer: rightDrawerSlice,
   modal: modalSlice,

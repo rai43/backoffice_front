@@ -43,28 +43,52 @@ import {
   setTo
 } from '../common/ordersTableSlice';
 
+/**
+ * Initial filters for a search or listing interface.
+ * These filters determine which options are active by default.
+ */
 const INITIAL_FILTERS = {
-  sort: false,
-  status: false,
-  paymentMethod: false,
-  merchantName: false,
-  more: false
+  sort: false, // If true, sorting is enabled by default
+  status: false, // If true, status filter is applied by default
+  paymentMethod: false, // If true, payment method filter is applied by default
+  merchantName: false, // If true, merchant name filter is applied by default
+  more: false // If true, additional filters are shown by default
 };
 
+/**
+ * Configuration options for a grid (table-like structure) in the interface.
+ */
 const gridOptions = {
-  paginationPageSize: 20, // Initial page size
-  suppressExcelExport: true,
+  paginationPageSize: 20, // Initial page size, number of items per page
+  suppressExcelExport: true, // If true, disables the option to export data to Excel
   defaultColDef: {
-    sortable: true,
-    resizable: true
+    sortable: true, // Allows columns to be sorted
+    resizable: true // Allows columns to be resized
   }
 };
 
+/**
+ * Component responsible for displaying and managing orders.
+ * It includes functionality for filtering, sorting, exporting data,
+ * handling date range selections, and loading additional orders for pagination.
+ */
 const Orders = () => {
+  // useDispatch hook to dispatch actions to the Redux store.
+  const dispatch = useDispatch();
+
+  // useRef hook to maintain a mutable reference to the grid component.
   const gridRef = useRef(null);
+
+  // useState hook to manage the filter states based on predefined initial filters.
   const [filterStates, setFilterStates] = useState(INITIAL_FILTERS);
+
+  // useState hook to toggle visibility of statistics.
   const [showStats, setShowStats] = useState(true);
+
+  // useState hook for managing the selected map (array) state.
   const [showSelectedMap, setShowSelectedMap] = useState([]);
+
+  // useState hook for maintaining various statistics related to orders.
   const [statistics, setsStatistics] = useState({
     totalOrders: 0,
     totalPaid: 0,
@@ -81,6 +105,7 @@ const Orders = () => {
     InInProcessState: 0
   });
 
+  // useSelector hook to access various order-related states from the Redux store.
   const {
     orderStatus,
     paymentMethod,
@@ -95,6 +120,7 @@ const Orders = () => {
     merchantPhone
   } = useSelector((state) => state.ordersTable);
 
+  // Constructing an initial filter object based on values from the Redux store.
   const INITIAL_FILTER_OBJ = {
     orderStatus: orderStatus,
     paymentMethod: paymentMethod,
@@ -109,14 +135,17 @@ const Orders = () => {
     merchantPhone: merchantPhone
   };
 
+  // Accessing orders related data from the Redux store using useSelector.
   const { orders, orderSkipCount, isLoading, noMoreQuery } = useSelector((state) => state.order);
   const { paginationSize } = useSelector((state) => state.ordersTable);
 
+  // useFormik hook to manage form state and handle form submissions.
   const orderFormContext = useFormik({
     initialValues: INITIAL_FILTER_OBJ
   });
-  const dispatch = useDispatch();
 
+  // useState hook for managing date values in the form.
+  // noinspection DuplicatedCode
   const [dateValue, setDateValue] = useState({
     startDate: orderFormContext.values.from,
     endDate: orderFormContext.values.to
@@ -181,7 +210,7 @@ const Orders = () => {
     if (!noMoreQuery && !isLoading) {
       // Create parameters for dispatching the order retrieval action with updated skip value
       const additionalOrderParams = assembleOrderQueryParameters(orderFormContext.values, {
-        skip: orderSkipCount
+        skip: orders?.length || 0
       });
 
       // Fetch and process orders with the created parameters and 'load' set to true
@@ -211,6 +240,10 @@ const Orders = () => {
     ...extraQueryParams // Including any additional parameters passed to the function
   });
 
+  /**
+   * Uses useCallback to create a memoized version of a function that updates the form values.
+   * This is essential for optimizing performance, especially with forms.
+   */
   const updateFormValue = useCallback(
     ({ key, value }) => {
       orderFormContext.setValues({
@@ -221,8 +254,16 @@ const Orders = () => {
     [orderFormContext]
   );
 
+  /**
+   * Debounced version of updateFormValue. This prevents the function from being called too
+   * frequently, improving performance for operations like typing in an input field.
+   */
   const debouncedUpdateFormValue = _.debounce(updateFormValue, 1500);
 
+  /**
+   * Handles changes in the DatePicker's value and updates the form state accordingly.
+   * Also dispatches actions to update the global state.
+   */
   const handleDatePickerValueChange = (newValue) => {
     setDateValue(newValue);
     orderFormContext.setValues({
@@ -242,6 +283,10 @@ const Orders = () => {
     );
   };
 
+  /**
+   * Downloads the orders data as an Excel file. It processes the orders data,
+   * computes various metrics, and uses ExcelJS to create and download the file.
+   */
   const excelDownloader = () => {
     const data = orders?.map((order) => {
       const totalSupplementsMerchantPrices = order?.article_commandes.reduce(
@@ -589,6 +634,11 @@ const Orders = () => {
     }
   };
 
+  /**
+   * Handles the download of the current orders data in CSV format.
+   * It checks if there are any orders to download and triggers the download process,
+   * otherwise it dispatches a notification message.
+   */
   const onDownload = () => {
     orders.length
       ? gridRef.current.api?.exportDataAsCsv({
@@ -621,6 +671,11 @@ const Orders = () => {
         );
   };
 
+  /**
+   * Triggers an action to display a modal showing all positions.
+   * It checks if there are orders to display and opens a modal accordingly,
+   * otherwise, it dispatches a notification about the absence of positions to display.
+   */
   const onAllPositionsClicked = () => {
     orders.length
       ? dispatch(
@@ -639,6 +694,11 @@ const Orders = () => {
         );
   };
 
+  /**
+   * Opens a modal to display positions for selected orders.
+   * It checks if any orders are selected and opens a modal with these orders,
+   * otherwise, it dispatches a notification prompting the selection of an order.
+   */
   const onSelectedPositionsClicked = () => {
     if (showSelectedMap?.length) {
       const selectedRows = gridRef.current.api.getSelectedRows();
@@ -663,10 +723,21 @@ const Orders = () => {
     }
   };
 
+  /**
+   * Effect hook to initiate order retrieval based on form values changes.
+   * It ensures that orders are fetched whenever relevant form values are updated.
+   */
   useEffect(() => {
+    // noinspection JSIgnoredPromiseFromCall
     initiateOrderRetrieval();
   }, [orderFormContext.values]);
 
+  /**
+   * Updates the filter values in the form context and dispatches actions to update global state.
+   * It takes an object with 'key' and 'value' properties, which represent the filter's name
+   * and its new value, respectively. After updating the form's state, it resets the
+   * local filter states and dispatches an action to update the corresponding global state.
+   */
   const changeFilter = async ({ key, value }) => {
     await orderFormContext.setValues({
       ...orderFormContext.values,
@@ -684,6 +755,9 @@ const Orders = () => {
     );
   };
 
+  /**
+   * Resets the form to its initial state and dispatches actions to update the global state.
+   */
   const onReset = async () => {
     await orderFormContext.setValues({
       orderStatus: 'ALL',
@@ -1380,24 +1454,24 @@ const Orders = () => {
                   labelTitle="Command ID"
                   updateFormValue={debouncedUpdateFormValue}
                 />
-                <InputText
-                  type="text"
-                  defaultValue={orderFormContext.values.merchantPhone}
-                  updateType="merchantPhone"
-                  containerStyle=""
-                  inputStyle="input-sm"
-                  labelTitle="Merchant Number"
-                  updateFormValue={debouncedUpdateFormValue}
-                />
-                <InputText
-                  type="text"
-                  defaultValue={orderFormContext.values.clientPhone}
-                  updateType="clientPhone"
-                  containerStyle=""
-                  inputStyle="input-sm"
-                  labelTitle="Client Phone Number"
-                  updateFormValue={debouncedUpdateFormValue}
-                />
+                {/*<InputText*/}
+                {/*  type="text"*/}
+                {/*  defaultValue={orderFormContext.values.merchantPhone}*/}
+                {/*  updateType="merchantPhone"*/}
+                {/*  containerStyle=""*/}
+                {/*  inputStyle="input-sm"*/}
+                {/*  labelTitle="Merchant Number"*/}
+                {/*  updateFormValue={debouncedUpdateFormValue}*/}
+                {/*/>*/}
+                {/*<InputText*/}
+                {/*  type="text"*/}
+                {/*  defaultValue={orderFormContext.values.clientPhone}*/}
+                {/*  updateType="clientPhone"*/}
+                {/*  containerStyle=""*/}
+                {/*  inputStyle="input-sm"*/}
+                {/*  labelTitle="Client Phone Number"*/}
+                {/*  updateFormValue={debouncedUpdateFormValue}*/}
+                {/*/>*/}
               </div>
             </>
           )}

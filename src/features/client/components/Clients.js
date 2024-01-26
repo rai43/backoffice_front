@@ -1,36 +1,29 @@
 import React, { useMemo, useRef } from 'react';
-import cliTruncate from 'cli-truncate';
-import { useDispatch, useSelector } from 'react-redux';
+
 import { AgGridReact } from 'ag-grid-react';
-import { IoStorefrontOutline, IoPencil } from 'react-icons/io5';
-import { AiOutlineSchedule } from 'react-icons/ai';
-import streetLogo from '../../../assets/street_logo.jpeg';
-
-import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
-import { openModal } from '../../common/modalSlice';
-
-import { classNames } from '../../../components/Common/UtilsClassNames';
+import cliTruncate from 'cli-truncate';
 import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { AiOutlineSchedule } from 'react-icons/ai';
+import { IoStorefrontOutline, IoPencil } from 'react-icons/io5';
+
+import streetLogo from '../../../assets/street_logo.jpeg';
+import { classNames } from '../../../components/Common/UtilsClassNames';
 import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
 import {
   setFilters,
   setPaginationCurrentPage,
   setPaginationSize
 } from '../../common/CustomersTableSlice';
+import { openModal } from '../../common/modalSlice';
 
-const gridOptions = {
-  paginationPageSize: 20,
-  defaultColDef: {
-    sortable: true,
-    resizable: true
-  }
-};
-
-const Clients = ({ onLoadClients }) => {
+const Clients = ({ onLoadClients, gridOptions }) => {
   const gridRef = useRef(null);
   const dispatch = useDispatch();
 
-  const { clients, from, isLoading, noMoreQuery } = useSelector((state) => state.client);
+  const { clients, isLoading } = useSelector((state) => state.client);
   const { paginationCurrentPage, filters, paginationSize } = useSelector(
     (state) => state.customersTable
   );
@@ -53,13 +46,12 @@ const Clients = ({ onLoadClients }) => {
         title: 'Edit customer',
         bodyType: MODAL_BODY_TYPES.CLIENTS_ADD_OR_EDIT,
         size: 'lg',
-        extraObject: { client }
+        extraObject: { client, edit: true }
       })
     );
   };
 
   const editClientScheduleDetails = (client) => {
-    console.log(client);
     if (client?.client_type?.code === 'MARCH') {
       dispatch(
         openModal({
@@ -95,15 +87,15 @@ const Clients = ({ onLoadClients }) => {
   const columnDefs = useMemo(
     () => [
       {
-        // field: 'phone_number',
+        field: 'phone_number',
         valueGetter: ({ data }) => {
           return data
             ? data?.phone_number + (data?.merchants[0] ? data?.merchants[0]?.name : '')
             : ''; // Adjust this based on your actual structure
         },
         headerName: 'Client',
-        width: 260,
-        pinned: true,
+        flex: 2,
+        // pinned: true,
         filterParams: containFilterParams,
         cellRenderer: ({ value, data }) => {
           const TYPE_OBJ = data.client_type;
@@ -123,8 +115,7 @@ const Clients = ({ onLoadClients }) => {
               <div className="ml-4 text-sm">
                 <div className="font-medium text-gray-900">{data?.phone_number}</div>
                 <div
-                  className={`${TYPE_OBJ['code'] === 'MARCH' ? 'text-primary' : 'text-gray-500'}`}
-                >
+                  className={`${TYPE_OBJ['code'] === 'MARCH' ? 'text-primary' : 'text-gray-500'}`}>
                   {MERCHANT_NAME
                     ? cliTruncate(MERCHANT_NAME.toLocaleUpperCase(), 30)
                     : data?.client_type?.libelle || 'N/A'}
@@ -136,116 +127,10 @@ const Clients = ({ onLoadClients }) => {
         onCellClicked: (params) => openClientDetails(params.data)
       },
       {
-        valueGetter: (params) => {
-          const wallets = params.data.wallets || [];
-          const personalWallet = wallets.find((wallet) => wallet?.wallet_type?.code === 'PERSO');
-          return personalWallet ? personalWallet.balance : ''; // Adjust this based on your actual structure
-        },
-        headerName: 'Personal Wallet',
-        width: 170,
-        // flex: 2,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => openClientDetails(params.data),
-        cellRenderer: ({ value, data }) => {
-          console.log(value);
-          const wallets = data.wallets;
-          const personalWallet = wallets.find((wallet) => wallet?.wallet_type?.code === 'PERSO');
-          return (
-            <div className="flex items-center justify-center">
-              <p
-                className={classNames(
-                  'px-3 py-1 uppercase leading-wide font-bold text-md',
-                  personalWallet?.balance >= 0 ? ' text-blue-700' : null,
-                  !personalWallet ? 'text-red-700' : null
-                )}
-              >
-                {personalWallet?.balance >= 0 ? personalWallet?.balance : 'N/A'}
-              </p>
-            </div>
-          );
-        }
-      },
-      {
-        valueGetter: (params) => {
-          const wallets = params.data.wallets || [];
-          const personalWallet = wallets.find((wallet) => wallet?.wallet_type?.code === 'PERSO');
-          return personalWallet ? personalWallet.bonus : ''; // Adjust this based on your actual structure
-        },
-        headerName: 'Bonus Wallet',
-        width: 170,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => openClientDetails(params.data),
-        cellRenderer: ({ value, data }) => {
-          const wallets = data.wallets;
-          const personalWallet = wallets.find((wallet) => wallet?.wallet_type?.code === 'PERSO');
-          return (
-            <div className="flex items-center justify-center">
-              <p
-                className={classNames(
-                  'px-3 py-1 uppercase leading-wide font-bold text-md',
-                  personalWallet?.bonus >= 0 ? ' text-blue-700' : null,
-                  !personalWallet ? 'text-red-700' : null
-                )}
-              >
-                {personalWallet?.bonus >= 0 ? personalWallet?.bonus : 'N/A'}
-              </p>
-            </div>
-          );
-        }
-      },
-      {
-        valueGetter: (params) => {
-          const wallets = params.data.wallets || [];
-          const personalWallet = wallets.find((wallet) => wallet?.wallet_type?.code === 'MARCH');
-          return personalWallet ? personalWallet.balance : 'N/A'; // Adjust this based on your actual structure
-        },
-        headerName: 'Merchant Wallet',
-        width: 170,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => openClientDetails(params.data),
-        cellRenderer: ({ value, data }) => {
-          const wallets = data.wallets;
-          const marchantWallet = wallets.find((wallet) => wallet?.wallet_type?.code === 'MARCH');
-          return (
-            <div className="flex items-center justify-center">
-              <p
-                className={classNames(
-                  'px-3 py-1 uppercase leading-wide font-bold text-md',
-                  marchantWallet?.balance >= 0 ? ' text-green-700' : null,
-                  !marchantWallet ? 'text-neutral' : null
-                )}
-              >
-                {value}
-              </p>
-            </div>
-          );
-        }
-      },
-      {
-        valueGetter: (params) => {
-          return params?.data?.created_at
-            ? moment.utc(moment(params?.data?.created_at).format('DD/MM/YYYY')).toDate()
-            : 'N/A'; // Adjust this based on your actual structure
-        },
-        headerName: 'Registration Date',
-        width: '200',
-        filter: 'agDateColumnFilter',
-        onCellClicked: (params) => openClientDetails(params.data),
-        cellRenderer: ({ value, data }) => {
-          let formattedValue = data?.created_at ? data?.created_at : 'N/A';
-
-          if (formattedValue !== 'N/A') {
-            formattedValue = moment.utc(data?.created_at).format('DD/MM/YYYY HH:mm');
-          }
-
-          return <span className="font-semibold text-md">{formattedValue}</span>;
-        }
-      },
-      {
         field: 'client_type',
         headerName: 'Edit Schedule',
-        width: '130',
-        pinned: 'right',
+        flex: 1,
+        // pinned: true,
         filter: 'agDateColumnFilter',
         onCellClicked: (params) => editClientScheduleDetails(params.data),
         cellRenderer: ({ value }) => {
@@ -268,8 +153,8 @@ const Clients = ({ onLoadClients }) => {
       {
         field: 'client_type',
         headerName: 'Edit Account',
-        width: '130',
-        pinned: 'right',
+        flex: 1,
+        // pinned: true,
         filter: 'agDateColumnFilter',
         onCellClicked: (params) => editClientDetails(params.data),
         cellRenderer: (_) => {
@@ -285,8 +170,8 @@ const Clients = ({ onLoadClients }) => {
       {
         field: 'client_type',
         headerName: 'To Merchant ?',
-        width: '130',
-        pinned: 'right',
+        flex: 1,
+        // pinned: true,
         filter: 'agDateColumnFilter',
         onCellClicked: (params) => clientToMarchant(params.data),
         cellRenderer: ({ value }) => {
@@ -304,6 +189,107 @@ const Clients = ({ onLoadClients }) => {
               )}
             </div>
           );
+        }
+      },
+      {
+        valueGetter: (params) => {
+          const wallets = params.data.wallets || [];
+          const personalWallet = wallets.find((wallet) => wallet?.type === 'PERSONAL');
+          return personalWallet ? personalWallet.balance : ''; // Adjust this based on your actual structure
+        },
+        headerName: 'Personal Wallet',
+        flex: 2,
+        filterParams: containFilterParams,
+        onCellClicked: (params) => openClientDetails(params.data),
+        cellRenderer: ({ value, data }) => {
+          const wallets = data.wallets;
+          const personalWallet = wallets.find((wallet) => wallet?.type === 'PERSONAL');
+          return (
+            <div className="flex items-center justify-center">
+              <p
+                className={classNames(
+                  'px-3 py-1 uppercase leading-wide font-bold text-md',
+                  personalWallet?.balance >= 0 ? ' text-blue-700' : null,
+                  !personalWallet ? 'text-red-700' : null
+                )}>
+                {personalWallet?.balance >= 0 ? personalWallet?.balance : 'N/A'}
+              </p>
+            </div>
+          );
+        }
+      },
+      {
+        valueGetter: (params) => {
+          const wallets = params.data.wallets || [];
+          const personalWallet = wallets.find((wallet) => wallet?.type === 'PERSONAL');
+          return personalWallet ? personalWallet.bonus : ''; // Adjust this based on your actual structure
+        },
+        headerName: 'Bonus Wallet',
+        flex: 2,
+        filterParams: containFilterParams,
+        onCellClicked: (params) => openClientDetails(params.data),
+        cellRenderer: ({ value, data }) => {
+          const wallets = data.wallets;
+          const personalWallet = wallets.find((wallet) => wallet?.type === 'PERSONAL');
+          return (
+            <div className="flex items-center justify-center">
+              <p
+                className={classNames(
+                  'px-3 py-1 uppercase leading-wide font-bold text-md',
+                  personalWallet?.bonus >= 0 ? ' text-blue-700' : null,
+                  !personalWallet ? 'text-red-700' : null
+                )}>
+                {personalWallet?.bonus >= 0 ? personalWallet?.bonus : 'N/A'}
+              </p>
+            </div>
+          );
+        }
+      },
+      {
+        valueGetter: (params) => {
+          const wallets = params.data.wallets || [];
+          const personalWallet = wallets.find((wallet) => wallet?.type === 'MERCHANT');
+          return personalWallet ? personalWallet.balance : 'N/A'; // Adjust this based on your actual structure
+        },
+        headerName: 'Merchant Wallet',
+        flex: 2,
+        filterParams: containFilterParams,
+        onCellClicked: (params) => openClientDetails(params.data),
+        cellRenderer: ({ value, data }) => {
+          const wallets = data.wallets;
+          const marchantWallet = wallets.find((wallet) => wallet?.type === 'MERCHANT');
+          return (
+            <div className="flex items-center justify-center">
+              <p
+                className={classNames(
+                  'px-3 py-1 uppercase leading-wide font-bold text-md',
+                  marchantWallet?.balance >= 0 ? ' text-green-700' : null,
+                  !marchantWallet ? 'text-neutral' : null
+                )}>
+                {value}
+              </p>
+            </div>
+          );
+        }
+      },
+      {
+        valueGetter: (params) => {
+          return params?.data?.created_at
+            ? moment.utc(moment(params?.data?.created_at).format('DD/MM/YYYY')).toDate()
+            : 'N/A'; // Adjust this based on your actual structure
+        },
+        headerName: 'Registration Date',
+        flex: 2,
+        filter: 'agDateColumnFilter',
+        onCellClicked: (params) => openClientDetails(params.data),
+        cellRenderer: ({ value, data }) => {
+          let formattedValue = data?.created_at ? data?.created_at : 'N/A';
+
+          if (formattedValue !== 'N/A') {
+            formattedValue = moment.utc(data?.created_at).format('DD/MM/YYYY HH:mm');
+          }
+
+          return <span className="font-semibold text-md">{formattedValue}</span>;
         }
       }
     ],
@@ -324,8 +310,7 @@ const Clients = ({ onLoadClients }) => {
                   gridOptions.api.paginationSetPageSize(newSize);
                   dispatch(setPaginationSize({ paginationSize: newSize || 20 }));
                 }}
-                defaultValue={paginationSize}
-              >
+                defaultValue={paginationSize}>
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>

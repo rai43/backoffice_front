@@ -63,7 +63,15 @@ export const STATUS_COLORS = {
 
 export const ABSOLUTE_STATUS_ACTIONS = {
   ABSOLUTE: {
-    FRONT: ['DELIVERED', 'NOT_DELIVERED', 'REGISTERED', 'ARTICLE_TO_RETURN', 'REFUSED', 'RETURNED'],
+    FRONT: [
+      'DELIVERED',
+      'NOT_DELIVERED',
+      'REGISTERED',
+      'WAREHOUSED',
+      'ARTICLE_TO_RETURN',
+      'REFUSED',
+      'RETURNED'
+    ],
     BACK: [
       'COLLECTED',
       'NOT_COLLECTED',

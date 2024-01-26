@@ -1,20 +1,48 @@
 import React from 'react';
+
+import ImageUpload from '../../../../components/Input/ImageUpload';
 import InputPhoneNumber from '../../../../components/Input/InputPhoneNumber';
 import InputText from '../../../../components/Input/InputText';
-import ImageUpload from '../../../../components/Input/ImageUpload';
 
+/**
+ * Form component for adding or modifying a merchant account.
+ *
+ * @param {Object} formik - Formik object for form handling.
+ * @param {Function} updateFormValue - Function to update form values.
+ * @param {Function} clickAction - Function to handle navigation between form steps.
+ * @param {boolean} firstLoad - Flag to indicate if it's the first form load.
+ * @param {boolean} preventGoBack - Flag to prevent navigation to the previous step.
+ * @param {boolean} clientToMarchant - Flag indicating if the client is becoming a merchant.
+ * @returns {React.Component} A form component for merchant account data input.
+ */
 const AddOrModifyMerchantAccount = ({
   formik,
   updateFormValue,
   clickAction,
   firstLoad,
+  edit,
   preventGoBack,
   clientToMarchant
 }) => {
-  console.log(formik.values);
+  const isFormValid = formik.isValid && formik.values.profile_picture;
+
+  // Determine if the 'Next' button should be enabled
+  const shouldEnableNext = () => {
+    if (clientToMarchant && preventGoBack && formik.values.profile_picture !== null) {
+      return true;
+    }
+    return firstLoad && !edit ? false : isFormValid;
+  };
+
+  // Inline function to handle click for 'Back' button
+  const handleBackClick = () => {
+    return preventGoBack ? clickAction((old) => old) : clickAction((old) => old - 1);
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Input fields for phone number, merchant name, latitude, and longitude */}
         <InputPhoneNumber
           defaultCountry={'CI'}
           defaultValue={formik.values.phone_number}
@@ -70,6 +98,8 @@ const AddOrModifyMerchantAccount = ({
               : ''
           } `}
         />
+
+        {/* Image upload section */}
         <div className="md:col-span-2">
           <div className="flex items-center justify-center">
             <ImageUpload
@@ -84,49 +114,18 @@ const AddOrModifyMerchantAccount = ({
           </div>
         </div>
       </div>
+
+      {/* Navigation buttons */}
       <div className="flex flex-row-reverse mt-6 mb-2 mx-4 gap-3">
         <button
           className="btn btn-outline btn-primary btn-sm"
-          onClick={() =>
-            clickAction((old) => {
-              console.log(formik.values);
-              console.log('!clientToMerchant', !clientToMarchant);
-              console.log('preventGoBack', preventGoBack);
-              console.log(
-                'formik.values.profile_picture !== null',
-                formik.values.profile_picture !== null
-              );
-              console.log(
-                'formik?.values?.profile_picture?.includes(https://res.cloudinary.com/',
-                formik?.values?.profile_picture?.includes('https://res.cloudinary.com/')
-              );
-              if (
-                (!clientToMarchant && preventGoBack && formik.values.profile_picture !== null) ||
-                (!firstLoad &&
-                  formik.isValid &&
-                  formik.values.profile_picture !== '' &&
-                  formik.values.profile_picture !== undefined &&
-                  formik.values.profile_picture !== null)
-              ) {
-                return old + 1;
-              } else {
-                return old;
-              }
-            })
-          }
-        >
+          onClick={() => clickAction(shouldEnableNext() ? (old) => old + 1 : (old) => old)}>
           Next
         </button>
         <button
-          className=" btn btn-outline btn-ghost btn-sm"
+          className="btn btn-outline btn-ghost btn-sm"
           disabled={preventGoBack}
-          onClick={() => {
-            if (preventGoBack) {
-              return clickAction((old) => old);
-            }
-            return clickAction((old) => old - 1);
-          }}
-        >
+          onClick={handleBackClick}>
           Back
         </button>
       </div>

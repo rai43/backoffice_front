@@ -1,61 +1,59 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useFormik } from 'formik';
 import moment from 'moment';
+import numeral from 'numeral';
 import { useDispatch, useSelector } from 'react-redux';
 import Datepicker from 'react-tailwindcss-datepicker';
 
+import { CiMoneyCheck1 } from 'react-icons/ci';
 import { FaMoneyBillTransfer } from 'react-icons/fa6';
+import { MdOutlineSendToMobile } from 'react-icons/md';
+import { SlWallet } from 'react-icons/sl';
 
 import ArrowLeftOnRectangleIcon from '@heroicons/react/24/outline/ArrowLeftOnRectangleIcon';
 import ArrowRightOnRectangleIcon from '@heroicons/react/24/outline/ArrowRightOnRectangleIcon';
 import LockClosedIcon from '@heroicons/react/24/outline/LockClosedIcon';
 
-import ClientRechargementsTable from './ClientRechargementsTable';
-import ClientRequetesTable from './ClientRequetesTable';
+import BlockUnblockModal from './BlockUnblockModal';
 import ClientTransactionsTable from './ClientTransactionsTable';
-import InputText from '../../../components/Input/InputText';
-import SelectBox from '../../../components/Input/SelectBox';
-import { showNotification } from '../../common/headerSlice';
-import { getClientRechargements } from '../../rechargement/rechargementSlice';
-import { getClientRetraits } from '../../retrait/retraitSlice';
+import CreditDebitModal from './CreditDebitModal';
+import WithdrawModal from './WithdrawModal';
 import {
-  creditAccountToServer,
-  debitAccountToServer,
-  generateStatistics,
   getClientTransactions,
   getOperatorTypes,
-  resetForm,
-  switchWalletStatus
+  resetForm
 } from '../../transaction/transactionSlice';
-import { replaceClientObjectByUpdatedOne } from '../clientSlice';
-import PersonalCardTransactionsNav from '../containers/PersonalCardTransactionsNav';
 
+// Constants
 const INITIAL_WALLET_FILTER_OBJ = {
   transactionType: 'ALL',
-  from: moment.utc().subtract(30, 'd').format('YYYY-MM-DD'),
-  to: moment.utc().add(1, 'days').format('YYYY-MM-DD')
+  from: moment.utc().subtract(30, 'days').format('YYYY-MM-DD'),
+  to: moment.utc().add(1, 'day').format('YYYY-MM-DD')
 };
 
-const transactionTypeOptionsTransactions = [
-  { name: 'ALL', value: 'ALL' },
-  { name: 'PAYMENT', value: 'PAYMENT' },
-  { name: 'RECHARGEMENT', value: 'RECHARGEMENT' },
-  { name: 'RECHARGEMENT_STREET', value: 'RECHARGEMENT_STREET' },
-  { name: 'RETRAIT', value: 'RETRAIT' },
-  { name: 'RECHARGEMENT_MOBILE_MONEY', value: 'RECHARGEMENT_MOBILE_MONEY' },
-  { name: 'BONUS', value: 'BONUS' }
-];
-
+/**
+ * Component to handle the view and manipulation of a client's wallet details.
+ * Displays the detailed view of the client's wallet, including transactions and wallet operations.
+ *
+ * @param {Object} extraObject - Additional data about the client and wallet.
+ */
 const ClientWalletDetailView = ({ extraObject }) => {
-  const clientPhoneNumber = extraObject?.client?.phone_number;
-  const pageNumberRef = useRef(0);
   const dispatch = useDispatch();
+  const { clients, transactions, isLoading, noMoreQuery, operator_operation_types } = useSelector(
+    (state) => ({
+      clients: state.client.clients,
+      transactions: state.transaction.transactions,
+      isLoading: state.transaction.isLoading,
+      noMoreQuery: state.transaction.noMoreQuery,
+      operator_operation_types: state.transaction.operator_operation_types
+    })
+  );
 
-  const [walletStatus, setWalletStatus] = useState({
-    balance: extraObject?.wallet?.balance,
-    bonus: extraObject?.wallet?.bonus
-  });
+  const clientWallet = clients
+    .find((client) => client?.id === extraObject?.client?.id)
+    ?.wallets?.find((wallet) => wallet?.id === extraObject?.wallet?.id);
+
   const [modalObj, setModalObj] = useState({
     isOpened: false,
     amount: 0,
@@ -69,144 +67,230 @@ const ClientWalletDetailView = ({ extraObject }) => {
     extraObject?.wallet?.wallet_status?.code === 'ACTIVATED'
   );
 
-  const [activePage, setActivePage] = useState('/my-wallet/transactions');
-  const [statistics, setsStatistics] = useState({
-    transactionsInCount: 0,
-    transactionsOutCount: 0,
-    transactionsInAmount: 0,
-    transactionsOutAmount: 0,
-    paymentsCount: 0,
-    paymentsAmount: 0,
-    topupsCount: 0,
-    topupsAmount: 0,
-    withdrawalsCount: 0,
-    withdrawalsAmount: 0,
-    bonusCount: 0,
-    bonusAmount: 0
-  });
-  const { transactions, skip, isLoading, noMoreQuery, operator_operation_types, totalCount } =
-    useSelector((state) => state.transaction);
-
+  // Setup formik for filter form handling
   const formik = useFormik({
     initialValues: INITIAL_WALLET_FILTER_OBJ
   });
 
+  // Synchronize date picker state with formik
   const [dateValue, setDateValue] = useState({
     startDate: formik.values.from,
     endDate: formik.values.to
   });
 
+  /**
+   * Handles the change event for the date picker.
+   * @param {Object} newValue - The new date value from the date picker.
+   */
   const handleDatePickerValueChange = (newValue) => {
     setDateValue(newValue);
-    formik.setValues({
-      ...formik.values,
+    formik.setValues((currentValues) => ({
+      ...currentValues,
       from: newValue.startDate,
       to: newValue.endDate
-    });
+    }));
   };
 
-  const updateFormValue = useCallback(
-    ({ key, value }) => {
-      // this update will cause useEffect to get executed as there is a lookup on 'formik.values'
-      formik.setValues({
-        ...formik.values,
-        [key]: value
-      });
-    },
-    [formik]
-  );
+  /**
+   * Applies transaction filters based on the current form values and updates the Redux store.
+   * @param {number} skip - The number of transactions to skip (for pagination).
+   */
+  const fetchTransactions = (skip = 0) => {
+    // Parameters for transaction filters based on formik state.
+    const filterParams = {
+      transactionType: formik.values.transactionType,
+      fromDate: moment(formik.values.from).format('YYYY-MM-DD'),
+      toDate: moment(formik.values.to).format('YYYY-MM-DD'),
+      walletId: extraObject?.wallet?.id,
+      skip
+    };
+    dispatch(getClientTransactions(filterParams));
+  };
 
-  const applyFilter = async (dispatchParams) => {
-    if (activePage === '/my-wallet/transactions') {
-      dispatch(getClientTransactions(dispatchParams)).then(async (res) => {
-        if (res?.payload?.transactions) {
-          try {
-            const { payload } = await dispatch(
-              generateStatistics({
-                data: res?.payload?.transactions,
-                clientPhoneNumber
-              })
-            );
-            setsStatistics((oldStats) => {
-              return {
-                ...oldStats,
-                ...payload
-              };
-            });
-          } catch (e) {
-            console.log('Could not fetch the statistics');
-          }
-        }
-      });
-    } else if (activePage === '/personal-wallet/rechargements') {
-      dispatch(getClientRechargements(dispatchParams));
-    } else if (activePage === '/marchant-wallet/requests') {
-      dispatch(getClientRetraits(dispatchParams));
+  // Effect to fetch transactions when form values or the active page change.
+  useEffect(() => {
+    // Resets transaction state and fetches new transactions based on filter criteria.
+    dispatch(resetForm());
+    fetchTransactions();
+  }, [formik.values.from, formik.values.to, formik.values.transactionType]);
+
+  /**
+   * Fetches the next set of transactions when user requests more data.
+   */
+  const handleLoadMoreTransactions = () => {
+    // Prevents fetching if already loading or no more transactions are available.
+    if (!isLoading && !noMoreQuery) {
+      fetchTransactions(transactions.length);
     }
   };
 
-  const onFetchTransactions = async () => {
-    dispatch(resetForm());
-    const dispatchParams = {
-      transactionType: formik.values.transactionType,
-      from: formik.values.from,
-      to: formik.values.to,
-      wallet: extraObject?.wallet?.id,
-      skip: 0
-    };
-    await applyFilter(dispatchParams);
-  };
-  // setClientPhoneNumber(clientPhoneNumber);
-
+  /**
+   * Fetches the list of operator types when the component mounts.
+   */
   useEffect(() => {
-    const fetchOperatorTypeList = async () => {
+    async function fetchOperatorTypeList() {
       await dispatch(getOperatorTypes());
-    };
+    }
 
     fetchOperatorTypeList();
+    // Since dispatch and getOperatorTypes should not change across re-renders,
+    // there's no need to include them in the dependency array.
   }, []);
 
-  useEffect(() => {
-    onFetchTransactions();
-  }, [formik.values.from, formik.values.to, formik.values.transactionType, activePage]);
-
-  const handleLoadTransactions = async (prevPage) => {
-    pageNumberRef.current = prevPage;
-    if (!noMoreQuery && !isLoading) {
-      const dispatchParams = {
-        transactionType: formik.values.transactionType,
-        from: formik.values.from,
-        to: formik.values.to,
-        wallet: extraObject?.wallet?.id,
-        skip: skip
-      };
-
-      await applyFilter(dispatchParams);
-    }
-  };
-
+  /**
+   * Closes the modal and resets its state to default values.
+   */
   const handleCloseModal = () => {
-    setModalObj(() => {
-      return {
-        isOpened: false,
-        amount: 0,
-        actionType: 'principal',
-        action: '',
-        operatorOperationId: 'pickOne',
-        mobileMoneyNumber: ''
-      };
+    setModalObj({
+      isOpened: false,
+      amount: 0,
+      actionType: 'principal',
+      action: '',
+      operatorOperationId: 'pickOne',
+      mobileMoneyNumber: ''
     });
   };
+
+  /**
+   * Sums credited and debited transactions in an array of transaction objects, differentiating bonus transactions.
+   *
+   * @param {Object[]} transactions - Array of transaction objects.
+   * @returns {Object} An object containing the total of credited and debited transactions, separated by bonus and others.
+   */
+  const sumTransactionsWithBonusDifferentiation = () => {
+    return transactions.reduce(
+      (acc, transaction) => {
+        // Convert string values to numbers and handle null values
+        const credited = parseFloat(transaction.credited) || 0;
+        const debited = parseFloat(transaction.debited) || 0;
+        const isBonusType = transaction.type === 'BONUS';
+
+        // Accumulate credited and debited amounts, separate bonus from others
+        if (isBonusType) {
+          acc.creditedBonusTotal += credited;
+          acc.debitedBonusTotal += debited;
+        } else {
+          acc.creditedOtherTotal += credited;
+          acc.debitedOtherTotal += debited;
+        }
+
+        return acc;
+      },
+      {
+        creditedBonusTotal: 0, // Initial values for bonus totals
+        debitedBonusTotal: 0, // Initial values for bonus totals
+        creditedOtherTotal: 0, // Initial values for other totals
+        debitedOtherTotal: 0 // Initial values for other totals
+      }
+    );
+  };
+
+  /**
+   * Renders the action buttons for credit, debit, withdraw, and block/unblock operations.
+   */
+  const renderActionButtons = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Individual action buttons */}
+      <ActionButton
+        action="credit"
+        label="Credit"
+        icon={ArrowLeftOnRectangleIcon}
+        colorClass="btn-success focus:bg-success-300 btn-outline "
+        setModalObj={setModalObj}
+      />
+      <ActionButton
+        action="debit"
+        label="Debit"
+        icon={ArrowRightOnRectangleIcon}
+        colorClass="btn-secondary btn-outline"
+        setModalObj={setModalObj}
+      />
+      {/*<ActionButton*/}
+      {/*  action="withdraw"*/}
+      {/*  label="Withdraw"*/}
+      {/*  icon={FaMoneyBillTransfer}*/}
+      {/*  colorClass="btn-outline btn-warning focus:bg-warning-300"*/}
+      {/*  setModalObj={setModalObj}*/}
+      {/*/>*/}
+      <ActionButton
+        action="block"
+        label={isActive ? 'Block' : 'Unblock'}
+        icon={LockClosedIcon}
+        colorClass="btn-outline btn-error"
+        isActive={isActive}
+        setModalObj={setModalObj}
+      />
+    </div>
+  );
+
+  /**
+   * Renders the statistics section displaying wallet balance and transaction statistics.
+   */
+  const renderStatistics = () => (
+    <div className="grid mb-3 md:grid-cols-3 grid-cols-1 gap-6 my-2">
+      {/* Statistics components */}
+      <div className="stats shadow">
+        <div className="stat">
+          <div className={`stat-figure dark:text-slate-300 text-secondary`}>
+            <CiMoneyCheck1 className="w-6 h-6" />
+          </div>
+          <div className="stat-title dark:text-slate-300">Principal Account</div>
+          <div className={`stat-value dark:text-slate-300 text-secondary text-[1.5rem]`}>
+            {numeral(parseInt(clientWallet?.balance || 0)).format('0,0')}
+          </div>
+          <div className={'stat-desc  '}>
+            Bonus Account: {numeral(parseInt(clientWallet?.bonus || 0)).format('0,0')}
+          </div>
+        </div>
+      </div>
+      <div className="stats shadow">
+        <div className="stat">
+          <div className={`stat-figure dark:text-slate-300 text-secondary`}>
+            <SlWallet className="w-6 h-6" />
+          </div>
+          <div className="stat-title dark:text-slate-300">Cash In</div>
+          <div className={`stat-value dark:text-slate-300 text-secondary text-[1.5rem]`}>
+            {numeral(
+              parseInt(sumTransactionsWithBonusDifferentiation()?.creditedOtherTotal || 0)
+            ).format('0,0')}
+          </div>
+          <div className={'stat-desc  '}>
+            {numeral(
+              parseInt(sumTransactionsWithBonusDifferentiation()?.creditedBonusTotal || 0)
+            ).format('0,0')}{' '}
+            on bonus
+          </div>
+        </div>
+      </div>
+      <div className="stats shadow">
+        <div className="stat">
+          <div className={`stat-figure dark:text-slate-300 text-secondary`}>
+            <MdOutlineSendToMobile className="w-6 h-6" />
+          </div>
+          <div className="stat-title dark:text-slate-300">Cash Out</div>
+          <div className={`stat-value dark:text-slate-300 text-secondary text-[1.5rem]`}>
+            {numeral(
+              parseInt(sumTransactionsWithBonusDifferentiation()?.debitedOtherTotal || 0)
+            ).format('0,0')}
+          </div>
+          <div className={'stat-desc  '}>
+            {numeral(
+              parseInt(sumTransactionsWithBonusDifferentiation()?.debitedBonusTotal || 0)
+            ).format('0,0')}{' '}
+            on bonus
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
       {!isLoading && (
         <div className="w-full my-2">
           <div className="w-full">
-            <h3 className="text-sm font-light">Filters</h3>
-            {/* Divider */}
-            <div className="divider mt-0 my-1"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {/* Datepicker component */}
               <Datepicker
                 containerClassName="w-full"
                 value={dateValue}
@@ -218,189 +302,26 @@ const ClientWalletDetailView = ({ extraObject }) => {
                 showShortcuts={true}
                 primaryColor={'white'}
               />
-              {activePage === '/my-wallet/transactions' ? (
-                <SelectBox
-                  options={transactionTypeOptionsTransactions}
-                  labelTitle="Transaction Type"
-                  updateType="transactionType"
-                  placeholder="Select the transaction type"
-                  labelStyle="hidden"
-                  defaultValue={formik.values.transactionType}
-                  updateFormValue={updateFormValue}
-                />
-              ) : (
-                <></>
-              )}
             </div>
           </div>
           <div className="w-full">
-            <h3 className="text-sm font-light">
-              Actions on{' '}
-              {extraObject?.wallet?.wallet_type?.libelle
-                ? extraObject?.wallet?.wallet_type?.libelle?.toLocaleLowerCase()
-                : ''}{' '}
-              wallet
-            </h3>
-            {/* Divider */}
-            <div className="divider mt-0 mb-1"></div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-4 md:grid-cols-4 gap-6">
-              <ActionButton
-                action="credit"
-                label="Credit"
-                icon={ArrowLeftOnRectangleIcon}
-                colorClass="btn-success focus:bg-success-300"
-                setModalObj={setModalObj}
-              />
-              <ActionButton
-                action="debit"
-                label="Debit"
-                icon={ArrowRightOnRectangleIcon}
-                colorClass="btn-info focus:bg-info-300"
-                setModalObj={setModalObj}
-              />
-              <ActionButton
-                action="withdraw"
-                label="Withdraw"
-                icon={FaMoneyBillTransfer}
-                colorClass="btn-warning focus:bg-warning-300"
-                setModalObj={setModalObj}
-              />
-              <ActionButton
-                action="block"
-                label={isActive ? 'Block' : 'Unblock'}
-                icon={LockClosedIcon}
-                colorClass={
-                  isActive ? 'btn-error focus:bg-error-300' : 'btn-teal focus:bg-teal-300'
-                }
-                isActive={isActive}
-                setModalObj={setModalObj}
-              />
-            </div>
+            {/* Action buttons */}
+            {renderActionButtons()}
           </div>
 
-          <div className="my-2">
-            <h3 className="text-sm font-light mt-6">
-              {/* <span className='mx-2 text-primary'>
-						{extraObject?.client?.country?.prefix ? extraObject?.client?.country?.prefix + ' ' : '+225 '} {extraObject?.client?.phone_number}
-					</span> */}
-              Balance & History
-            </h3>
-            <div className="w-full stats stats-vertical lg:stats-horizontal shadow mt-2">
-              <div className="stat">
-                <div className="stat-title">Account Balance</div>
-                <div className={`stat-value text-[1.8rem]`}>
-                  <span className="text-info">{walletStatus.balance} FCFA </span>
-                </div>
-                <div className={`stat-desc`}>
-                  Bonus:{' '}
-                  <span>
-                    <span className="text-info">{walletStatus.bonus} FCFA</span>
-                  </span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Transactions (In/Out)</div>
-                <div className={`stat-value text-[1.1rem]`}>
-                  <span className="text-info">{statistics.transactionsInAmount} FCFA </span>{' '}
-                  <span className="text-error font-normal">
-                    ({statistics.transactionsOutAmount} FCFA)
-                  </span>
-                </div>
-                <div className={`stat-desc`}>
-                  Count:{' '}
-                  <span>
-                    <span className="text-info">{statistics.transactionsInCount} </span> |{' '}
-                    <span className="text-error">{statistics.transactionsOutCount} </span>
-                  </span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Payment(s)</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.paymentsAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count: <span className="text-info">{statistics.paymentsCount}</span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Top up(s)</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.topupsAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count: <span className="text-info">{statistics.topupsCount}</span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Withdrawal(s)</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.withdrawalsAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count: <span className="text-info">{statistics.withdrawalsCount}</span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Bonus</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.bonusAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count <span className="text-info">{statistics.bonusCount}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Divider */}
-          <div className="divider mt-0"></div>
-          <PersonalCardTransactionsNav
-            activePage={activePage}
-            setActivePage={setActivePage}
-            accountType={extraObject?.wallet?.wallet_type?.code}
-          />
+          {/* Statistics display */}
+          {renderStatistics()}
 
-          {activePage === '/my-wallet/transactions' && (
-            <>
-              <ClientTransactionsTable
-                currPage={pageNumberRef.current}
-                onLoad={handleLoadTransactions}
-                updateFormValue={() => {}}
-                client={extraObject.client}
-              />
-            </>
-          )}
-          {activePage === '/personal-wallet/rechargements' && (
-            <>
-              <ClientRechargementsTable
-                currPage={pageNumberRef.current}
-                onLoad={handleLoadTransactions}
-                updateFormValue={() => {}}
-              />
-            </>
-          )}
-          {activePage === '/marchant-wallet/requests' && (
-            <>
-              <ClientRequetesTable
-                currPage={pageNumberRef.current}
-                onLoad={handleLoadTransactions}
-                updateFormValue={() => {}}
-              />
-            </>
-          )}
+          {/* Transactions table */}
+          <ClientTransactionsTable onLoad={handleLoadMoreTransactions} />
         </div>
       )}
 
-      {/* TODO: make a component for this */}
+      {/* Modals for credit/debit, block/unblock, and withdraw operations */}
       <CreditDebitModal
         modalObj={modalObj}
         setModalObj={setModalObj}
         extraObject={extraObject}
-        transactions={transactions}
-        clientPhoneNumber={clientPhoneNumber}
-        setWalletStatus={setWalletStatus}
-        setsStatistics={setsStatistics}
         closeModal={handleCloseModal}
       />
 
@@ -413,22 +334,32 @@ const ClientWalletDetailView = ({ extraObject }) => {
         closeModal={handleCloseModal}
       />
 
-      <WithdrawModal
-        modalObj={modalObj}
-        extraObject={extraObject}
-        setModalObj={setModalObj}
-        operator_operation_types={operator_operation_types}
-        closeModal={handleCloseModal}
-      />
+      {/*<WithdrawModal*/}
+      {/*  modalObj={modalObj}*/}
+      {/*  extraObject={extraObject}*/}
+      {/*  setModalObj={setModalObj}*/}
+      {/*  operator_operation_types={operator_operation_types}*/}
+      {/*  closeModal={handleCloseModal}*/}
+      {/*/>*/}
     </>
   );
 };
 
+/**
+ * Renders an action button with a specified icon and label.
+ *
+ * @param {Object} props - Properties passed to the component.
+ * @param {string} props.action - The action type (e.g., 'credit', 'debit').
+ * @param {string} props.label - The label displayed on the button.
+ * @param {Function} props.Icon - The icon component to be displayed.
+ * @param {string} props.colorClass - Additional CSS classes for styling.
+ * @param {boolean} props.isActive - Indicates if the button is active.
+ * @param {Function} props.setModalObj - Function to update the modal state.
+ * @returns {React.Component} A button component with an icon and label.
+ */
 const ActionButton = ({ action, label, icon: Icon, colorClass, isActive, setModalObj }) => (
   <button
-    className={`btn btn-sm btn-outline w-full ${colorClass} hover:bg-opacity-90 focus:ring-2 transition duration-300 ease-in-out ${
-      isActive && 'focus:ring-error-500'
-    }`}
+    className={`btn btn-sm w-full ${colorClass} ${isActive ? 'focus:ring-error-500' : ''}`}
     onClick={() =>
       setModalObj((old) => ({
         ...old,
@@ -442,425 +373,4 @@ const ActionButton = ({ action, label, icon: Icon, colorClass, isActive, setModa
   </button>
 );
 
-const CreditDebitModal = ({
-  modalObj,
-  setModalObj,
-  extraObject,
-  transactions,
-  clientPhoneNumber,
-  setWalletStatus,
-  setsStatistics,
-  closeModal
-}) => {
-  const dispatch = useDispatch();
-
-  const handleCreditOrDebit = async () => {
-    const action = modalObj.action === 'credit' ? creditAccountToServer : debitAccountToServer;
-    const response = await dispatch(
-      action({
-        wallet: extraObject?.wallet?.id,
-        amount: modalObj.amount,
-        accountType: modalObj?.actionType
-      })
-    );
-
-    if (response?.error) {
-      console.error(response.error);
-      dispatch(
-        showNotification({
-          message: `Error while ${modalObj.action}ing the client account`,
-          status: 0
-        })
-      );
-    } else {
-      dispatch(
-        showNotification({
-          message: `Successfully ${modalObj.action}ed the client account`,
-          status: 1
-        })
-      );
-
-      // Logic after successful action
-      try {
-        const statsResponse = await dispatch(
-          generateStatistics({
-            data: [response?.payload?.transaction, ...transactions],
-            clientPhoneNumber
-          })
-        );
-        setsStatistics((oldStats) => ({ ...oldStats, ...statsResponse.payload }));
-
-        if (response?.payload?.isPrincipalAccount) {
-          setWalletStatus((old) => ({
-            ...old,
-            balance:
-              modalObj.action === 'credit'
-                ? old.balance + response?.payload?.transaction?.amount
-                : old.balance - response?.payload?.transaction?.amount
-          }));
-        } else {
-          setWalletStatus((old) => ({
-            ...old,
-            bonus:
-              modalObj.action === 'credit'
-                ? old.bonus + response?.payload?.transaction?.amount
-                : old.bonus - response?.payload?.transaction?.amount
-          }));
-        }
-
-        const clientUpdateResponse = await dispatch(
-          replaceClientObjectByUpdatedOne({
-            client: response?.payload?.client
-          })
-        );
-        console.log('Updated Client:', clientUpdateResponse.payload);
-      } catch (e) {
-        console.error('Error:', e);
-      }
-    }
-
-    setModalObj({ action: '', amount: 0, isOpened: false, actionType: 'principal' });
-  };
-
-  return (
-    <div
-      className={`modal modal-bottom sm:modal-middle ${
-        modalObj?.isOpened && (modalObj.action === 'credit' || modalObj.action === 'debit')
-          ? 'modal-open'
-          : ''
-      }`}>
-      <div className="modal-box">
-        <h3 className="font-bold text-lg">
-          {modalObj.action === 'credit' ? 'Credit Account' : 'Debit Account'}
-        </h3>
-        {(modalObj.action === 'credit' || modalObj.action === 'debit') && (
-          <div className="py-4">
-            <InputText
-              type="number"
-              labelTitle="Amount"
-              defaultValue={0}
-              updateFormValue={({ value }) => setModalObj((old) => ({ ...old, amount: value }))}
-            />
-            {extraObject?.wallet?.wallet_type?.code === 'PERSO' ? (
-              <>
-                <label className="label cursor-pointer">
-                  <span className="label-text">Principal Account</span>
-                  <input
-                    type="radio"
-                    name="radio-10"
-                    className="radio checked:bg-blue-500"
-                    onChange={(_) =>
-                      setModalObj((old) => {
-                        return {
-                          ...old,
-                          actionType: 'principal'
-                        };
-                      })
-                    }
-                    checked={modalObj?.actionType === 'principal'}
-                  />
-                </label>
-                <label className="label cursor-pointer">
-                  <span className="label-text">Bonus Account</span>
-                  <input
-                    type="radio"
-                    name="radio-10"
-                    className="radio checked:bg-red-500"
-                    onChange={(_) =>
-                      setModalObj((old) => {
-                        return {
-                          ...old,
-                          actionType: 'bonus'
-                        };
-                      })
-                    }
-                    checked={modalObj?.actionType === 'bonus'}
-                  />
-                </label>
-              </>
-            ) : (
-              <></>
-            )}
-          </div>
-        )}
-        <div className="modal-action">
-          <button className="btn btn-outline btn-ghost" onClick={() => closeModal()}>
-            Close
-          </button>
-          <button className="btn btn-outline btn-primary" onClick={handleCreditOrDebit}>
-            {modalObj.action === 'credit' ? 'Credit Now' : 'Debit Now'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const BlockUnblockModal = ({
-  modalObj,
-  setModalObj,
-  isActive,
-  setIsActive,
-  extraObject,
-  closeModal
-}) => {
-  const dispatch = useDispatch();
-
-  const handleSwitchStatus = async () => {
-    const response = await dispatch(switchWalletStatus({ wallet: extraObject?.wallet?.id }));
-
-    if (response?.error) {
-      console.error('Error:', response.error);
-      dispatch(
-        showNotification({
-          message: 'Error while switching the wallet status',
-          status: 0
-        })
-      );
-    } else {
-      dispatch(
-        showNotification({
-          message: 'Successfully switched the wallet status account',
-          status: 1
-        })
-      );
-
-      setIsActive(response?.payload?.wallet?.wallet_status_id === 1);
-
-      try {
-        const { payload } = await dispatch(
-          replaceClientObjectByUpdatedOne({
-            client: response?.payload?.client
-          })
-        );
-        console.log('Updated Client:', payload);
-      } catch (e) {
-        console.error('Could not update the information:', e);
-      }
-    }
-
-    setModalObj({ action: '', amount: 0, isOpened: false, actionType: 'principal' });
-  };
-
-  return (
-    <div
-      className={`modal modal-bottom sm:modal-middle ${
-        modalObj?.isOpened && modalObj.action === 'block' ? 'modal-open' : ''
-      }`}>
-      <div className="modal-box">
-        <h3 className="font-bold text-lg">
-          {isActive
-            ? 'Are you sure you want to block this client?'
-            : 'Are you sure you want to unblock this client?'}
-        </h3>
-        <div className="modal-action">
-          <button className="btn btn-outline btn-ghost" onClick={() => closeModal()}>
-            No, Cancel Action
-          </button>
-          <button className="btn btn-outline btn-error" onClick={handleSwitchStatus}>
-            Yes, Proceed
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const WithdrawModal = ({
-  modalObj,
-  extraObject,
-  setModalObj,
-  operator_operation_types,
-  closeModal
-}) => {
-  const dispatch = useDispatch();
-  const handleWithdraw = () => {
-    // Implement the withdraw functionality here
-    console.log('Withdrawal Process');
-    const operatorId = operator_operation_types?.find(
-      (elt) => elt?.id === modalObj?.operatorOperationId
-    )?.operator?.id;
-
-    if (
-      !modalObj?.amount ||
-      !operatorId ||
-      !modalObj?.mobileMoneyNumber ||
-      (modalObj?.mobileMoneyNumber?.length && modalObj?.mobileMoneyNumber?.length !== 10)
-    ) {
-      dispatch(
-        showNotification({
-          message: `Some fields are not correctly filled`,
-          status: 0
-        })
-      );
-    }
-  };
-
-  // Phone number validation function
-  const isValidPhoneNumber = (phoneNumber) => {
-    const pattern = /^\d+$/; // Regex to check if the string contains only digits
-    return pattern.test(phoneNumber);
-  };
-
-  // Phone number validation function
-  const isValidPrice = (price) => {
-    const pattern = /^\d+$/; // Regex to check if the string contains only digits
-    return pattern.test(price);
-  };
-
-  // Update total calculation based on selected operator and amount
-  const getTotal = () => {
-    if (!modalObj?.operatorOperationId || !modalObj?.amount) return 0;
-
-    const feePercentage =
-      operator_operation_types?.find((elt) => elt?.id === modalObj?.operatorOperationId)?.fee || 0;
-    return (
-      parseInt(modalObj?.amount) - (parseInt(modalObj?.amount) * parseInt(feePercentage)) / 100
-    );
-  };
-  const getPercentage = () => {
-    // if (!modalObj?.operatorOperationId) return 0;
-
-    const feePercentage =
-      operator_operation_types?.find(
-        (elt) => parseInt(elt?.id) === parseInt(modalObj?.operatorOperationId)
-      )?.fee || 0;
-    console.log({
-      feePercentage,
-      feePercentage2: parseInt(feePercentage),
-      to: parseInt(modalObj?.amount) * (parseInt(feePercentage) / 100)
-    });
-    return parseInt(modalObj?.amount) * (parseInt(feePercentage) / 100);
-  };
-
-  return (
-    <div
-      className={`modal modal-bottom sm:modal-middle ${
-        modalObj?.isOpened && modalObj.action === 'withdraw' ? 'modal-open' : ''
-      }`}>
-      <div className="modal-box">
-        <h3 className="font-bold text-lg">Withdraw money</h3>
-        <div className="py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {/* Mobile Money Number Input */}
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text">Mobile Money Number</span>
-              </label>
-              <input
-                type={'text'}
-                value={modalObj?.mobileMoneyNumber || ''}
-                placeholder={'0xxxxxxxxx'}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '') {
-                    setModalObj((old) => ({ ...old, mobileMoneyNumber: value }));
-                    return;
-                  }
-                  if (!isValidPhoneNumber(value)) {
-                    return;
-                  }
-                  setModalObj((old) => ({ ...old, mobileMoneyNumber: value }));
-                }}
-                className={`input input-bordered w-full ${
-                  modalObj?.mobileMoneyNumber?.length && modalObj?.mobileMoneyNumber?.length !== 10
-                    ? 'input-error'
-                    : ''
-                }`}
-              />
-            </div>
-
-            {/* Operator Dropdown */}
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text">Operator</span>
-              </label>
-              <select
-                className="select select-bordered"
-                value={modalObj?.operatorOperationId}
-                onChange={(e) => {
-                  console.log({ val: e.target.value });
-                  setModalObj((prevState) => ({
-                    ...prevState,
-                    operatorOperationId: parseInt(e.target.value)
-                  }));
-                }}>
-                <option value="pickOne" disabled selected>
-                  Pick one
-                </option>
-                {operator_operation_types
-                  ?.filter(
-                    (operator_operation) =>
-                      operator_operation?.operator_type?.code === 'RETRAIT' &&
-                      operator_operation?.wallet_type?.code ===
-                        extraObject?.wallet?.wallet_type?.code
-                    // operator_operation?.wallet_type?.code === 'PERSO'
-                  )
-                  ?.map((operator_operation) => (
-                    <option key={operator_operation?.operator?.name} value={operator_operation?.id}>
-                      {operator_operation?.operator?.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {/* Amount Input */}
-            <div className="form-control w-full md:col-span-2">
-              <label className="label">
-                <span className="label-text">Amount</span>
-              </label>
-              <input
-                type={'text'}
-                value={modalObj?.amount || 0}
-                placeholder={'1000'}
-                onChange={(e) => {
-                  let value = e.target.value;
-                  // Allow the field to be empty
-                  if (value === '') {
-                    setModalObj((old) => ({ ...old, amount: 0 }));
-                    return;
-                  }
-                  // Remove leading zeros for non-empty fields
-                  value = value.replace(/^0+/, '');
-
-                  if (!isValidPrice(value)) {
-                    return;
-                  }
-                  setModalObj((old) => ({ ...old, amount: value }));
-                }}
-                className={`input input-bordered w-full`}
-              />
-            </div>
-
-            {/* Total Calculation Display */}
-            {modalObj?.operatorOperationId && modalObj?.operatorOperationId !== 'pickOne' && (
-              <>
-                <div className="font-semibold mt-3">
-                  Fee (
-                  {parseInt(
-                    operator_operation_types?.find(
-                      (elt) => parseInt(elt?.id) === parseInt(modalObj?.operatorOperationId)
-                    )?.fee
-                  )}
-                  %) :
-                </div>
-                <div className="font-semibold text-primary mt-3">{getPercentage()} CFA</div>
-                <div className="font-semibold mt-3">Total:</div>
-                <div className="font-semibold text-primary mt-3">{getTotal()} CFA</div>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="modal-action">
-          <button className="btn btn-outline btn-ghost" onClick={closeModal}>
-            Close
-          </button>
-          <button className="btn btn-outline btn-primary" onClick={handleWithdraw}>
-            Withdraw
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 export default ClientWalletDetailView;

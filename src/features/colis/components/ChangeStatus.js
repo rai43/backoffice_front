@@ -3,7 +3,6 @@ import React, { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { BsChevronDoubleLeft, BsChevronDoubleRight } from 'react-icons/bs';
-import { CiSettings } from 'react-icons/ci';
 import { GiConfirmed } from 'react-icons/gi';
 import { GoEyeClosed } from 'react-icons/go';
 import { MdOutlineDeliveryDining } from 'react-icons/md';

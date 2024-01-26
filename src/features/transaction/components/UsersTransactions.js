@@ -1,12 +1,13 @@
 import React, { useMemo, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AgGridReact } from 'ag-grid-react';
 
-import { openModal } from '../../common/modalSlice';
-import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
+import { AgGridReact } from 'ag-grid-react';
 import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { classNames } from '../../../components/Common/UtilsClassNames';
 import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
+import { openModal } from '../../common/modalSlice';
 import {
   setPaginationCurrentPage,
   setFilters,
@@ -70,212 +71,108 @@ const UsersTransactions = ({ onLoad }) => {
   const columnDefs = useMemo(
     () => [
       {
-        field: 'transaction_type.libelle',
-        headerName: 'Transaction Type',
-        width: 140,
-        pinned: true,
+        field: 'id',
+        headerName: 'ID',
+        flex: 1,
+        // pinned: true,
         filterParams: containFilterParams,
         onCellClicked: (params) => onDetailsClicked(params.data),
         cellRenderer: ({ value }) => {
           return (
             // <div className='flex items-center justify-center'>
-            <p className={classNames('px-3 py-1 uppercase leading-wide font-bold  ')}>{value}</p>
+            <p className={classNames('px- py-1 uppercase leading-wide font-bold  ')}>{value}</p>
             // </div>
           );
         }
       },
       {
-        field: 'reference',
-        headerName: 'Reference',
-        width: 150,
-        pinned: true,
+        field: 'wallet.client.phone_number',
+        headerName: 'CLIENT',
+        flex: 2,
+        // pinned: true,
         filterParams: containFilterParams,
         onCellClicked: (params) => onDetailsClicked(params.data),
         cellRenderer: ({ value }) => {
           return (
-            <p className={classNames('px-3 py-1 uppercase leading-wide font-bold  text-blue-700')}>
+            // <div className='flex items-center justify-center'>
+            <p className={classNames('uppercase flex items-center justify-center')}>{value}</p>
+            // </div>
+          );
+        }
+      },
+      {
+        field: 'status',
+        headerName: 'STATUS',
+        flex: 2,
+        filterParams: containFilterParams,
+        onCellClicked: (params) => onDetailsClicked(params.data),
+        cellRenderer: ({ value }) => {
+          return (
+            <p
+              className={`uppercase leading-wide font-bold flex items-center justify-center ${
+                value === 'CANCELED' ? 'text-red-700' : ''
+              }`}>
               {value}
             </p>
           );
         }
       },
       {
-        field: 'sender_wallet.client.phone_number',
-        headerName: 'Sender',
-        width: 130,
+        field: 'type',
+        headerName: 'TYPE',
+        flex: 2,
         filterParams: containFilterParams,
         onCellClicked: (params) => onDetailsClicked(params.data),
         cellRenderer: ({ value }) => {
           return (
-            <p className={classNames('px-3 py-1 uppercase leading-wide font-bold ')}>
+            <p className={classNames('flex items-center justify-center uppercase leading-wide')}>
               {!STREET_NUMBERS.includes(value) && value}
             </p>
           );
         }
       },
       {
-        field: 'sender_wallet.wallet_type.libelle',
-        valueGetter: (params) => {
-          const walletLibelle = params?.data?.sender_wallet?.wallet_type?.libelle;
-          const transactionType = params?.data?.transaction_type?.code?.toUpperCase();
-          const phone_number = params?.data?.sender_wallet?.client?.phone_number;
-
-          return !STREET_NUMBERS.includes(phone_number)
-            ? walletLibelle
-              ? walletLibelle?.toUpperCase()
-              : 'STREET-' + transactionType
-            : 'STREET';
-        },
-        headerName: 'Sender Type',
-        width: 140,
+        field: 'amount',
+        headerName: 'AMOUNT',
+        flex: 2,
         filterParams: containFilterParams,
         onCellClicked: (params) => onDetailsClicked(params.data),
-        cellRenderer: ({ value, data }) => {
-          const phone_number = data?.sender_wallet?.client?.phone_number;
+        cellRenderer: ({ data }) => {
+          return (
+            <p
+              className={`flex items-center justify-center font-semibold ${
+                data?.credited ? 'text-green-700' : 'text-red-700'
+              }`}>
+              {data?.credited ? `+ ${data?.credited}` : `- ${data?.debited}`}
+            </p>
+          );
+        }
+      },
+      {
+        field: 'created_at',
+        headerName: 'DATE',
+        flex: 2,
+        filterParams: containFilterParams,
+        onCellClicked: (params) => onDetailsClicked(params.data),
+        cellRenderer: ({ value }) => {
           return (
             <div className="flex items-center justify-center">
-              <span
-                className={`px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full mt-3
-                  ${
-                    !STREET_NUMBERS.includes(phone_number) && value.includes('STREET')
-                      ? 'bg-green-100 text-green-700 shadow-sm'
-                      : value === 'PERSONAL'
-                        ? 'bg-violet-100 text-violet-700 shadow-sm'
-                        : value === 'MERCHANT'
-                          ? 'bg-blue-100 text-blue-700 shadow-sm'
-                          : 'bg-gray-100 text-gray-700 shadow-sm'
-                  }
-                 `}
-              >
-                {value}
-              </span>
+              {moment.utc(value).format('DD-MM-YYYY HH:mm')}
             </div>
           );
         }
       },
       {
-        field: 'amount',
-        valueGetter: (params) => {
-          const amount = params?.data?.amount;
-
-          return amount + '';
-        },
-        headerName: 'Amount',
-        width: 110,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => onDetailsClicked(params.data),
-        cellRenderer: ({ value }) => {
-          return <div className="flex items-center justify-center font-semibold">{value}</div>;
-        }
-      },
-      {
-        field: 'receiver_wallet.client.phone_number',
-        headerName: 'Receiver',
-        width: 130,
+        field: 'description',
+        headerName: 'DESCRIPTION',
+        flex: 6,
         filterParams: containFilterParams,
         onCellClicked: (params) => onDetailsClicked(params.data),
         cellRenderer: ({ value }) => {
           return (
             // <div className='flex items-center justify-center'>
-            <p className={classNames('px-3 py-1 uppercase leading-wide font-bold ')}>{value}</p>
+            <p className={classNames('uppercase leading-wide')}>{value}</p>
             // </div>
-          );
-        }
-      },
-      {
-        field: 'receiver_wallet.wallet_type.libelle',
-        valueGetter: (params) => {
-          const walletLibelle = params?.data?.receiver_wallet?.wallet_type?.libelle;
-          const transactionType = params?.data?.transaction_type?.code?.toUpperCase();
-          const phone_number = params?.data?.sender_wallet?.client?.phone_number;
-
-          return !STREET_NUMBERS.includes(phone_number)
-            ? walletLibelle
-              ? walletLibelle?.toUpperCase()
-              : 'STREET-' + transactionType
-            : 'STREET';
-        },
-        headerName: 'Receiver Type',
-        width: 140,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => onDetailsClicked(params.data),
-        cellRenderer: ({ value, data }) => {
-          console.log(data);
-          const phone_number = data?.receiver_wallet?.client?.phone_number;
-          return (
-            <div className="flex items-center justify-center">
-              <span
-                className={`px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full mt-3
-                  ${
-                    !STREET_NUMBERS.includes(phone_number) && value.includes('STREET')
-                      ? 'bg-green-100 text-green-700 shadow-sm'
-                      : value === 'PERSONAL'
-                        ? 'bg-violet-100 text-violet-700 shadow-sm'
-                        : value === 'MERCHANT'
-                          ? 'bg-blue-100 text-blue-700 shadow-sm'
-                          : value === 'LIVREUR'
-                            ? 'bg-orange-100 text-orange-700 shadow-sm'
-                            : 'bg-gray-100 text-gray-700 shadow-sm'
-                  }
-                 `}
-              >
-                {value}
-              </span>
-            </div>
-          );
-        }
-      },
-      {
-        field: 'commande.balance_share',
-        valueGetter: (params) => {
-          const balance_share = params?.data?.commande?.balance_share;
-
-          return balance_share ? balance_share + '' : '';
-        },
-        headerName: 'Balance Shared',
-        width: 140,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => onDetailsClicked(params.data),
-        cellRenderer: ({ value }) => {
-          return <div className="flex items-center justify-center font-semibold">{value}</div>;
-        }
-      },
-      {
-        field: 'commande.bonus_share',
-        valueGetter: (params) => {
-          const bonus_share = params?.data?.commande?.bonus_share;
-
-          return bonus_share ? bonus_share + '' : '';
-        },
-        headerName: 'Bonus Shared',
-        width: 140,
-        filterParams: containFilterParams,
-        onCellClicked: (params) => onDetailsClicked(params.data),
-        cellRenderer: ({ value }) => {
-          return <div className="flex items-center justify-center font-semibold">{value}</div>;
-        }
-      },
-      {
-        field: 'created_at',
-        headerName: 'Registration Date',
-        width: 130,
-        // pinned: 'right',
-        filter: 'agDateColumnFilter',
-        onCellClicked: (params) => onDetailsClicked(params.data),
-        cellRenderer: ({ value }) => {
-          let formattedValue = value ? value : 'N/A';
-
-          if (formattedValue !== 'N/A') {
-            formattedValue = moment.utc(value).format('DD/MM/YYYY');
-          }
-
-          return (
-            <div className="grid row-span-2 text-xs">
-              <p>
-                <span className="font-semibold text-sm mr-2">{formattedValue}</span>
-              </p>
-              <span className="font-semibold text-sm">{moment.utc(value).format('HH:mm')}</span>
-            </div>
           );
         }
       }
@@ -298,8 +195,7 @@ const UsersTransactions = ({ onLoad }) => {
                     gridOptions.api.paginationSetPageSize(newSize);
                     dispatch(setPaginationSize({ paginationSize: newSize || 20 }));
                   }}
-                  defaultValue={paginationSize}
-                >
+                  defaultValue={paginationSize}>
                   <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="50">50</option>
@@ -330,9 +226,9 @@ const UsersTransactions = ({ onLoad }) => {
                       paginationCurrentPage: currentPage
                     })
                   );
-                  if (currentPage === totalPages - 1 && currentPage !== 0) {
-                    await onLoad();
-                  }
+                  // if (currentPage === totalPages - 1 && currentPage !== 0) {
+                  //   await onLoad();
+                  // }
                 }}
                 onFirstDataRendered={(params) => {
                   adjustGridHeight(params.api); // Adjust height

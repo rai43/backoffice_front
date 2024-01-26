@@ -1,22 +1,34 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { useDispatch } from 'react-redux';
-
-import { replaceClientObjectByUpdatedOne } from '../client/clientSlice';
 
 export const getClientTransactions = createAsyncThunk('/transactions/client', async (params) => {
-  const wallet = params.wallet;
-  const transactionType = params.transactionType;
+  const walletId = params.walletId;
+  const from = params.fromDate;
+  const to = params.toDate;
+  const skip = params.skip;
+  const limit = params.limit || 20;
+
+  const response = await axios.get(`/api/transactions/get-transactions/${walletId}`, {
+    params: {
+      to,
+      from,
+      skip,
+      limit
+    }
+  });
+
+  return response.data;
+});
+
+export const getTransactions = createAsyncThunk('/all-transactions', async (params) => {
   const from = params.from;
   const to = params.to;
   const skip = params.skip;
-
-  const response = await axios.get(`/api/transaction/get-transactions/${wallet}`, {
+  const limit = params.limit || 20;
+  const response = await axios.get(`/api/transactions/get-transactions`, {
     params: {
-      transactionType,
-      to,
       from,
-      skip
+      to
     }
   });
 
@@ -24,7 +36,7 @@ export const getClientTransactions = createAsyncThunk('/transactions/client', as
 });
 
 export const getOperatorTypes = createAsyncThunk('/transactions/get-operator-types', async () => {
-  const response = await axios.get(`/api/transaction/get-operator-types`, {});
+  const response = await axios.get(`/api/transactions/get-operator-types`, {});
 
   return response.data;
 });
@@ -57,6 +69,40 @@ export const debitAccountToServer = createAsyncThunk(
       return response.data;
     } catch (e) {
       throw new Error(e.statusText);
+    }
+  }
+);
+
+/**
+ * Asynchronously withdraws an amount from a specified wallet.
+ *
+ * @param {Object} payload - The data needed for the withdrawal transaction.
+ * @param {number} payload.amount - The amount to be withdrawn.
+ * @param {string} payload.phoneNumber - The phone number associated with the transaction.
+ * @param {string} payload.operatorId - The ID of the operator handling the transaction.
+ * @param {number} payload.operatorFee - The fee charged by the operator.
+ * @param {string} payload.walletId - The unique identifier of the wallet.
+ * @returns {Promise<Object>} The response data from the server.
+ */
+export const withdrawFromAccount = createAsyncThunk(
+  '/transaction/withdraw-account',
+  async ({ amount, phoneNumber, operatorId, operatorFee, walletId }) => {
+    // Constructing the API endpoint with the walletId in the URL
+    const endpoint = `/api/wallet/actions/withdraw/${walletId}`;
+
+    try {
+      // Performing the withdrawal operation via a POST request
+      const response = await axios.post(endpoint, {
+        amount: parseInt(amount),
+        phone: phoneNumber,
+        oid: parseInt(operatorId),
+        fee: parseFloat(operatorFee)
+      });
+      // Returning the data received from the server
+      return response.data;
+    } catch (e) {
+      // Throwing an error with the response's status text or a default message
+      throw new Error(e.response?.statusText || e.message);
     }
   }
 );
@@ -158,18 +204,27 @@ export const transactionSlice = createSlice({
       state.isLoading = true;
     },
     [getClientTransactions.fulfilled]: (state, action) => {
+      const oldTransactionsLength = state.transactions?.length;
       state.transactions = [...state.transactions, ...action.payload.transactions];
-      if (state.totalCount !== action.payload.totalCount) {
-        state.totalCount = action.payload.totalCount;
-      }
-      if (state.skip === action.payload.skip) {
+
+      if (oldTransactionsLength === state.transactions?.length) {
         state.noMoreQuery = true;
-      } else {
-        state.skip = action.payload.skip;
       }
       state.isLoading = false;
     },
     [getClientTransactions.rejected]: (state) => {
+      state.isLoading = false;
+    },
+
+    [getTransactions.pending]: (state) => {
+      state.isLoading = true;
+    },
+    [getTransactions.fulfilled]: (state, action) => {
+      state.transactions = [...action.payload.transactions];
+
+      state.isLoading = false;
+    },
+    [getTransactions.rejected]: (state) => {
       state.isLoading = false;
     },
 
@@ -194,6 +249,18 @@ export const transactionSlice = createSlice({
       state.isLoading = false;
     },
     [debitAccountToServer.rejected]: (state) => {
+      state.isLoading = false;
+    },
+
+    [withdrawFromAccount.pending]: (state) => {
+      state.isLoading = true;
+    },
+    [withdrawFromAccount.fulfilled]: (state, action) => {
+      // state.transactions = [action.payload.transaction, ...state.transactions];
+      // state.totalCount += 1;
+      state.isLoading = false;
+    },
+    [withdrawFromAccount.rejected]: (state) => {
       state.isLoading = false;
     },
 

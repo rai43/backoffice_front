@@ -1,112 +1,64 @@
-import moment from 'moment';
-import streetLogo from '../../assets/street_logo.jpeg';
-import clientCard from '../../assets/client_card.png';
-import merchantCard from '../../assets/merchant_card.png';
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from 'react';
+import React from 'react';
 
+import moment from 'moment';
+
+import clientCardBackground from '../../assets/client_card.png';
+import merchantCardBackground from '../../assets/merchant_card.png';
+import streetLogo from '../../assets/street_logo.jpeg';
+
+/**
+ * Displays individual wallet information in a visually appealing card layout.
+ *
+ * @param {Object} props - The component props.
+ * @param {Object} props.client - Client data related to the wallet.
+ * @param {Object} props.wallet - Wallet data to be displayed.
+ * @param {string} props.phone_number - Phone number associated with the wallet.
+ * @param {Function} props.onWalletClicked - Function for handling wallet card click events.
+ * @returns {React.ReactElement} - A styled wallet card.
+ */
 const WalletCard = ({ client, wallet, phone_number, onWalletClicked }) => {
-  const { clients, from, isLoading, noMoreQuery } = useSelector((state) => state.client);
-  useEffect(
-    () =>
-      console.log(
-        clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
-      ),
-    []
-  );
+  const walletData = client?.wallets?.find((w) => w?.id === wallet?.id) || {};
+  const isMerchant = walletData?.type === 'MERCHANT';
+  const cardBackground = isMerchant ? merchantCardBackground : clientCardBackground;
+  const formattedNumber = `•••• •••• •••• ${client.phone_number.slice(-4)}`;
+
+  // Format the balance for accounting (in CFA currency)
+  const formattedBalance = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XOF', // CFA currency code
+    minimumFractionDigits: 0 // You can adjust the decimal places as needed
+  }).format(walletData?.balance || 0);
 
   return (
     <div
-      className="hover:cursor-pointer  sm:w-96 sm:h-56 m-auto bg-red-100 rounded-xl relative text-white shadow-2xl transition-transform transform hover:scale-110"
-      onClick={() =>
-        onWalletClicked(
-          client,
-          clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
-        )
-      }
-    >
-      <img
-        className="relative object-cover w-full h-full rounded-xl"
-        src={
-          clients.find((cl) => cl?.id === client?.id)?.wallets?.find((w) => w?.id === wallet?.id)
-            ?.wallet_type?.code !== 'MARCH'
-            ? clientCard
-            : merchantCard
-        }
-        alt=""
-      />
-
-      <div className="w-full px-8 absolute top-8">
-        <div className="justify-between hidden sm:flex">
-          <div className="">
-            <p className="font-light">Wallet Info</p>
-            <p className="font-medium tracking-widest">
-              {
-                clients
-                  .find((cl) => cl?.id === client?.id)
-                  ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_type?.libelle
-              }
-              <span
-                className={`mx-2 inline-grid rounded-lg w-3 h-3 justify-items-center self-center items-center ${
-                  clients
-                    .find((cl) => cl?.id === client?.id)
-                    ?.wallets?.find((w) => w?.id === wallet?.id)?.wallet_status?.code ===
-                  'ACTIVATED'
-                    ? 'bg-success'
-                    : 'bg-red-900'
-                }`}
-              ></span>
+      className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg text-white"
+      style={{
+        height: '200px',
+        backgroundImage: `url(${cardBackground})`,
+        backgroundSize: 'cover'
+      }}
+      onClick={() => onWalletClicked(client, walletData)}>
+      <div className="absolute inset-0 p-4 flex flex-col justify-between">
+        {/* Top section */}
+        <div className="flex justify-between">
+          <div>
+            <p className="font-bold text-lg">{walletData?.wallet_type?.libelle}</p>
+            <p className="text-sm opacity-80">
+              Valid From: {moment.utc().add(3, 'years').format('MM/YY')}
             </p>
           </div>
-          <img className="w-14 h-14 rounded-full" src={streetLogo} alt="" />
-          {/* <img
-						className='w-14 h-14'
-						src='https://i.imgur.com/bbPHJVe.png'
-						alt=''
-					/> */}
+          <img src={streetLogo} alt="Logo" className="h-8 rounded-full" />
         </div>
-        <div className="pt-1">
-          <p className="font-light">Client Number</p>
-          <p className="font-medium tracking-more-wider">{phone_number || 'N/A'}</p>
-        </div>
-        <div className="pt-6 pr-6">
-          <div className="flex justify-between">
-            <div className="">
-              <p className="font-light text-xs">Balance</p>
-              <p className="font-medium tracking-wider text-sm">
-                {
-                  clients
-                    .find((cl) => cl?.id === client?.id)
-                    ?.wallets?.find((w) => w?.id === wallet?.id)?.balance
-                }{' '}
-                CFA
-              </p>
-            </div>
-            <div className="">
-              <p className="font-light text-xs">Bonus</p>
-              <p className="font-medium tracking-wider text-sm">
-                {
-                  clients
-                    .find((cl) => cl?.id === client?.id)
-                    ?.wallets?.find((w) => w?.id === wallet?.id)?.bonus
-                }{' '}
-                CFA
-              </p>
-            </div>
 
-            <div className="">
-              <p className="font-light text-xs">Created On</p>
-              <p className="font-bold tracking-more-wider text-sm">
-                {moment
-                  .utc(
-                    clients
-                      .find((cl) => cl?.id === client?.id)
-                      ?.wallets?.find((w) => w?.id === wallet?.id)?.created_at
-                  )
-                  .format('ll')}
-              </p>
-            </div>
-          </div>
+        {/* Middle section with balance */}
+        <div className="my-2">
+          <p className="text-xl font-medium">Balance: {formattedBalance}</p>
+        </div>
+
+        {/* Bottom section */}
+        <div>
+          <p className="font-medium text-xl">{formattedNumber}</p>
+          <p className="text-sm">{walletData?.type?.toUpperCase()}</p>
         </div>
       </div>
     </div>

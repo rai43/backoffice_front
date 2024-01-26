@@ -2,18 +2,9 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 import moment from 'moment/moment';
 
-import { countStatuses } from '../../utils/colisUtils';
+import { countStatuses } from '../../../utils/colisUtils';
 
-export const getReturnedColis = createAsyncThunk(
-  '/parcels-management/get-returned-colis',
-  async () => {
-    const response = await axios.get('/api/colis/get-returned-colis');
-
-    return response.data;
-  }
-);
-
-export const getColis = createAsyncThunk('/parcels-management/get-colis', async (params) => {
+export const getColis = createAsyncThunk('/return-parcels-management/get-colis', async (params) => {
   const from = params.from || moment.utc().format('YYYY-MM-DD');
   const to = params.to || moment.utc().format('YYYY-MM-DD');
   const skip = params.skip;
@@ -29,82 +20,8 @@ export const getColis = createAsyncThunk('/parcels-management/get-colis', async 
   return response.data;
 });
 
-export const saveColis = createAsyncThunk('/parcels-management/save-colis', async (params) => {
-  const pickup_phone_number = params.pickup_phone_number;
-  const pickup_address_name = params.pickup_address_name;
-  const delivery_phone_number = params.delivery_phone_number;
-  const delivery_address_name = params.delivery_address_name;
-  const fee = params.fee;
-  const fee_payment = params.fee_payment;
-  const price = params.price;
-  const pickup_livreur_id = params.pickup_livreur_id;
-  const delivery_livreur_id = params.delivery_livreur_id;
-  console.log(params);
-
-  const payload = JSON.stringify({
-    pickup_phone_number,
-    pickup_address_name,
-    delivery_phone_number,
-    delivery_address_name,
-    fee,
-    fee_payment,
-    price,
-    pickup_livreur_id,
-    delivery_livreur_id
-  });
-
-  const response = await axios.post('/api/colis/save-colis', payload);
-  return response.data;
-});
-
-export const saveColisBulk = createAsyncThunk(
-  '/parcels-management/save-colis-bulk',
-  async (params, { rejectWithValue }) => {
-    const { parcels } = params;
-
-    // Verify each parcel
-    for (const parcel of parcels) {
-      const {
-        merchant_phone_number,
-        pickup_phone_number,
-        pickup_address_name,
-        delivery_phone_number,
-        delivery_address_name,
-        fee_payment
-        // fee,
-        // price
-      } = parcel;
-
-      // Check for required fields
-      if (
-        !merchant_phone_number ||
-        !pickup_phone_number ||
-        !pickup_address_name ||
-        !delivery_phone_number ||
-        !delivery_address_name ||
-        !fee_payment
-        // fee === undefined ||
-        // fee <= 0 ||
-      ) {
-        return rejectWithValue('One or more parcels are missing required fields.');
-      }
-    }
-
-    // Construct the payload from the verified parcels
-    const payload = JSON.stringify(parcels);
-
-    // Send the request to the backend
-    try {
-      const response = await axios.post('/api/colis/save-colis-bulk', payload);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
 export const updateColis = createAsyncThunk(
-  '/parcels-management/update-colis',
+  '/return-parcels-management/update-colis',
   async (params, { rejectWithValue }) => {
     const { parcel } = params;
 
@@ -152,7 +69,7 @@ export const updateColis = createAsyncThunk(
 );
 
 export const changeColisStatus = createAsyncThunk(
-  '/parcels-management/set-colis-status',
+  '/return-parcels-management/set-colis-status',
   async (params) => {
     const colisId = params?.colisId;
     const livreurId = params.livreurId ? params.livreurId : 'UNDEFINED';
@@ -231,7 +148,6 @@ export const parcelsManagementSlice = createSlice({
   initialState: {
     isLoading: false,
     colis: [],
-    returnedColis: [],
     skip: 0,
     noMoreQuery: false,
     totalCount: 0,
@@ -261,7 +177,6 @@ export const parcelsManagementSlice = createSlice({
     resetForm: (state) => {
       state.isLoading = false;
       state.colis = [];
-      state.returnedColis = [];
       state.skip = 0;
       state.noMoreQuery = false;
       state.totalCount = 0;
@@ -290,16 +205,6 @@ export const parcelsManagementSlice = createSlice({
   },
 
   extraReducers: {
-    [getReturnedColis.pending]: (state) => {
-      state.isLoading = true;
-    },
-    [getReturnedColis.fulfilled]: (state, action) => {
-      state.returnedColis = action.payload.returnedColis;
-    },
-    [getReturnedColis.rejected]: (state) => {
-      state.isLoading = false;
-    },
-
     [getColis.pending]: (state) => {
       state.isLoading = true;
     },
@@ -350,18 +255,6 @@ export const parcelsManagementSlice = createSlice({
       const indexToRemoved = state.colis.findIndex(
         (order) => order.id === action.payload?.colis?.id
       );
-
-      const indexToRemovedInReturnedColis = state.returnedColis.findIndex(
-        (order) => order.id === action.payload?.colis?.id
-      );
-
-      if (
-        action.payload?.colis?.status?.colis_status?.code !== 'ARTICLE_TO_RETURN' &&
-        indexToRemovedInReturnedColis !== -1
-      ) {
-        state.returnedColis.splice(indexToRemovedInReturnedColis, 1);
-      }
-
       if (indexToRemoved !== -1) {
         state.colis[indexToRemoved] = action.payload?.colis;
 
@@ -400,24 +293,6 @@ export const parcelsManagementSlice = createSlice({
       const indexToReplace = state.colis.findIndex(
         (order) => order.id === action.payload?.colis?.id
       );
-
-      const indexToRemovedInReturnedColis = state.returnedColis.findIndex(
-        (rc) => rc.id === action.payload?.colis?.id
-      );
-
-      console.log({
-        colis: action.payload?.colis,
-        indexToRemovedInReturnedColis,
-        code: action.payload?.colis?.colis_status?.code
-      });
-
-      if (
-        action.payload?.colis?.status?.colis_status?.code === 'ARTICLE_TO_RETURN' &&
-        indexToRemovedInReturnedColis !== -1
-      ) {
-        state.returnedColis[indexToRemovedInReturnedColis] = action.payload?.colis;
-      }
-
       if (indexToReplace !== -1) {
         state.colis[indexToReplace] = action.payload?.colis;
 

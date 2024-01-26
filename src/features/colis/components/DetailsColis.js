@@ -21,6 +21,12 @@ const DetailsColis = ({ extraObject, closeModal }) => {
     [ACTIONS.DELETE]: false
   });
 
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  const toggleZoom = () => {
+    setIsZoomed(!isZoomed);
+  };
+
   const onCloseBlockModal = () => {
     enableScroll();
     setActionsState(() => {
@@ -285,6 +291,23 @@ const DetailsColis = ({ extraObject, closeModal }) => {
         </>
       ) : (
         <></>
+      )}
+
+      {extraObject?.colis?.photo && (
+        <div className="mt-4">
+          <div className="max-w-md mx-auto bg-white rounded-lg shadow-md">
+            <img
+              className="w-full object-cover object-center rounded-t-lg"
+              src={extraObject?.colis?.photo}
+              alt="Parcel Photo"
+            />
+            <div className="p-4">
+              <h2 className="text-xl font-semibold mb-2">
+                Parcel Photo: #{extraObject?.colis?.code}
+              </h2>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

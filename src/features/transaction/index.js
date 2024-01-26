@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { useFormik } from 'formik';
 import moment from 'moment';
@@ -6,7 +6,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import Datepicker from 'react-tailwindcss-datepicker';
 
 import UsersTransactions from './components/UsersTransactions';
-import { generateStatistics, getClientTransactions, resetForm } from './transactionSlice';
+import {
+  generateStatistics,
+  getClientTransactions,
+  getTransactions,
+  resetForm
+} from './transactionSlice';
 import InputText from '../../components/Input/InputText';
 import SelectBox from '../../components/Input/SelectBox';
 import InfoText from '../../components/Typography/InfoText';
@@ -69,7 +74,8 @@ const Transactions = () => {
   const { transactions, skip, isLoading, noMoreQuery } = useSelector((state) => state.transaction);
 
   const applyFilter = async (dispatchParams) => {
-    dispatch(getClientTransactions(dispatchParams)).then(async (res) => {
+    console.log(dispatchParams);
+    dispatch(getTransactions(dispatchParams)).then(async (res) => {
       if (res?.payload?.transactions) {
         try {
           const { payload } = await dispatch(
@@ -150,69 +156,69 @@ const Transactions = () => {
     <>
       {!isLoading && (
         <>
-          <div className="mb-4">
-            <h3 className="text-sm font-light">
-              Transactions History from{' '}
-              <span className="font-semibold">{moment.utc(formik.values.from).format('LL')}</span>{' '}
-              to <span className="font-semibold">{moment.utc(formik.values.to).format('LL')}</span>
-            </h3>
+          {/*<div className="mb-4">*/}
+          {/*  <h3 className="text-sm font-light">*/}
+          {/*    Transactions History from{' '}*/}
+          {/*    <span className="font-semibold">{moment.utc(formik.values.from).format('LL')}</span>{' '}*/}
+          {/*    to <span className="font-semibold">{moment.utc(formik.values.to).format('LL')}</span>*/}
+          {/*  </h3>*/}
 
-            <div className="divider m-0"></div>
-            <div className="w-full stats stats-vertical lg:stats-horizontal shadow mt-2">
-              <div className="stat">
-                <div className="stat-title">Transactions (In/Out)</div>
-                <div className={`stat-value text-[1.1rem]`}>
-                  <span className="text-info">{statistics.transactionsInAmount} FCFA </span>{' '}
-                  <span className="text-error font-normal">
-                    ({statistics.transactionsOutAmount} FCFA)
-                  </span>
-                </div>
-                <div className={`stat-desc`}>
-                  Count:{' '}
-                  <span>
-                    <span className="text-info">{statistics.transactionsInCount} </span> |{' '}
-                    <span className="text-error">{statistics.transactionsOutCount} </span>
-                  </span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Payment(s)</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.paymentsAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count: <span className="text-info">{statistics.paymentsCount}</span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Top up(s)</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.topupsAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count: <span className="text-info">{statistics.topupsCount}</span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Withdrawal(s)</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.withdrawalsAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count: <span className="text-info">{statistics.withdrawalsCount}</span>
-                </div>
-              </div>
-              <div className="stat">
-                <div className="stat-title">Bonus</div>
-                <div className="stat-value text-[1.5rem] text-info">
-                  {statistics.bonusAmount} FCFA
-                </div>
-                <div className="stat-desc">
-                  Count <span className="text-info">{statistics.bonusCount}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/*  <div className="divider m-0"></div>*/}
+          {/*  <div className="w-full stats stats-vertical lg:stats-horizontal shadow mt-2">*/}
+          {/*    <div className="stat">*/}
+          {/*      <div className="stat-title">Transactions (In/Out)</div>*/}
+          {/*      <div className={`stat-value text-[1.1rem]`}>*/}
+          {/*        <span className="text-info">{statistics.transactionsInAmount} FCFA </span>{' '}*/}
+          {/*        <span className="text-error font-normal">*/}
+          {/*          ({statistics.transactionsOutAmount} FCFA)*/}
+          {/*        </span>*/}
+          {/*      </div>*/}
+          {/*      <div className={`stat-desc`}>*/}
+          {/*        Count:{' '}*/}
+          {/*        <span>*/}
+          {/*          <span className="text-info">{statistics.transactionsInCount} </span> |{' '}*/}
+          {/*          <span className="text-error">{statistics.transactionsOutCount} </span>*/}
+          {/*        </span>*/}
+          {/*      </div>*/}
+          {/*    </div>*/}
+          {/*    <div className="stat">*/}
+          {/*      <div className="stat-title">Payment(s)</div>*/}
+          {/*      <div className="stat-value text-[1.5rem] text-info">*/}
+          {/*        {statistics.paymentsAmount} FCFA*/}
+          {/*      </div>*/}
+          {/*      <div className="stat-desc">*/}
+          {/*        Count: <span className="text-info">{statistics.paymentsCount}</span>*/}
+          {/*      </div>*/}
+          {/*    </div>*/}
+          {/*    <div className="stat">*/}
+          {/*      <div className="stat-title">Top up(s)</div>*/}
+          {/*      <div className="stat-value text-[1.5rem] text-info">*/}
+          {/*        {statistics.topupsAmount} FCFA*/}
+          {/*      </div>*/}
+          {/*      <div className="stat-desc">*/}
+          {/*        Count: <span className="text-info">{statistics.topupsCount}</span>*/}
+          {/*      </div>*/}
+          {/*    </div>*/}
+          {/*    <div className="stat">*/}
+          {/*      <div className="stat-title">Withdrawal(s)</div>*/}
+          {/*      <div className="stat-value text-[1.5rem] text-info">*/}
+          {/*        {statistics.withdrawalsAmount} FCFA*/}
+          {/*      </div>*/}
+          {/*      <div className="stat-desc">*/}
+          {/*        Count: <span className="text-info">{statistics.withdrawalsCount}</span>*/}
+          {/*      </div>*/}
+          {/*    </div>*/}
+          {/*    <div className="stat">*/}
+          {/*      <div className="stat-title">Bonus</div>*/}
+          {/*      <div className="stat-value text-[1.5rem] text-info">*/}
+          {/*        {statistics.bonusAmount} FCFA*/}
+          {/*      </div>*/}
+          {/*      <div className="stat-desc">*/}
+          {/*        Count <span className="text-info">{statistics.bonusCount}</span>*/}
+          {/*      </div>*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <Datepicker
@@ -249,60 +255,60 @@ const Transactions = () => {
             {/*  </div>*/}
             {/*</div>*/}
           </div>
-          <div
-            tabIndex={0}
-            className={`collapse rounded-lg collapse-plus border bg-white ${
-              openFilter ? 'collapse-open' : 'collapse-close'
-            }`}>
-            <div
-              className="collapse-title text-xl font-medium"
-              onClick={() => setOpenFilter((oldVal) => !oldVal)}>
-              Filters
-            </div>
-            <div className="collapse-content">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-x-5 lg:gap-y-3">
-                <SelectBox
-                  options={transactionTypeOptionsTransactions}
-                  labelTitle="Transaction Type"
-                  updateType="transactionType"
-                  placeholder="Select the transaction type"
-                  defaultValue={formik.values.transactionType}
-                  updateFormValue={updateFormValue}
-                />
-                <InputText
-                  type="number"
-                  defaultValue={formik.values.minAmount}
-                  updateType="minAmount"
-                  containerStyle=""
-                  labelTitle="Min Amount"
-                  updateFormValue={updateFormValue}
-                />
-                <InputText
-                  type="number"
-                  defaultValue={formik.values.maxAmount}
-                  updateType="maxAmount"
-                  containerStyle=""
-                  labelTitle="Max Amount"
-                  updateFormValue={updateFormValue}
-                />
-                <button
-                  className="btn btn-outline btn-ghost md:col-start-2"
-                  onClick={async () => {
-                    dispatch(
-                      setTransactionType({
-                        transactionType: formik.values?.transactionType
-                      })
-                    );
-                    dispatch(setMinAmount({ minAmount: formik.values?.minAmount }));
-                    dispatch(setMaxAmount({ maxAmount: formik.values?.maxAmount }));
+          {/*<div*/}
+          {/*  tabIndex={0}*/}
+          {/*  className={`collapse rounded-lg collapse-plus border bg-white ${*/}
+          {/*    openFilter ? 'collapse-open' : 'collapse-close'*/}
+          {/*  }`}>*/}
+          {/*  <div*/}
+          {/*    className="collapse-title text-xl font-medium"*/}
+          {/*    onClick={() => setOpenFilter((oldVal) => !oldVal)}>*/}
+          {/*    Filters*/}
+          {/*  </div>*/}
+          {/*  <div className="collapse-content">*/}
+          {/*    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-x-5 lg:gap-y-3">*/}
+          {/*      <SelectBox*/}
+          {/*        options={transactionTypeOptionsTransactions}*/}
+          {/*        labelTitle="Transaction Type"*/}
+          {/*        updateType="transactionType"*/}
+          {/*        placeholder="Select the transaction type"*/}
+          {/*        defaultValue={formik.values.transactionType}*/}
+          {/*        updateFormValue={updateFormValue}*/}
+          {/*      />*/}
+          {/*      <InputText*/}
+          {/*        type="number"*/}
+          {/*        defaultValue={formik.values.minAmount}*/}
+          {/*        updateType="minAmount"*/}
+          {/*        containerStyle=""*/}
+          {/*        labelTitle="Min Amount"*/}
+          {/*        updateFormValue={updateFormValue}*/}
+          {/*      />*/}
+          {/*      <InputText*/}
+          {/*        type="number"*/}
+          {/*        defaultValue={formik.values.maxAmount}*/}
+          {/*        updateType="maxAmount"*/}
+          {/*        containerStyle=""*/}
+          {/*        labelTitle="Max Amount"*/}
+          {/*        updateFormValue={updateFormValue}*/}
+          {/*      />*/}
+          {/*      <button*/}
+          {/*        className="btn btn-outline btn-ghost md:col-start-2"*/}
+          {/*        onClick={async () => {*/}
+          {/*          dispatch(*/}
+          {/*            setTransactionType({*/}
+          {/*              transactionType: formik.values?.transactionType*/}
+          {/*            })*/}
+          {/*          );*/}
+          {/*          dispatch(setMinAmount({ minAmount: formik.values?.minAmount }));*/}
+          {/*          dispatch(setMaxAmount({ maxAmount: formik.values?.maxAmount }));*/}
 
-                    await onFetchTransactions();
-                  }}>
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </div>
+          {/*          await onFetchTransactions();*/}
+          {/*        }}>*/}
+          {/*        Apply Filters*/}
+          {/*      </button>*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
 
           {transactions.length ? (
             <UsersTransactions onLoad={handleLoadTransactions} />

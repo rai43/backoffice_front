@@ -38,8 +38,7 @@ const AddOrModifyPersonalAccount = ({
                   return old;
                 }
               })
-            }
-          >
+            }>
             Next
           </button>
           <button
@@ -50,8 +49,7 @@ const AddOrModifyPersonalAccount = ({
                 return clickAction((old) => old);
               }
               return clickAction((old) => old - 1);
-            }}
-          >
+            }}>
             Back
           </button>
         </div>
