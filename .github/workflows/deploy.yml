@@ -29,6 +29,17 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
+    - name: Add SSH key to agent with passphrase
+      env:
+        SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+      run: |
+        #!/usr/bin/expect -f
+        spawn ssh-add /path/to/your/private/key
+        expect "Enter passphrase for (stdin):"
+        send "$SSH_PASSPHRASE\r"
+        expect eof
+
+
     - name: SSH and Deploy
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} << 'EOF'
