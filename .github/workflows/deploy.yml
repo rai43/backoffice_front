@@ -24,13 +24,16 @@ jobs:
     - name: Build Project
       run: npm run build
 
-    - name: SSH and Deploy
-      uses: appleboy/ssh-action@master
+    - name: Setup SSH Agent
+      uses: webfactory/ssh-agent@v0.5.3
       with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
+        ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+
+    - name: SSH and Deploy
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          # Commands to execute on your server
+
           # Connect as sudo user
           sudo su
 
@@ -41,16 +44,16 @@ jobs:
           TIMESTAMP=$(date +%F-%T)
 
           # Create a directory for old builds if it doesn't exist
-          mkdir -p test_old_builds test_build
+          mkdir -p old_builds
 
           # Move the current build to the old_builds directory
           if [ -d "build" ]; then
-            cp -R build "old_builds/old_build_$TIMESTAMP"
-            # mv build "old_builds/old_build_$TIMESTAMP"
+            mv build "old_builds/old_build_$TIMESTAMP"
           fi
 
           # Since the entire repo (including the build directory) is transferred
           # to the server by the ssh-action, the 'build' directory will be in the
           # root directory where the SSH command is executed.
           # Now, move the new 'build' directory to the desired location
-          mv build ./test_build
+          mv build ./build
+        EOF
