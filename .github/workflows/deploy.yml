@@ -34,8 +34,8 @@ jobs:
         SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
       run: |
         #!/usr/bin/expect -f
-        spawn ssh-add /path/to/your/private/key
-        expect "Enter passphrase for (stdin):"
+        spawn ssh-add /home/runner/.ssh/known_hosts
+        expect "Enter passphrase for /home/runner/.ssh/known_hosts:"
         send "$SSH_PASSPHRASE\r"
         expect eof
 
