@@ -25,9 +25,50 @@ jobs:
         # If your key has a passphrase, uncomment the next line and add the passphrase to your secrets
         # ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
 
+    - name: Install sshuttle
+      run: sudo apt-get install sshuttle
+
+    - name: Create sshuttle tunnel
+      run: sshuttle -r ${{ secrets.SERVER_USERNAME }}@$34.159.170.242 192.168.60.0/24 -e 'ssh -o StrictHostKeyChecking=no' &
+
     - name: Deploy to Server
       run: |
+        # Your deployment commands go here, for example:
         ssh -o "StrictHostKeyChecking=no" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "ls -al"
+
+
+
+
+# name: Deploy React App
+
+# on:
+#   push:
+#     branches:
+#     - master # Trigger deployment on push to main branch
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout Code
+#       uses: actions/checkout@v2
+
+#     # - name: Set up Node.js
+#     #   uses: actions/setup-node@v2
+#     #   with:
+#     #     node-version: '18' # Set this to your node version or the project version 12
+
+#     - name: Set up SSH
+#       uses: webfactory/ssh-agent@v0.5.3
+#       with:
+#         ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+#         # If your key has a passphrase, uncomment the next line and add the passphrase to your secrets
+#         # ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
+
+#     - name: Deploy to Server
+#       run: |
+#         ssh -o "StrictHostKeyChecking=no" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "ls -al"
 
         
     # - name: multiple command
