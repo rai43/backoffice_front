@@ -17,18 +17,30 @@ jobs:
     #   uses: actions/setup-node@v2
     #   with:
     #     node-version: '18' # Set this to your node version or the project version 1
-        
-    - name: multiple command
-      uses: appleboy/ssh-action@v1.0.3
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
       with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }} # Your private SSH key
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        port: 22
-        script: |
-          whoami
-          ls -al
+        ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+        # If your key has a passphrase, uncomment the next line and add the passphrase to your secrets
+        # ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
+
+    - name: Deploy to Server
+      run: |
+        ssh -o "StrictHostKeyChecking=no" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "ls -al"
+
+        
+    # - name: multiple command
+    #   uses: appleboy/ssh-action@v1.0.3
+    #   with:
+    #     host: ${{ secrets.SERVER_HOST }}
+    #     username: ${{ secrets.SERVER_USERNAME }}
+    #     key: ${{ secrets.SERVER_SSH_KEY }} # Your private SSH key
+    #     passphrase: ${{ secrets.SSH_PASSPHRASE }}
+    #     port: 22
+    #     script: |
+    #       whoami
+    #       ls -al
 
     # - name: Install Dependencies
     #   run: npm install
