@@ -32,6 +32,13 @@ export const parcelsManagementTableSlice = createSlice({
       state.paginationSize = paginationSize;
     },
 
+    getFromAndToDates: (state, action) => {
+      return {
+        from: state.from,
+        to: state.to
+      };
+    },
+
     setFrom: (state, action) => {
       const { from } = action.payload;
       state.from = from;
@@ -86,6 +93,7 @@ export const parcelsManagementTableSlice = createSlice({
 });
 
 export const {
+  getFromAndToDates,
   setFilters,
   resetAllParcelsManagementSettings,
   resetSearchParcelsManagementSettings,

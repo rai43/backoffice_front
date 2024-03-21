@@ -12,6 +12,7 @@ import { CiShoppingTag } from 'react-icons/ci';
 import { FaAmazonPay } from 'react-icons/fa';
 import { IoCreateOutline } from 'react-icons/io5';
 import { MdOutlineDeliveryDining } from 'react-icons/md';
+import { PiQrCodeThin } from 'react-icons/pi';
 
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon';
 import ArrowPathIcon from '@heroicons/react/24/outline/ArrowPathIcon';
@@ -93,7 +94,7 @@ const ParcelsManagement = () => {
       groupedData[clientPhone].colisList.push(colisItem);
 
       // Determine the last colis status
-      const lastStatus = colisItem.colis_statuses[colisItem.colis_statuses.length - 1];
+      const lastStatus = colisItem.colis_statuses[0];
       if (lastStatus) {
         const status = lastStatus.colis_status.code;
         groupedData[clientPhone].deliveryStatusCounts[status] =
@@ -151,7 +152,7 @@ const ParcelsManagement = () => {
       groupedData[clientPhone].colisList.push(colisItem);
 
       // Determine the last colis status
-      const lastStatus = colisItem.colis_statuses[colisItem.colis_statuses.length - 1];
+      const lastStatus = colisItem.colis_statuses[0];
       if (lastStatus) {
         const status = lastStatus.colis_status.code;
         groupedData[clientPhone].deliveryStatusCounts[status] =
@@ -197,69 +198,87 @@ const ParcelsManagement = () => {
   function groupColisByDeliveryLivreurPhone(data) {
     const groupedData = {};
 
+    console.log({ data });
+
     // Iterate over each colis item in the data
     data.forEach((colisItem) => {
+      const latestAssignment =
+        colisItem?.colis_assignment?.[colisItem?.colis_assignment?.length - 1];
+
+      const colisStatuses = colisItem?.colis_statuses;
+      const lastStatus = colisStatuses?.[0];
+      const oneBeforeLastStatus = colisStatuses?.[1];
+
       let groupKey;
 
       // Determine the group key based on delivery_livreur's client phone number
       // If delivery_livreur is null, group them under a common key 'no_delivery_livreur'
+      // if (
+      //   colisItem.delivery_livreur &&
+      //   colisItem.delivery_livreur.client &&
+      //   colisItem.delivery_livreur.client.phone_number
+      // ) {
+
       if (
-        colisItem.delivery_livreur &&
-        colisItem.delivery_livreur.client &&
-        colisItem.delivery_livreur.client.phone_number
+        lastStatus?.colis_status?.code !== 'WAITING_FOR_RETURN' &&
+        oneBeforeLastStatus?.colis_status?.code !== 'REFUSED' &&
+        oneBeforeLastStatus?.colis_status?.code !== 'NOT_DELIVERED' &&
+        oneBeforeLastStatus?.colis_status?.code !== 'NOT_RETURNED'
       ) {
-        // Concatenate client's phone number, first name, and last name as the group key
-        const delivery_livreur = colisItem.delivery_livreur;
-        groupKey = `${delivery_livreur.first_name || ''} ${delivery_livreur.last_name || ''} (${
-          delivery_livreur?.client?.phone_number || ''
-        })`
-          ?.trim()
-          ?.toUpperCase();
-      } else {
-        groupKey = 'no_delivery_livreur';
-      }
-
-      // Initialize the group if it doesn't exist
-      if (!groupedData[groupKey]) {
-        groupedData[groupKey] = {
-          colisList: [],
-          totalAmountToBePaid: 0,
-          processingFee: 0,
-          finalAmountDue: 0,
-          totalFee: 0,
-          deliveryStatusCounts: {}
-        };
-      }
-
-      // Add the current colis item to the group
-      groupedData[groupKey].colisList.push(colisItem);
-
-      // Get the last status of the colis
-      const lastStatus = colisItem.colis_statuses[colisItem.colis_statuses.length - 1];
-      if (lastStatus) {
-        const status = lastStatus.colis_status.code;
-
-        // Update the count of delivery statuses
-        groupedData[groupKey].deliveryStatusCounts[status] =
-          (groupedData[groupKey].deliveryStatusCounts[status] || 0) + 1;
-
-        // Calculate the amount to be paid based on the status and payment conditions
-        if (
-          status === 'DELIVERED' &&
-          parseInt(colisItem.price) > 0
-          // &&
-          // colisItem.payment === 'PENDING'
-        ) {
-          let amountToBePaid = parseInt(colisItem.price);
-          if (colisItem.fee_payment === 'PREPAID' && status !== 'LOST') {
-            amountToBePaid -= parseInt(colisItem.fee || 0);
-          }
-          groupedData[groupKey].totalAmountToBePaid += amountToBePaid;
+        if (latestAssignment && latestAssignment?.livreur) {
+          // Concatenate client's phone number, first name, and last name as the group key
+          const delivery_livreur = latestAssignment.livreur;
+          groupKey = `${delivery_livreur.first_name || ''} ${delivery_livreur.last_name || ''} (${
+            delivery_livreur?.client?.phone_number || ''
+          })`
+            ?.trim()
+            ?.toUpperCase();
+        } else {
+          groupKey = 'no_delivery_livreur';
         }
 
-        if (status === 'DELIVERED' && colisItem.fee_payment === 'POSTPAID') {
-          // Add fee to totalFee for POSTPAID items
-          groupedData[groupKey].totalFee += parseInt(colisItem.fee || 0);
+        // Initialize the group if it doesn't exist
+        if (!groupedData[groupKey]) {
+          groupedData[groupKey] = {
+            colisList: [],
+            totalAmountToBePaid: 0,
+            processingFee: 0,
+            finalAmountDue: 0,
+            totalFee: 0,
+            deliveryStatusCounts: {}
+          };
+        }
+
+        // Add the current colis item to the group
+        groupedData[groupKey].colisList.push(colisItem);
+
+        // Get the last status of the colis
+        // const lastStatus = colisItem.colis_statuses[0];
+        if (lastStatus) {
+          const status = lastStatus.colis_status.code;
+
+          // Update the count of delivery statuses
+          groupedData[groupKey].deliveryStatusCounts[status] =
+            (groupedData[groupKey].deliveryStatusCounts[status] || 0) + 1;
+
+          // Calculate the amount to be paid based on the status and payment conditions
+          if (
+            status === 'DELIVERED' &&
+            parseInt(colisItem.price) > 0
+            // &&
+            // colisItem.payment === 'PENDING'
+          ) {
+            let amountToBePaid = parseInt(colisItem.price);
+            if (colisItem.fee_payment === 'PREPAID' && status !== 'LOST') {
+              amountToBePaid -= parseInt(colisItem.fee || 0);
+            }
+            groupedData[groupKey].totalAmountToBePaid += amountToBePaid;
+          }
+
+          if (status === 'DELIVERED' && colisItem.fee_payment === 'POSTPAID') {
+            // Add fee to totalFee for POSTPAID items
+            groupedData[groupKey].totalFee += parseInt(colisItem.fee || 0);
+          }
         }
       }
     });
@@ -288,7 +307,11 @@ const ParcelsManagement = () => {
 
   const colisRequiringPayment = (dataList) => {
     const elementsToBePaid = dataList.filter((data) => {
-      const lastStatus = data?.colis_statuses[data?.colis_statuses?.length - 1];
+      if (!data?.colis_statuses?.length) {
+        return;
+      }
+      const lastStatus = data?.colis_statuses[0];
+      // data?.colis_statuses?.length - 1
       const isDeliveredOrLost =
         lastStatus &&
         (lastStatus?.colis_status?.code === 'DELIVERED' ||
@@ -568,9 +591,24 @@ const ParcelsManagement = () => {
           )}
           <button
             className="btn btn-ghost btn-sm normal-case"
+            onClick={() =>
+              dispatch(
+                openModal({
+                  title: 'QRCODE PANEL',
+                  size: 'max',
+                  bodyType: MODAL_BODY_TYPES.COLIS_QR_CODE_PANEL,
+                  extraObject: { from, to }
+                })
+              )
+            }>
+            <PiQrCodeThin className="w-4 mr-2" />
+            Scan
+          </button>
+          <button
+            className="btn btn-ghost btn-sm normal-case"
             onClick={() => window.location.reload()}>
             <ArrowPathIcon className="w-4 mr-2" />
-            Refresh Data
+            Refresh
           </button>
           <button
             className="btn btn-ghost btn-sm normal-case"
@@ -625,6 +663,22 @@ const ParcelsManagement = () => {
                   New Colis
                 </span>
               </li>
+              {/*<li*/}
+              {/*  onClick={() => {*/}
+              {/*    dispatch(*/}
+              {/*      openModal({*/}
+              {/*        title: 'QRCODE PANEL',*/}
+              {/*        size: 'max',*/}
+              {/*        bodyType: MODAL_BODY_TYPES.COLIS_QR_CODE_PANEL,*/}
+              {/*        extraObject: {}*/}
+              {/*      })*/}
+              {/*    );*/}
+              {/*  }}>*/}
+              {/*  <span>*/}
+              {/*    <IoCreateOutline className="w-4" />*/}
+              {/*    QR Code Panel*/}
+              {/*  </span>*/}
+              {/*</li>*/}
               <li
                 onClick={() => {
                   dispatch(
@@ -689,12 +743,22 @@ const ParcelsManagement = () => {
                 </span>
               </li>
 
-              {/*<li>*/}
-              {/*  <span>*/}
-              {/*    <ArrowDownTrayIcon className="w-4" />*/}
-              {/*    Download All Data*/}
-              {/*  </span>*/}
-              {/*</li>*/}
+              <li>
+                <span
+                  onClick={() => {
+                    dispatch(
+                      openModal({
+                        title: 'Download Colis Data',
+                        size: '',
+                        bodyType: MODAL_BODY_TYPES.GENERATE_COLIS_QR_CODES,
+                        extraObject: {}
+                      })
+                    );
+                  }}>
+                  <PiQrCodeThin className="w-4" />
+                  Generate QR Codes
+                </span>
+              </li>
               {/*<li>*/}
               {/*  <span>*/}
               {/*    <EnvelopeIcon className="w-4" />*/}

@@ -1,16 +1,11 @@
-import moment from 'moment';
-import { useEffect, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AgGridReact } from 'ag-grid-react';
-import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
-import { getSmsProviders, resetFrom } from './smsPorviderSlide';
-import { openModal } from '../common/modalSlice';
+import React, { useEffect, useMemo } from 'react';
 
-const containFilterParams = {
-  filterOptions: ['contains', 'notContains'],
-  debounceMs: 200,
-  maxNumConditions: 1
-};
+import { AgGridReact } from 'ag-grid-react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { getSmsProviders, resetFrom } from './smsPorviderSlide';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
+import { openModal } from '../common/modalSlice';
 
 const gridOptions = {
   paginationPageSize: 20, // Initial page size

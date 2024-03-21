@@ -1,11 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
+import { LoadScript, StandaloneSearchBox } from '@react-google-maps/api';
 import Modal from 'react-modal';
 import { components } from 'react-select';
 import AsyncSelect from 'react-select/async';
 
-const AddOrEditColis = ({ extraObject, onFieldChange, livreursPromise, index, errors }) => {
+const zonesOptions = [
+  { value: '', label: 'Select a Zone' },
+  { value: 'Abobo', label: 'Abobo & Anyama' },
+  { value: 'Angre', label: 'Angre & 2 Plateaux' },
+  { value: 'Bingerville', label: 'Bingerville & Riviera' },
+  { value: 'Adjame', label: 'Cocody Centre & Plateau & Adjame' },
+  { value: 'AbidjanSud', label: 'Grand Abidjan Sud' },
+  { value: 'Yopougnon', label: 'Grand Yopougnon' }
+];
+
+// {
+//     Bingerville: 213, // Maïk Maurel Derou
+//     Abobo: 598, // Kacou Marc Junior
+//     Yopougnon: 538, // Dje Bi Clovis
+//     AbidjanSud: 594, // Moussa Sylla
+//     Angre: 263, // Benoît Sib
+//     Adjame: 492 // Yao Alphonse Kounan
+//   },
+
+const AddOrEditColis = ({
+  extraObject,
+  onFieldChange,
+  livreursPromise,
+  index,
+  errors,
+  onDeliveryPlacesChanged,
+  onDeliverySBLoad
+}) => {
   const [isImageZoomed, setIsImageZoomed] = useState(false);
+
+  useEffect(() => {
+    if (extraObject?.active_assignment) {
+      onFieldChange(0, 'pickup_livreur_id', extraObject?.active_assignment?.livreur?.id);
+    } else {
+      onFieldChange(0, 'pickup_livreur_id', '');
+      onFieldChange(0, 'delivery_livreur_id', '');
+    }
+  }, []);
 
   const handleImageClick = () => {
     setIsImageZoomed(true);
@@ -16,8 +53,12 @@ const AddOrEditColis = ({ extraObject, onFieldChange, livreursPromise, index, er
   };
 
   // Function to get input classes based on error state
-  const getInputClass = (fieldName) => {
-    const baseClass = 'input input-bordered input-sm w-full';
+  const getInputClass = (fieldName, type = 'text') => {
+    console.log({ errors });
+    let baseClass = 'input input-bordered input-sm w-full';
+    if (type === 'select') {
+      baseClass = 'select select-bordered select-sm w-full';
+    }
     return errors[fieldName] ? `${baseClass} border-red-500 bg-red-100` : baseClass;
   };
 
@@ -63,6 +104,8 @@ const AddOrEditColis = ({ extraObject, onFieldChange, livreursPromise, index, er
     // Additional styles can be added as needed
   };
 
+  console.log({ extraObject });
+
   return (
     <div className="mb-5 overflow-hidden rounded-lg shadow">
       <div className="flex">
@@ -71,52 +114,119 @@ const AddOrEditColis = ({ extraObject, onFieldChange, livreursPromise, index, er
             className={
               extraObject.photo
                 ? 'grid grid-cols-1 gap-4'
-                : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4'
+                : `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${
+                    extraObject?.active_assignment ? 'xl:grid-cols-7' : 'xl:grid-cols-7'
+                  } gap-4`
             }>
-            <div>
-              <div className="text-gray-600 text-sm font-semibold">Pickup Livreur</div>
-              <AsyncSelect
-                maxMenuHeight={90}
-                cacheOptions
-                defaultOptions
-                loadOptions={livreursPromise}
-                styles={customStyles}
-                onChange={({ value }) => onFieldChange(index, 'pickup_livreur_id', value)}
-                defaultValue={() => {
-                  if (extraObject?.pickup_livreur !== null) {
-                    return {
-                      label: `${extraObject?.pickup_livreur?.first_name} ${extraObject?.pickup_livreur?.last_name} (${extraObject?.pickup_livreur?.whatsapp})`,
-                      value: extraObject?.pickup_livreur?.id
-                    };
-                  }
-                }}
-                components={{ MenuPortal: Menu }}
-                menuPortalTarget={document.body}
-                menuPosition={'fixed'}
-              />
+            <div
+              className={`${extraObject?.active_assignment ? 'xl:col-span-2' : 'xl:grid-cols-7'}`}>
+              <div className="text-gray-600 text-sm font-semibold">
+                {extraObject?.active_assignment ? 'Ongoing Assignment Livreur' : 'Pickup Livreur'}
+              </div>
+              {extraObject?.active_assignment ? (
+                <AsyncSelect
+                  maxMenuHeight={90}
+                  cacheOptions
+                  defaultOptions
+                  loadOptions={livreursPromise}
+                  styles={customStyles}
+                  onChange={({ value }) => onFieldChange(index, 'pickup_livreur_id', value)}
+                  defaultValue={() => {
+                    if (extraObject?.active_assignment !== null) {
+                      return {
+                        label: `${extraObject?.active_assignment?.livreur?.first_name} ${extraObject?.active_assignment?.livreur?.last_name} (${extraObject?.active_assignment?.livreur?.whatsapp})`,
+                        value: extraObject?.active_assignment?.livreur?.id
+                      };
+                    }
+                  }}
+                  components={{ MenuPortal: Menu }}
+                  menuPortalTarget={document.body}
+                  menuPosition={'fixed'}
+                />
+              ) : (
+                <select
+                  className={getInputClass('pickup_livreur_id')}
+                  onChange={(e) => onFieldChange(index, 'pickup_livreur_id', e.target.value)}>
+                  {zonesOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label?.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-            <div>
-              <div className="text-gray-600 text-sm font-semibold">Delivery Livreur</div>
-              <AsyncSelect
-                maxMenuHeight={90}
-                cacheOptions
-                defaultOptions
-                loadOptions={livreursPromise}
-                styles={customStyles}
-                onChange={({ value }) => onFieldChange(index, 'delivery_livreur_id', value)}
-                defaultValue={() => {
-                  if (extraObject?.delivery_livreur !== null) {
-                    return {
-                      label: `${extraObject?.delivery_livreur?.first_name} ${extraObject?.delivery_livreur?.last_name} (${extraObject?.delivery_livreur?.whatsapp})`,
-                      value: extraObject?.delivery_livreur?.id
-                    };
-                  }
-                }}
-                components={{ MenuPortal: Menu }}
-                menuPortalTarget={document.body}
-                menuPosition={'fixed'}
-              />
-            </div>
+            {!extraObject?.active_assignment && (
+              <>
+                {extraObject?.delivery_livreur ? (
+                  <div>
+                    <div className="text-gray-600 text-sm font-semibold">Delivery Zone</div>
+                    <AsyncSelect
+                      maxMenuHeight={90}
+                      cacheOptions
+                      defaultOptions
+                      loadOptions={livreursPromise}
+                      styles={customStyles}
+                      onChange={({ value }) => onFieldChange(index, 'delivery_livreur_id', value)}
+                      defaultValue={() => {
+                        if (extraObject?.delivery_livreur !== null) {
+                          return {
+                            label: `${extraObject?.delivery_livreur?.livreur?.first_name} ${extraObject?.delivery_livreur?.livreur?.last_name} (${extraObject?.delivery_livreur?.livreur?.whatsapp})`,
+                            value: extraObject?.delivery_livreur?.livreur?.id
+                          };
+                        }
+                      }}
+                      components={{ MenuPortal: Menu }}
+                      menuPortalTarget={document.body}
+                      menuPosition={'fixed'}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {!extraObject?.pickup_livreur && (
+                      <div>
+                        <div className="text-gray-600 text-sm font-semibold">Delivery Zone</div>
+                        <select
+                          className={getInputClass('delivery_livreur_id')}
+                          onChange={(e) =>
+                            onFieldChange(index, 'delivery_livreur_id', e.target.value)
+                          }>
+                          {zonesOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label?.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
+                )}
+                {extraObject?.return_livreur && (
+                  <div>
+                    <div className="text-gray-600 text-sm font-semibold">Return Livreur</div>
+                    <AsyncSelect
+                      maxMenuHeight={90}
+                      cacheOptions
+                      defaultOptions
+                      loadOptions={livreursPromise}
+                      styles={customStyles}
+                      onChange={({ value }) => onFieldChange(index, 'return_livreur_id', value)}
+                      defaultValue={() => {
+                        if (extraObject?.return_livreur !== null) {
+                          return {
+                            label: `${extraObject?.return_livreur?.livreur?.first_name} ${extraObject?.return_livreur?.livreur?.last_name} (${extraObject?.return_livreur?.livreur?.whatsapp})`,
+                            value: extraObject?.return_livreur?.livreur?.id
+                          };
+                        }
+                      }}
+                      components={{ MenuPortal: Menu }}
+                      menuPortalTarget={document.body}
+                      menuPosition={'fixed'}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
             <div>
               <div className="text-gray-600 text-sm font-semibold">Delivery Phone Number</div>
               <input
@@ -127,13 +237,32 @@ const AddOrEditColis = ({ extraObject, onFieldChange, livreursPromise, index, er
               />
             </div>
             <div>
-              <div className="text-gray-600 text-sm font-semibold">Delivery Address Name</div>
-              <input
-                type="text"
-                value={extraObject.delivery_address_name}
-                className={getInputClass('delivery_address_name')}
-                onChange={(e) => onFieldChange(index, 'delivery_address_name', e.target.value)}
-              />
+              {index === 0 ? (
+                <>
+                  {/*<div className="text-gray-600 text-sm font-semibold">Delivery Address Name</div>*/}
+                  {/*<LoadScript*/}
+                  {/*  googleMapsApiKey="AIzaSyBn8n_poccjk4WVSg31H0rIkU-u7a2lYg8"*/}
+                  {/*  libraries={['places']}>*/}
+                  <DeliveryAddress
+                    index={index}
+                    onDeliveryPlacesChanged={onDeliveryPlacesChanged}
+                    onDeliverySBLoad={onDeliverySBLoad}
+                    extraObject={extraObject}
+                    getInputClass={getInputClass}
+                    onFieldChange={onFieldChange}
+                  />
+                  {/*</LoadScript>*/}
+                </>
+              ) : (
+                <DeliveryAddress
+                  index={index}
+                  onDeliveryPlacesChanged={onDeliveryPlacesChanged}
+                  onDeliverySBLoad={onDeliverySBLoad}
+                  extraObject={extraObject}
+                  getInputClass={getInputClass}
+                  onFieldChange={onFieldChange}
+                />
+              )}
             </div>
             <div>
               <div className="text-gray-600 text-sm font-semibold">Price</div>
@@ -195,6 +324,33 @@ const AddOrEditColis = ({ extraObject, onFieldChange, livreursPromise, index, er
 };
 
 export default AddOrEditColis;
+
+const DeliveryAddress = ({
+  index,
+  onDeliveryPlacesChanged,
+  onDeliverySBLoad,
+  extraObject,
+  getInputClass,
+  onFieldChange
+}) => {
+  return (
+    <>
+      <div className="text-gray-600 text-sm font-semibold">Delivery Address Name</div>
+      {/*<LoadScript googleMapsApiKey="AIzaSyBn8n_poccjk4WVSg31H0rIkU-u7a2lYg8" libraries={['places']}>*/}
+      <StandaloneSearchBox
+        onPlacesChanged={() => onDeliveryPlacesChanged(index)}
+        onLoad={onDeliverySBLoad}>
+        <input
+          type="text"
+          value={extraObject.delivery_address_name}
+          className={getInputClass('delivery_address_name')}
+          onChange={(e) => onFieldChange(index, 'delivery_address_name', e.target.value)}
+        />
+      </StandaloneSearchBox>
+      {/*</LoadScript>*/}
+    </>
+  );
+};
 
 const ZoomImageModal = ({ isOpen, imageUrl, onRequestClose }) => {
   return (

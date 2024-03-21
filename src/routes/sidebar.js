@@ -10,6 +10,7 @@ import { GiPartyPopper, GiReturnArrow } from 'react-icons/gi';
 import { GrMoney } from 'react-icons/gr';
 import { LuPackageCheck } from 'react-icons/lu';
 import {
+  MdAreaChart,
   MdOutlineDiscount,
   MdOutlineMenuBook,
   MdManageHistory,
@@ -109,6 +110,11 @@ const routes = [
         path: '/app/logistics-center/return-parcels', // url
         icon: <GiReturnArrow className={submenuIconClasses} />, // icon component
         name: 'Return Management' // name that appear in Sidebar
+      },
+      {
+        path: '/app/logistics-center/colis-zones', // url
+        icon: <MdAreaChart className={submenuIconClasses} />, // icon component
+        name: 'Colis Zones' // name that appear in Sidebar
       }
       // {
       //   path: '/app/logistics-center/colis-fees', // url

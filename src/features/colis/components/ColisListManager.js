@@ -1,5 +1,7 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 
+import { LoadScript, StandaloneSearchBox } from '@react-google-maps/api';
+import axios from 'axios';
 import flatpickr from 'flatpickr';
 import moment from 'moment/moment';
 import { useDispatch } from 'react-redux';
@@ -10,54 +12,82 @@ import { IoClose, IoAddSharp } from 'react-icons/io5';
 import AddOrEditColis from './AddOrEditColis';
 import { showNotification } from '../../common/headerSlice';
 import { getLivreursBySearch } from '../../livreurs/livreursSlice';
+import parcelsUtils from '../parcels.utils';
 import { saveColisBulk, updateColis } from '../parcelsManagementSlice';
 
 const ColisListManager = ({ extraObject, closeModal }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [pickupAddressSearchBox, setPickupAddressSearchBox] = useState(null);
+  const [deliveryAddressSearchBox, setDeliveryAddressSearchBox] = useState(null);
+
+  const [latestColisObject, setLatestColisObject] = useState(null);
+  const [colisGeneralInfo, setColisGeneralInfo] = useState({});
+  const [colisList, setColisList] = useState([]);
+
+  useEffect(() => {
+    const fetchParcelById = async (id) => {
+      try {
+        const response = await axios.get('/api/colis/get-colis-by-id-or-code', {
+          params: { reference: id }
+        });
+        const fetchedColis = response.data?.colis;
+        setLatestColisObject(fetchedColis);
+
+        const assignments = parcelsUtils.findOngoingAssignment(fetchedColis);
+
+        // Update colisList and colisGeneralInfo based on the fetched data
+        init(
+          setColisList,
+          fetchedColis,
+          assignments,
+          // pickupAssignment,
+          // deliveryAssignment,
+          // returnAssignment,
+          setColisGeneralInfo
+        );
+      } catch (error) {
+        console.error('Failed to fetch parcel data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (extraObject?.colis?.id) {
+      setIsLoading(true);
+      fetchParcelById(extraObject?.colis?.id);
+    } else {
+      init(setColisList, [], null, setColisGeneralInfo);
+    }
+  }, [extraObject?.colis?.id]);
+
+  const onPickupPlacesChanged = () => {
+    const place = pickupAddressSearchBox?.getPlaces()?.length
+      ? pickupAddressSearchBox?.getPlaces()[0]
+      : {};
+    handleGeneralInfoChange('pickup_address_name', `${place?.name}, ${place?.formatted_address}`);
+  };
+
+  const onPickupSBLoad = (ref) => {
+    setPickupAddressSearchBox(ref);
+  };
+
+  const onDeliveryPlacesChanged = (index) => {
+    const place = deliveryAddressSearchBox?.getPlaces()?.length
+      ? deliveryAddressSearchBox?.getPlaces()[0]
+      : {};
+    onValueChange(index, 'delivery_address_name', `${place?.name}, ${place?.formatted_address}`);
+    // setDeliveryAddressSearchBox(null);
+  };
+
+  const onDeliverySBLoad = (ref) => {
+    setDeliveryAddressSearchBox(ref);
+  };
+
   const dispatch = useDispatch();
 
   const pickupDateRef = useRef();
 
-  const [colisGeneralInfo, setColisGeneralInfo] = useState({
-    merchant_phone_number: extraObject?.colis?.client?.phone_number
-      ? extraObject?.colis?.client?.phone_number
-      : '',
-    pickup_phone_number: extraObject?.colis?.pickup_phone_number
-      ? extraObject?.colis?.pickup_phone_number
-      : '',
-    pickup_address_name: extraObject?.colis?.pickup_address_name
-      ? extraObject?.colis?.pickup_address_name
-      : '',
-    pickup_date: extraObject?.colis?.pickup_date
-      ? moment.utc(extraObject?.colis?.pickup_date).format('YYYY-MM-DD')
-      : moment.utc().format('YYYY-MM-DD')
-  });
-
-  const [colisList, setColisList] = useState([
-    {
-      delivery_phone_number: extraObject?.colis?.delivery_phone_number
-        ? extraObject?.colis?.delivery_phone_number
-        : '',
-      delivery_address_name: extraObject?.colis?.delivery_address_name
-        ? extraObject?.colis?.delivery_address_name
-        : '',
-      fee: parseInt(extraObject?.colis?.fee ? extraObject?.colis?.fee : 0),
-      fee_payment: extraObject?.colis?.fee_payment ? extraObject?.colis?.fee_payment : '',
-      price: parseInt(extraObject?.colis?.price ? extraObject?.colis?.price : 0),
-      photo: extraObject?.colis?.photo ? extraObject?.colis?.photo : '',
-      pickup_livreur_id: extraObject?.colis?.pickup_livreur?.id
-        ? extraObject?.colis?.pickup_livreur_id
-        : '',
-      delivery_livreur_id: extraObject?.colis?.delivery_livreur?.id
-        ? extraObject?.colis?.delivery_livreur_id
-        : '',
-      pickup_livreur: extraObject?.colis?.pickup_livreur?.id
-        ? extraObject?.colis?.pickup_livreur
-        : null,
-      delivery_livreur: extraObject?.colis?.delivery_livreur?.id
-        ? extraObject?.colis?.delivery_livreur
-        : null
-    } /* initial data for a new colis */
-  ]);
+  console.log({ latestColisObject });
 
   // State to track errors for colis general information
   const [generalErrors, setGeneralErrors] = useState({});
@@ -115,6 +145,16 @@ const ColisListManager = ({ extraObject, closeModal }) => {
           error = 'Invalid delivery address name';
         }
         break;
+      case 'delivery_livreur_id':
+        if (!`${value}`.length) {
+          error = 'Invalid delivery delivery livreur';
+        }
+        break;
+      case 'pickup_livreur_id':
+        if (!`${value}`.length) {
+          error = 'Invalid pickup livreur';
+        }
+        break;
       case 'fee':
         if (value === undefined || parseInt(value) <= 0) {
           error = 'Fee should be positive';
@@ -163,7 +203,8 @@ const ColisListManager = ({ extraObject, closeModal }) => {
           pickup_livreur_id: '',
           delivery_livreur_id: '',
           pickup_livreur: null,
-          delivery_livreur: null
+          delivery_livreur: null,
+          delivery_address_data: {}
         }
       ];
     });
@@ -215,6 +256,23 @@ const ColisListManager = ({ extraObject, closeModal }) => {
       if (!isValidPrice(value)) {
         return;
       }
+    } else if (fieldName === 'delivery_address_name') {
+      const place = deliveryAddressSearchBox?.getPlaces()?.length
+        ? deliveryAddressSearchBox?.getPlaces()[0]
+        : {};
+      // Allow the field to be empty
+      setColisList((prevList) => {
+        prevList[index][fieldName] = value;
+        prevList[index]['delivery_address_data'] = place?.geometry
+          ? {
+              lat: place?.geometry?.location?.lat(),
+              lng: place?.geometry?.location?.lng(),
+              placeId: place?.place_id
+            }
+          : {};
+        return [...prevList];
+      });
+      return;
     }
 
     setColisList((prevList) => {
@@ -254,10 +312,23 @@ const ColisListManager = ({ extraObject, closeModal }) => {
     let formPosition = 0;
     // Check if all required fields are set in each object in colisList
     for (const colis of colisList) {
-      const { delivery_phone_number, delivery_address_name, fee, fee_payment, price } = colis;
+      const {
+        delivery_phone_number,
+        delivery_address_name,
+        fee,
+        fee_payment,
+        price,
+        pickup_livreur_id,
+        delivery_livreur_id
+      } = colis;
       validateField(formPosition, 'delivery_phone_number', delivery_phone_number); // Validate field and update errors
       validateField(formPosition, 'delivery_address_name', delivery_address_name); // Validate field and update errors
       validateField(formPosition, 'fee_payment', fee_payment); // Validate field and update errors
+      validateField(formPosition, 'pickup_livreur_id', pickup_livreur_id); // Validate field and update errors
+      if (!parcelsUtils.findOngoingAssignment(latestColisObject)) {
+        console.log({ delivery_livreur_id });
+        validateField(formPosition, 'delivery_livreur_id', delivery_livreur_id); // Validate field and update errors
+      }
       // validateField(formPosition, 'fee', fee); // Validate field and update errors
 
       if (
@@ -295,18 +366,39 @@ const ColisListManager = ({ extraObject, closeModal }) => {
     }
 
     // Prepare the data for submission
-    const parcelsData = colisList.map((colis) => ({
+    const parcelsData = colisList?.map((colis) => ({
       ...colisGeneralInfo, // General information fields
       pickup_date: moment.utc(colisGeneralInfo?.pickup_date).format('YYYY-MM-DD'),
+      pickup_address_data: pickupAddressSearchBox?.getPlaces()?.length
+        ? {
+            lat: pickupAddressSearchBox?.getPlaces()[0]?.geometry?.location?.lat(),
+            lng: pickupAddressSearchBox?.getPlaces()[0]?.geometry?.location?.lng(),
+            placeId: pickupAddressSearchBox?.getPlaces()[0]?.place_id
+          }
+        : undefined,
       ...colis // Specific colis fields
     }));
 
     try {
       let response;
 
-      if (extraObject?.colis?.id) {
+      if (latestColisObject?.id) {
+        const assignments = parcelsUtils.processAssignments(latestColisObject?.assignments || []);
         // If an ID exists, update the existing parcel
-        const updatedParcelData = { ...parcelsData[0], id: extraObject.colis.id };
+        const updatedParcelData = {
+          ...parcelsData[0],
+          id: extraObject.colis.id,
+          // pickup_address_data: undefined,
+          delivery_address_data: parcelsData[0]?.delivery_address_data?.lat
+            ? parcelsData[0]?.delivery_address_data
+            : undefined
+        };
+        console.log({
+          parcelsData: parcelsData[0],
+          updatedParcelData,
+          extraObject,
+          assignments
+        });
         response = await dispatch(updateColis({ parcel: updatedParcelData }));
       } else {
         // Otherwise, create new parcels
@@ -324,7 +416,7 @@ const ColisListManager = ({ extraObject, closeModal }) => {
         dispatch(
           showNotification({
             message: `Successfully ${
-              extraObject?.colis?.id ? 'updated' : 'saved'
+              latestColisObject?.id ? 'updated' : 'saved'
             } parcel information`,
             status: 1
           })
@@ -389,28 +481,36 @@ const ColisListManager = ({ extraObject, closeModal }) => {
       }
     });
 
-  const inputPickupDateRef = useCallback((node) => {
-    if (node !== null) {
-      pickupDateRef.current = flatpickr(node, {
-        enableTime: true,
-        defaultDate: extraObject?.colis?.pickup_date
-          ? moment.utc(extraObject?.colis?.pickup_date).format('YYYY-MM-DD')
-          : moment.utc().format('YYYY-MM-DD'),
-        dateFormat: 'Y-m-d',
-        time_24hr: true,
-        onChange: (date) => {
-          handleGeneralInfoChange('pickup_date', date[0]);
-        }
-      });
-    }
-  }, []);
+  const inputPickupDateRef = useCallback(
+    (node) => {
+      if (node !== null) {
+        console.log({ parcelsUtils: parcelsUtils.findOngoingAssignment(latestColisObject)?.date });
+        pickupDateRef.current = flatpickr(node, {
+          enableTime: true,
+          defaultDate: parcelsUtils.findOngoingAssignment(latestColisObject)?.date
+            ? moment
+                .utc(parcelsUtils.findOngoingAssignment(latestColisObject)?.date)
+                .format('YYYY-MM-DD')
+            : moment.utc().format('YYYY-MM-DD'),
+          dateFormat: 'Y-m-d',
+          time_24hr: true,
+          onChange: (date) => {
+            handleGeneralInfoChange('pickup_date', date[0]);
+          }
+        });
+      }
+    },
+    [latestColisObject]
+  );
 
-  return (
+  // The content as a separate component
+  const content = (
     <div className="space-y-4">
       <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
         <h3 className="mb-3 text-lg font-semibold text-gray-700">Sender General Information</h3>
         <div className="mb-5">
-          <div className="grid md:grid-cols-4 gap-3">
+          <div
+            className={`grid gap-3 ${latestColisObject?.id ? 'md:grid-cols-4' : 'md:grid-cols-4'}`}>
             {/* Merchant Phone Number */}
             <div className={`form-control w-full`}>
               <label className="label">
@@ -438,15 +538,19 @@ const ColisListManager = ({ extraObject, closeModal }) => {
             {/* Pickup Address Name */}
             <div className={`form-control col-span-1 w-full`}>
               <label className="label">
-                <span className={'label-text text-base-content '}>Pickup Address Name</span>
+                <span className={'label-text text-base-content '}>Pickup Address</span>
               </label>
-              <input
-                type="text"
-                value={colisGeneralInfo.pickup_address_name}
-                className={getInputClass('pickup_address_name')}
-                onChange={(e) => handleGeneralInfoChange('pickup_address_name', e.target.value)}
-              />
+
+              <StandaloneSearchBox onPlacesChanged={onPickupPlacesChanged} onLoad={onPickupSBLoad}>
+                <input
+                  type="text"
+                  value={colisGeneralInfo.pickup_address_name}
+                  className={getInputClass('pickup_address_name')}
+                  onChange={(e) => handleGeneralInfoChange('pickup_address_name', e.target.value)}
+                />
+              </StandaloneSearchBox>
             </div>
+            {/*{!latestColisObject?.id && (*/}
             <div className={`form-control w-full`}>
               <label className="label">
                 <span className={'label-text text-base-content '}>Pickup Date</span>
@@ -457,51 +561,55 @@ const ColisListManager = ({ extraObject, closeModal }) => {
                 ref={inputPickupDateRef}
               />
             </div>
+            {/*)}*/}
           </div>
         </div>
       </div>
-      {colisList.map((colis, index) => (
-        <div key={index} className="relative ">
-          {!extraObject?.colis?.id ? (
-            <button
-              onClick={() => duplicateColis(index)}
-              className="absolute top-2 right-20 flex items-center font-semibold text-gray-600"
-              title="Remove">
-              <FaCopy className="text-lg" />
-              <span className="mx-2">Duplicate</span>
-            </button>
-          ) : (
-            <></>
-          )}
+      {colisList &&
+        colisList?.map((colis, index) => (
+          <div key={index} className="relative ">
+            {!latestColisObject?.id ? (
+              <button
+                onClick={() => duplicateColis(index)}
+                className="absolute top-2 right-20 flex items-center font-semibold text-gray-600"
+                title="Remove">
+                <FaCopy className="text-lg" />
+                <span className="mx-2">Duplicate</span>
+              </button>
+            ) : (
+              <></>
+            )}
 
-          {colisList?.length > 1 ? (
-            <button
-              onClick={() => removeColis(index)}
-              className="absolute top-2 right-2 text-red-500 hover:text-red-600"
-              title="Remove">
-              <IoClose size="1.5em" />
-            </button>
-          ) : (
-            <></>
-          )}
+            {colisList?.length > 1 ? (
+              <button
+                onClick={() => removeColis(index)}
+                className="absolute top-2 right-2 text-red-500 hover:text-red-600"
+                title="Remove">
+                <IoClose size="1.5em" />
+              </button>
+            ) : (
+              <></>
+            )}
 
-          <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
-            <h3 className="mb-3 text-lg font-semibold text-gray-700">Parcel Form #{index + 1}</h3>
-            <AddOrEditColis
-              index={index}
-              extraObject={colis}
-              onFieldChange={onValueChange}
-              errors={errorsList[index]}
-              livreursPromise={livreursPromiseOptions}
-              closeModal={() => {
-                /* logic to handle closing a colis */
-              }}
-            />
+            <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
+              <h3 className="mb-3 text-lg font-semibold text-gray-700">Parcel Form #{index + 1}</h3>
+              <AddOrEditColis
+                index={index}
+                extraObject={colis}
+                onFieldChange={onValueChange}
+                errors={errorsList[index]}
+                livreursPromise={livreursPromiseOptions}
+                closeModal={() => {
+                  /* logic to handle closing a colis */
+                }}
+                onDeliveryPlacesChanged={onDeliveryPlacesChanged}
+                onDeliverySBLoad={onDeliverySBLoad}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
-      {!extraObject?.colis?.id ? (
+      {!latestColisObject?.id ? (
         <div className="flex justify-end mt-4">
           <button
             className="p-2 rounded-full btn btn-ghost btn-outline btn-sm"
@@ -517,14 +625,70 @@ const ColisListManager = ({ extraObject, closeModal }) => {
       <div className="mt-6">
         <button
           className={`w-full py-2 btn ${
-            extraObject?.colis?.id ? 'btn-primary-content' : 'btn-secondary'
+            latestColisObject?.id ? 'btn-primary-content' : 'btn-secondary'
           } btn-outline`}
           onClick={handleSubmit}>
-          {extraObject?.colis?.id ? 'Edit Parcel' : 'Submit Parcel(s)'}
+          {latestColisObject?.id ? 'Edit Parcel' : 'Submit Parcel(s)'}
         </button>
       </div>
     </div>
   );
+
+  return (
+    <>
+      {
+        !isLoading && (
+          // (window.google === undefined ? (
+          <LoadScript
+            googleMapsApiKey="AIzaSyBn8n_poccjk4WVSg31H0rIkU-u7a2lYg8"
+            libraries={['places']}>
+            {content}
+          </LoadScript>
+        )
+        // ) : (
+        //   content
+        // ))
+      }
+    </>
+  );
 };
 
 export default ColisListManager;
+
+const init = (
+  setColisList,
+  fetchedColis,
+  activeAssignment,
+  // pickupAssignment,
+  // deliveryAssignment,
+  // returnAssignment,
+  setColisGeneralInfo
+) => {
+  setColisList([
+    {
+      delivery_phone_number: fetchedColis?.delivery_phone_number || '',
+      delivery_address_name: fetchedColis?.delivery_address?.description || '',
+      fee: parseInt(fetchedColis?.fee) || 0,
+      fee_payment: fetchedColis?.fee_payment || '',
+      price: parseInt(fetchedColis?.price) || 0,
+      photo: fetchedColis?.photo || '',
+      pickup_livreur_id: fetchedColis?.pickup_livreur?.id || '',
+      delivery_livreur_id: fetchedColis?.delivery_livreur?.id || '',
+      active_assignment: activeAssignment,
+      // pickup_livreur: pickupAssignment,
+      // delivery_livreur: deliveryAssignment,
+      // return_livreur: returnAssignment,
+      delivery_address_data: {}
+      // Other fields as needed
+    }
+  ]);
+
+  setColisGeneralInfo({
+    merchant_phone_number: fetchedColis?.client?.phone_number || '',
+    pickup_phone_number: fetchedColis?.pickup_phone_number || '',
+    pickup_address_name: fetchedColis?.pickup_address?.description || '',
+    pickup_date: fetchedColis?.pickup_date
+      ? moment(fetchedColis.pickup_date).format('YYYY-MM-DD')
+      : moment().format('YYYY-MM-DD')
+  });
+};

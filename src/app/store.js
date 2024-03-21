@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 
 import clientSlice from '../features/client/clientSlice';
 import codeManagementSlice from '../features/codeManagement/codeManagementSlice';
+import colisZonesSlide from '../features/colis/colisZones/colisZonesSlide';
 import controlPanelSlice from '../features/colis/controlPanel/controlPanelSlice';
 import parcelsManagementSlice from '../features/colis/parcelsManagementSlice';
 import codeManagementTableSlice from '../features/common/codeManagementTableSlice';
@@ -62,6 +63,7 @@ const combinedReducer = {
   code: codeManagementSlice,
   dynamicAssignment: dynamicAssignmentSlice,
   smsPorvider: smsPorviderSlide,
+  colisZones: colisZonesSlide,
   offers: offersSlice,
   subscriptions: subscriptionSlice,
   invitations: invitationSlice,

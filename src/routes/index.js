@@ -24,6 +24,7 @@ const ParcelsManagement = lazy(() => import('../pages/authenticated/ParcelsManag
 const ReturnParcelsManagement = lazy(() =>
   import('../pages/authenticated/ReturnParcelsManagement')
 );
+const ColisZones = lazy(() => import('../pages/authenticated/ColisZones'));
 
 const routes = [
   {
@@ -105,6 +106,10 @@ const routes = [
   {
     path: 'logistics-center/colis-fees',
     component: ReturnParcelsManagement
+  },
+  {
+    path: 'logistics-center/colis-zones',
+    component: ColisZones
   }
 ];
 
