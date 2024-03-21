@@ -80,108 +80,221 @@ export const ABSOLUTE_STATUS_ACTIONS = {
       'ASSIGNED_FOR_COLLECTION',
       'ASSIGNED_FOR_DELIVERY'
     ],
+    PICKUP: [
+      'ASSIGNED_FOR_COLLECTION',
+      // 'COLLECTION_IN_PROGRESS',
+      'COLLECTED',
+      'NOT_COLLECTED'
+    ],
+    DELIVERY: [
+      'ASSIGNED_FOR_DELIVERY',
+      // 'WAITING_FOR_DELIVERY',
+      // 'DELIVERY_IN_PROGRESS',
+      'DELIVERED',
+      'NOT_DELIVERED',
+      'POSTPONED',
+      'REFUSED',
+      'ARTICLE_TO_RETURN'
+    ],
+    RETURN: [
+      'ASSIGNED_FOR_RETURN',
+      // 'WAITING_FOR_RETURN',
+      // 'RETURN_IN_PROGRESS',
+      'RETURNED',
+      'NOT_RETURNED'
+    ],
     CAN_CANCEL: true,
-    CAN_DECLARE_LOST: true
+    CAN_DECLARE_LOST: true,
+    IS_LOST: true,
+    IS_DAMAGED: true,
+    IS_REFUNDED: true
   }
 };
 
+export const COLIS_ASSIGNMENTS_VS_ACTIONS = {
+  INIT: ['PENDING'],
+  PICKUP: [
+    'REGISTERED',
+    'ASSIGNED_FOR_COLLECTION',
+    // 'COLLECTION_IN_PROGRESS',
+    'COLLECTED',
+    'NOT_COLLECTED'
+    // 'WAREHOUSED'
+  ],
+  DELIVERY: [
+    // 'ASSIGNED_FOR_DELIVERY',
+    // 'WAITING_FOR_DELIVERY',
+    // 'DELIVERY_IN_PROGRESS',
+    'DELIVERED',
+    'NOT_DELIVERED',
+    // 'POSTPONED',
+    'REFUSED'
+  ],
+  RETURN: [
+    // 'ARTICLE_TO_RETURN',
+    // 'ASSIGNED_FOR_RETURN',
+    // 'WAITING_FOR_RETURN',
+    // 'RETURN_IN_PROGRESS',
+    'RETURNED',
+    'NOT_RETURNED'
+  ],
+  IS_CANCELED: true,
+  IS_LOST: true,
+  IS_DAMAGED: true,
+  IS_REFUNDED: true
+};
+
+export const ALL_STATUSES = {
+  PENDING: 'PENDING',
+  REGISTERED: 'REGISTERED',
+
+  ASSIGNED_FOR_COLLECTION: 'ASSIGNED_FOR_COLLECTION',
+  COLLECTION_IN_PROGRESS: 'COLLECTION_IN_PROGRESS', // Ce statut est défini pour chacun des colis que le livreur va récupérer chez un même marchand.
+  COLLECTED: 'COLLECTED',
+  NOT_COLLECTED: 'NOT_COLLECTED',
+  COLLECTION_POSTPONED: 'COLLECTION_POSTPONED',
+
+  WAREHOUSED: 'WAREHOUSED',
+  ASSIGNED_FOR_DELIVERY: 'ASSIGNED_FOR_DELIVERY',
+  WAITING_FOR_DELIVERY: 'WAITING_FOR_DELIVERY',
+  DELIVERY_IN_PROGRESS: 'DELIVERY_IN_PROGRESS',
+  DELIVERED: 'DELIVERED',
+  NOT_DELIVERED: 'NOT_DELIVERED', // Needs to go back to status WAREHOUSED so that the system can reassign it again
+  DELIVERY_POSTPONED: 'DELIVERY_POSTPONED',
+  // REFUSED n’est pas un statut mais une raison du statut NOT_DELIVERED (Non livré).
+  // Donc REFUSED est à retirer de la liste des statuts.
+  REFUSED: 'REFUSED',
+
+  ARTICLE_TO_RETURN: 'ARTICLE_TO_RETURN', // Ce statut n’est pas nécessaire. Le colis reste à REFUSED
+  ASSIGNED_FOR_RETURN: 'ASSIGNED_FOR_RETURN',
+  WAITING_FOR_RETURN: 'WAITING_FOR_RETURN',
+  RETURN_IN_PROGRESS: 'RETURN_IN_PROGRESS',
+  RETURNED: 'RETURNED',
+  NOT_RETURNED: 'NOT_RETURNED', // The system can reassign it again
+  RETURN_POSTPONED: 'RETURN_POSTPONED', // The system can reassign it again
+
+  CANCELED: 'CANCELED',
+  LOST: 'LOST', // The amount of the package must be REFUNDED
+  DAMAGED: 'DAMAGED' // The amount of the package must be REFUNDED
+};
+
 export const STATUS_ACTIONS = {
-  PENDING: {
-    FRONT: ['REGISTERED'],
-    BACK: [],
-    CAN_CANCEL: true
+  [ALL_STATUSES.PENDING]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.REGISTERED, isActive: false },
+      { action: ALL_STATUSES.CANCELED, isActive: true }
+    ]
   },
-  REGISTERED: {
-    FRONT: ['ASSIGNED_FOR_COLLECTION'],
-    BACK: ['PENDING'],
-    CAN_CANCEL: true
+  [ALL_STATUSES.REGISTERED]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.ASSIGNED_FOR_COLLECTION, isActive: false },
+      { action: ALL_STATUSES.CANCELED, isActive: true }
+    ]
   },
-  ASSIGNED_FOR_COLLECTION: {
-    FRONT: ['COLLECTION_IN_PROGRESS'],
-    BACK: ['REGISTERED'],
-    CAN_CANCEL: true
+  [ALL_STATUSES.ASSIGNED_FOR_COLLECTION]: {
+    ACTIONS: [{ action: ALL_STATUSES.COLLECTION_IN_PROGRESS, isActive: true }]
   },
-  COLLECTION_IN_PROGRESS: {
-    FRONT: ['COLLECTED', 'NOT_COLLECTED'],
-    BACK: ['ASSIGNED_FOR_COLLECTION'],
-    CAN_CANCEL: true
+  [ALL_STATUSES.COLLECTION_IN_PROGRESS]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.COLLECTED, isActive: true },
+      { action: ALL_STATUSES.NOT_COLLECTED, isActive: true }
+    ]
   },
-  COLLECTED: {
-    FRONT: ['WAREHOUSED', 'ARTICLE_TO_RETURN'],
-    BACK: ['COLLECTION_IN_PROGRESS'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.COLLECTED]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.COLLECTION_IN_PROGRESS, isActive: true },
+      { action: ALL_STATUSES.WAREHOUSED, isActive: true }
+    ]
   },
-  NOT_COLLECTED: {
-    FRONT: ['COLLECTED', 'PENDING'],
-    BACK: ['COLLECTION_IN_PROGRESS'],
-    CAN_CANCEL: true
+  [ALL_STATUSES.NOT_COLLECTED]: {
+    ACTIONS: [
+      // Assuming NOT_COLLECTED leads to CANCELED or COLLECTION_POSTPONED as per your description
+      // { action: ALL_STATUSES.CANCELED, isActive: true },
+      // { action: ALL_STATUSES.COLLECTION_POSTPONED, isActive: true }
+    ]
   },
-  WAREHOUSED: {
-    FRONT: ['ASSIGNED_FOR_DELIVERY', 'ARTICLE_TO_RETURN'],
-    BACK: ['COLLECTED'],
-    CAN_DECLARE_LOST: true
+  // [ALL_STATUSES.COLLECTION_POSTPONED]: {
+  //   ACTIONS: [
+  //     // Assuming the postponed collection can be reassigned for collection
+  //     { action: ALL_STATUSES.ASSIGNED_FOR_COLLECTION, isActive: true },
+  //   ],
+  // },
+  [ALL_STATUSES.WAREHOUSED]: {
+    ACTIONS: [{ action: ALL_STATUSES.ASSIGNED_FOR_DELIVERY, isActive: false }]
   },
-  ASSIGNED_FOR_DELIVERY: {
-    FRONT: ['WAITING_FOR_DELIVERY', 'ARTICLE_TO_RETURN'],
-    BACK: ['WAREHOUSED'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.ASSIGNED_FOR_DELIVERY]: {
+    ACTIONS: [{ action: ALL_STATUSES.WAITING_FOR_DELIVERY, isActive: true }]
   },
-  WAITING_FOR_DELIVERY: {
-    FRONT: ['DELIVERY_IN_PROGRESS', 'ARTICLE_TO_RETURN'],
-    BACK: ['ASSIGNED_FOR_DELIVERY'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.WAITING_FOR_DELIVERY]: {
+    ACTIONS: [{ action: ALL_STATUSES.DELIVERY_IN_PROGRESS, isActive: true }]
   },
-  DELIVERY_IN_PROGRESS: {
-    FRONT: ['DELIVERED', 'NOT_DELIVERED', 'ARTICLE_TO_RETURN'],
-    BACK: ['WAITING_FOR_DELIVERY'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.DELIVERY_IN_PROGRESS]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.DELIVERED, isActive: true },
+      { action: ALL_STATUSES.NOT_DELIVERED, isActive: true }
+    ]
   },
-  DELIVERED: {
-    FRONT: [],
-    BACK: ['DELIVERY_IN_PROGRESS']
+  [ALL_STATUSES.NOT_DELIVERED]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.WAREHOUSED, isActive: false }
+      // { action: ALL_STATUSES.DELIVERY_POSTPONED, isActive: false }
+    ]
   },
-  NOT_DELIVERED: {
-    FRONT: ['ARTICLE_TO_RETURN', 'DELIVERED'],
-    BACK: ['WAREHOUSED', 'DELIVERY_IN_PROGRESS'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.DELIVERED]: {
+    ACTIONS: [
+      // No actions are available after successful delivery
+    ]
   },
-  ARTICLE_TO_RETURN: {
-    FRONT: ['ASSIGNED_FOR_RETURN'],
-    BACK: ['PENDING', 'WAREHOUSED'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.NOT_DELIVERED]: {
+    ACTIONS: [{ action: ALL_STATUSES.WAREHOUSED, isActive: false }]
   },
-  ASSIGNED_FOR_RETURN: {
-    FRONT: ['RETURN_IN_PROGRESS'],
-    BACK: ['ARTICLE_TO_RETURN'],
-    CAN_DECLARE_LOST: true
+  // [ALL_STATUSES.REFUSED]: {
+  //   ACTIONS: [{ action: ALL_STATUSES.WAREHOUSED, isActive: false }]
+  // }
+  [ALL_STATUSES.ASSIGNED_FOR_RETURN]: {
+    ACTIONS: [{ action: ALL_STATUSES.WAITING_FOR_RETURN, isActive: false }]
   },
-  RETURN_IN_PROGRESS: {
-    FRONT: ['RETURNED', 'NOT_RETURNED'],
-    BACK: ['ASSIGNED_FOR_RETURN'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.ARTICLE_TO_RETURN]: {
+    ACTIONS: [{ action: ALL_STATUSES.WAITING_FOR_RETURN, isActive: false }]
   },
-  RETURNED: {
-    FRONT: [],
-    BACK: ['RETURN_IN_PROGRESS']
+  [ALL_STATUSES.WAITING_FOR_RETURN]: {
+    ACTIONS: [{ action: ALL_STATUSES.RETURN_IN_PROGRESS, isActive: true }]
   },
-  NOT_RETURNED: {
-    FRONT: ['RETURNED'],
-    BACK: ['WAREHOUSED', 'RETURN_IN_PROGRESS', 'ARTICLE_TO_RETURN'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.RETURN_IN_PROGRESS]: {
+    ACTIONS: [
+      { action: ALL_STATUSES.RETURNED, isActive: true },
+      { action: ALL_STATUSES.NOT_RETURNED, isActive: true }
+    ]
   },
-  REFUSED: {
-    FRONT: [],
-    BACK: ['WAREHOUSED', 'ARTICLE_TO_RETURN'],
-    CAN_DECLARE_LOST: true
+  [ALL_STATUSES.RETURNED]: {
+    ACTIONS: [
+      // No actions are available after successful delivery
+    ]
   },
-  CANCELED: {
-    FRONT: [],
-    BACK: ['PENDING']
+  [ALL_STATUSES.NOT_RETURNED]: {
+    ACTIONS: [{ action: ALL_STATUSES.WAREHOUSED, isActive: false }]
   },
-  LOST: {
-    FRONT: [],
-    BACK: ['PENDING']
+  [ALL_STATUSES.LOST]: {
+    ACTIONS: [
+      // No actions are available after successful delivery
+    ]
+  },
+  [ALL_STATUSES.LOST]: {
+    ACTIONS: [
+      // No actions are available after successful delivery
+    ]
+  },
+  [ALL_STATUSES.CANCELED]: {
+    ACTIONS: [
+      // No actions are available after successful delivery
+    ]
   }
+  // [ALL_STATUSES.DELIVERY_POSTPONED]: {
+  //   ACTIONS: [
+  //     // The postponed delivery can be reassigned for delivery
+  //     { action: ALL_STATUSES.ASSIGNED_FOR_DELIVERY, isActive: true }
+  //   ]
+  // },
 };
 
 export const countStatuses = (parcels) => {

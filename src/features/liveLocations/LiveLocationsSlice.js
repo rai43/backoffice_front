@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
 import { getDatabase, ref, child, get } from 'firebase/database';
+import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
 
 export const getLiveLocations = createAsyncThunk(
   '/liveLocations/get-live-locations',
@@ -77,7 +77,7 @@ export const liveLocationsSlice = createSlice({
     },
     [getLiveLocations.fulfilled]: (state, action) => {
       console.log(action);
-      const newLocations = Object.values(action?.payload).filter((loc) => {
+      const newLocations = Object.values(action?.payload)?.filter((loc) => {
         if (loc?.latitude && loc?.longitude) {
           return loc;
         }

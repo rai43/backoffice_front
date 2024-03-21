@@ -22,9 +22,8 @@ const ChangeStatusAbsolute = ({ extraObject, closeModal }) => {
   const [livreur, setLivreur] = useState('');
   const [statusActions, setStatusActions] = useState(
     STATUS_ACTIONS[
-      extraObject?.colis?.colis_statuses[
-        extraObject?.colis?.colis_statuses?.length - 1
-      ]?.colis_status?.code?.toUpperCase()
+      extraObject?.colis?.colis_statuses[0]?.colis_status?.code?.toUpperCase()
+      // extraObject?.colis?.colis_statuses?.length - 1
     ]
   );
 
@@ -59,7 +58,6 @@ const ChangeStatusAbsolute = ({ extraObject, closeModal }) => {
       }
     });
 
-  console.log('statusActions', statusActions);
 
   return (
     <div>
@@ -67,9 +65,8 @@ const ChangeStatusAbsolute = ({ extraObject, closeModal }) => {
         <div className={'divider'}>Current Status</div>
 
         <span className={'p-2 shadow shadow-primary rounded'}>
-          {extraObject?.colis?.colis_statuses[
-            extraObject?.colis?.colis_statuses?.length - 1
-          ]?.colis_status?.code
+          {extraObject?.colis?.colis_statuses[0]?.colis_status?.code
+            // extraObject?.colis?.colis_statuses?.length - 1
             ?.toUpperCase()
             ?.replaceAll('_', ' ')}
         </span>

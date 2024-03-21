@@ -59,3 +59,20 @@
   /* Add any additional styles you want on focus, e.g., a different border or shadow */
   border: none; /* Example: setting a custom border color */
 }
+
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  @page {
+    margin: 1.4cm 1cm;
+  }
+  .grid {
+    grid-template-columns: repeat(10, 2.5cm);
+    gap: 0;
+  }
+  .btn {
+    display: none;
+  }
+}

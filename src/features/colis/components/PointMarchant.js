@@ -215,8 +215,9 @@ const PointMarchantContent = ({ merchantPhoneNumber, data, from, to, onCopy }) =
               <tbody>
                 {data?.colisList?.map((colis) => {
                   const status = colis?.colis_statuses?.length
-                    ? colis?.colis_statuses[colis?.colis_statuses?.length - 1]?.colis_status?.code
-                    : 'N/A';
+                    ? colis?.colis_statuses[0]?.colis_status?.code
+                    : // colis?.colis_statuses?.length - 1
+                      'N/A';
                   const statusColor = getStatusColor(status);
 
                   return (

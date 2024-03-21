@@ -11,10 +11,9 @@ const MerchantPayment = ({ extraObject, closeModal }) => {
   const dispatch = useDispatch();
 
   const colisStatus = extraObject?.colis?.colis_statuses?.length
-    ? extraObject?.colis?.colis_statuses[
-        extraObject?.colis?.colis_statuses?.length - 1
-      ]?.colis_status?.code?.toUpperCase()
-    : '';
+    ? extraObject?.colis?.colis_statuses[0]?.colis_status?.code?.toUpperCase()
+    : // extraObject?.colis?.colis_statuses?.length - 1
+      '';
 
   const [paymentAmount, setPaymentAmount] = useState(
     extraObject?.colis?.fee_payment === 'PREPAID' && colisStatus !== 'LOST'

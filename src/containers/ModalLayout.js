@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React from 'react';
 
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -6,15 +6,18 @@ import AddOrModifyClients from '../features/client/components/AddOrModifyClients
 import ClientDetailView from '../features/client/components/ClientDetailView';
 import ConfirmationModalForClientCreation from '../features/client/components/ConfirmationModalForClientCreation';
 import AddOrEditCode from '../features/codeManagement/components/AddOrEditCode';
+import ChangeZoneLivreur from '../features/colis/colisZones/components/ChangeZoneLivreur';
 import AddOrEditColis from '../features/colis/components/AddOrEditColis';
 import ChangeStatus from '../features/colis/components/ChangeStatus';
 import ColisListManager from '../features/colis/components/ColisListManager';
+import ColisQrCode from '../features/colis/components/ColisQRCode';
 import DetailsColis from '../features/colis/components/DetailsColis';
 import DownloadColisData from '../features/colis/components/DownloadColisData';
 import MerchantPayment from '../features/colis/components/MerchantPayment';
 import MerchantPaymentBulk from '../features/colis/components/MerchantPaymentBulk';
 import PointLivreur from '../features/colis/components/PointLivreur';
 import PointMarchant from '../features/colis/components/PointMarchant';
+import QrCodePanel from '../features/colis/components/QrCodePanel';
 import ConfirmationModalBody from '../features/common/components/ConfirmationModalBody';
 import { closeModal } from '../features/common/modalSlice';
 import AddOrEditDiscount from '../features/discountManagement/components/AddOrEditDiscount';
@@ -76,6 +79,9 @@ function ModalLayout() {
               ),
               [MODAL_BODY_TYPES.CHANGE_PROVIDER]: (
                 <ChangeProvider extraObject={extraObject} closeModal={close} />
+              ),
+              [MODAL_BODY_TYPES.CHANGE_ZONE_LIVREUR]: (
+                <ChangeZoneLivreur extraObject={extraObject} closeModal={close} />
               ),
               [MODAL_BODY_TYPES.MERCHANT_DETAILS]: (
                 <MerchantsDetailView extraObject={extraObject} closeModal={close} />
@@ -139,6 +145,12 @@ function ModalLayout() {
               ),
               [MODAL_BODY_TYPES.DOWNLOAD_COLIS_DATA]: (
                 <DownloadColisData extraObject={extraObject} closeModal={close} />
+              ),
+              [MODAL_BODY_TYPES.GENERATE_COLIS_QR_CODES]: (
+                <ColisQrCode extraObject={extraObject} closeModal={close} />
+              ),
+              [MODAL_BODY_TYPES.COLIS_QR_CODE_PANEL]: (
+                <QrCodePanel extraObject={extraObject} closeModal={close} />
               ),
               // [MODAL_BODY_TYPES.COLIS_ADD_OR_EDIT]: (
               //   <AddOrEditColis extraObject={extraObject} closeModal={close} />

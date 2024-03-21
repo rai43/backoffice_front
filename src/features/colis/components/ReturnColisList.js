@@ -17,6 +17,7 @@ import {
   setFilters,
   setPaginationCurrentPage
 } from '../../common/returnParcelsManagementTableSlice';
+import parcelsUtils from '../parcels.utils';
 
 const containFilterParams = {
   filterOptions: ['contains', 'notContains'],
@@ -95,24 +96,20 @@ const ReturnColisList = ({ gridOptions }) => {
       field: 'pickup_longitude',
       valueGetter: ({ data }) => {
         return data?.colis_statuses?.length
-          ? data?.colis_statuses[
-              data?.colis_statuses?.length - 1
-            ]?.colis_status?.code?.toUpperCase()
+          ? data?.colis_statuses[0]?.colis_status?.code?.toUpperCase()
           : 'N/A';
       },
       headerName: 'Status',
-      width: 80,
-      // filter: containFilterParams,
+      width: 100,
       pinned: 'left',
-      onCellClicked: (params) =>
-        onStatusChangeClicked({
+      onCellClicked: (params) => {
+        return onStatusChangeClicked({
           data: params.data,
           value: params?.data?.colis_statuses?.length
-            ? params?.data?.colis_statuses[
-                params?.data?.colis_statuses?.length - 1
-              ]?.colis_status?.code?.toUpperCase()
+            ? params?.data?.colis_statuses[0]?.colis_status?.code?.toUpperCase()
             : 'N/A'
-        }),
+        });
+      },
       cellRenderer: ({ value }) => {
         return (
           <div className="flex items-center justify-center ">
@@ -133,10 +130,9 @@ const ReturnColisList = ({ gridOptions }) => {
       field: 'pickup_longitude',
       valueGetter: ({ data }) => {
         return data?.colis_statuses?.length
-          ? data?.colis_statuses[
-              data?.colis_statuses?.length - 1
-            ]?.colis_status?.code?.toUpperCase()
-          : 'N/A';
+          ? data?.colis_statuses[0]?.colis_status?.code?.toUpperCase()
+          : // data?.colis_statuses?.length - 1
+            'N/A';
       },
       headerName: 'Edit',
       width: 80,
@@ -159,57 +155,76 @@ const ReturnColisList = ({ gridOptions }) => {
     {
       field: 'delivery_longitude',
       valueGetter: ({ data }) => {
-        return data?.colis_statuses?.length
-          ? data?.colis_statuses[data?.colis_statuses?.length - 1]?.colis_status?.code
-              ?.toUpperCase()
+        const assignment = parcelsUtils.findOngoingAssignment(data);
+        let status = assignment?.colis_status;
+
+        if (
+          !assignment &&
+          (data?.status?.colis_status?.code === 'PENDING' ||
+            data?.status?.colis_status?.code === 'WAREHOUSED')
+        ) {
+          status = data.status;
+        }
+        return status
+          ? status?.colis_status?.code?.toUpperCase()?.replaceAll('_', ' ')
+          : data?.colis_assignment?.length
+          ? data?.colis_assignment
+              ?.slice()
+              .sort((a, b) => b.id - a.id)[0]
+              ?.colis_status?.colis_status?.code?.toUpperCase()
               ?.replaceAll('_', ' ')
           : 'N/A';
       },
       headerName: 'Current Status',
-      width: 140,
+      width: 230,
       onCellClicked: (params) => onColumnClicked(params.data),
       cellRenderer: ({ value }) => {
-        let textColor = 'text-primary'; // Default background color
+        let textColor = 'text-gray-500'; // Default color
 
-        switch (value) {
-          case 'DELIVERED':
-            textColor = 'teal-500'; // Teal for a pleasant, successful delivery
-            break;
-          case 'NOT DELIVERED':
-            textColor = 'amber-600'; // Amber for attention, slightly different from orange
-            break;
-          case 'NOT COLLECTED':
-            textColor = 'orange-700'; // Dark orange for a standout warning
-            break;
-          case 'CANCELED':
-            textColor = 'red-600'; // Crimson red for a clear negative outcome
-            break;
-          case 'RETURNED':
-            textColor = 'lime-600'; // Lime for an energetic, alerting return
-            break;
-          case 'REFUSED':
-            textColor = 'rose-600'; // Rose for a softer yet distinct negative response
-            break;
-          case 'ARTICLE TO RETURN':
-            textColor = 'cyan-600'; // Cyan for a cool, noticeable action needed
-            break;
-          case 'LOST':
-            textColor = 'purple-700'; // Deep purple for a serious, unusual event like loss
-            break;
-          case 'PENDING':
-            textColor = 'blue-500'; // Bright blue for a clear in-progress status
-            break;
-          case 'REGISTERED':
-            textColor = 'indigo-400'; // Indigo for a calm, neutral starting phase
-            break;
-          default:
-            textColor = 'gray-500'; // Gray for an unobtrusive default
-            break;
-        }
+        const statusColorMap = {
+          // Collection Process
+          PENDING: 'text-blue-500',
+          REGISTERED: 'text-indigo-400',
+          ASSIGNED_FOR_COLLECTION: 'text-blue-300',
+          COLLECTION_IN_PROGRESS: 'text-indigo-300',
+
+          // Collection Outcomes
+          COLLECTED: 'text-green-500',
+          NOT_COLLECTED: 'text-orange-700',
+
+          // Warehouse and Delivery Assignment
+          WAREHOUSED: 'text-gray-500',
+          ASSIGNED_FOR_DELIVERY: 'text-yellow-500',
+          WAITING_FOR_DELIVERY: 'text-yellow-400',
+          DELIVERY_IN_PROGRESS: 'text-amber-500',
+
+          // Delivery Outcomes
+          DELIVERED: 'text-green-600',
+          NOT_DELIVERED: 'text-red-600',
+          POSTPONED: 'text-lime-600',
+          REFUSED: 'text-rose-600',
+
+          // Return Process
+          ARTICLE_TO_RETURN: 'text-cyan-600',
+          ASSIGNED_FOR_RETURN: 'text-cyan-500',
+          WAITING_FOR_RETURN: 'text-cyan-400',
+          RETURN_IN_PROGRESS: 'text-cyan-300',
+          RETURNED: 'text-cyan-200',
+          NOT_RETURNED: 'text-cyan-700',
+
+          // Special Cases
+          CANCELED: 'text-pink-600',
+          LOST: 'text-purple-700',
+          REFUNDED: 'text-purple-500',
+          DAMAGED: 'text-red-700'
+        };
+
+        // Assigning text color based on value
+        textColor = statusColorMap[value?.toUpperCase().replaceAll(' ', '_')] || textColor;
 
         return (
           <span
-            className={`px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm shadow-gray-600 text-${textColor} mt-3`}>
+            className={`px-3 py-1 uppercase leading-wide font-bold text-xs rounded-full shadow-sm shadow-gray-600 ${textColor} mt-3`}>
             {value}
           </span>
         );
@@ -229,12 +244,17 @@ const ReturnColisList = ({ gridOptions }) => {
     },
     {
       field: 'pickup_address_name',
+      valueGetter: ({ data }) => {
+        return data?.pickup_address
+          ? data?.pickup_address?.description
+          : data?.pickup_address_name || '';
+      },
       headerName: 'From',
-      width: 160,
+      width: 220,
       filterParams: containFilterParams,
       onCellClicked: (params) => onColumnClicked(params.data),
       cellRenderer: ({ value }) => {
-        return <p className="uppercase break-all overflow-hidden">{value}</p>;
+        return <p className="uppercase break-all overflow-hidden">{value?.toUpperCase()}</p>;
       }
     },
     {
@@ -249,12 +269,17 @@ const ReturnColisList = ({ gridOptions }) => {
     },
     {
       field: 'delivery_address_name',
+      valueGetter: ({ data }) => {
+        return data?.delivery_address
+          ? data?.delivery_address?.description
+          : data?.delivery_address_name || '';
+      },
       headerName: 'To',
-      width: 160,
+      width: 220,
       filterParams: containFilterParams,
       onCellClicked: (params) => onColumnClicked(params.data),
       cellRenderer: ({ value }) => {
-        return <p className="uppercase break-all overflow-hidden">{value}</p>;
+        return <p className="uppercase break-all overflow-hidden">{value?.toUpperCase()}</p>;
       }
     },
     {
@@ -318,111 +343,64 @@ const ReturnColisList = ({ gridOptions }) => {
       }
     },
     {
-      field: 'pickup_date',
-      headerName: 'Pickup Date',
-      width: 130,
-      filter: 'agDateColumnFilter',
-      // pinned: "right",
-      onCellClicked: (params) => onColumnClicked(params.data),
-      cellRenderer: ({ value }) => {
-        let formattedValue = value ? value : 'N/A';
-
-        if (formattedValue !== 'N/A') {
-          formattedValue = moment.utc(value).format('DD/MM/YYYY');
-        }
-
-        return (
-          <p>
-            <span className=" text-sm mr-2">{value ? formattedValue : ''}</span>
-          </p>
-        );
-      }
-    },
-    {
       field: 'pickup_latitude',
-      valueGetter: ({ data }) => {
-        return data?.pickup_livreur?.first_name
-          ? data?.pickup_livreur?.client?.phone_number +
-              (data?.pickup_livreur?.first_name + ' ' + data?.pickup_livreur?.last_name)
-          : '';
-      },
-      headerName: 'Pickup Livreur',
-      width: 150,
+      headerName: 'Operation Livreur',
+      width: 170,
       filterParams: containFilterParams,
+      valueGetter: ({ data: colis }) => {
+        const assignmentsData = parcelsUtils.findOngoingAssignment(colis);
+        return assignmentsData ? assignmentsData : 'N/A';
+      },
       onCellClicked: (params) => onColumnClicked(params.data),
-      cellRenderer: ({ data }) => {
-        const PHONE_NUMBER = data?.pickup_livreur?.first_name
-          ? data?.pickup_livreur?.client?.phone_number
+      cellRenderer: ({ value: assignment }) => {
+        const phoneNumber = assignment?.livreur?.first_name
+          ? assignment?.livreur?.client?.phone_number
           : '';
-        const last_name = data?.pickup_livreur?.first_name;
-        const first_name = data?.pickup_livreur?.last_name;
+        const lastName = assignment?.livreur?.first_name;
+        const firstName = assignment?.livreur?.last_name;
         return (
-          <div className="flex items-center cursor-pointer">
-            <div className="ml-4 text-sm">
-              <div className="font-medium text-gray-900">{PHONE_NUMBER}</div>
-              <div className={`text-gray-500`}>
-                {data?.pickup_livreur?.first_name
-                  ? first_name?.toUpperCase() + ' ' + last_name?.toUpperCase()
-                  : ''}
-              </div>
+          <div className="grid row-span-2 text-sm">
+            <div className="font-medium text-gray-900 flex items-center justify-center">
+              {phoneNumber}
+            </div>
+            <div className="text-gray-500 flex items-center justify-center">
+              {firstName ? firstName?.toUpperCase() + ' ' + lastName?.toUpperCase() : 'N/A'}
             </div>
           </div>
         );
       }
     },
     {
-      field: 'delivery_date',
-      headerName: 'Delivery Date',
-      width: 130,
+      field: 'pickup_date',
+      headerName: 'Operation Date',
+      valueGetter: ({ data: colis }) => {
+        // const assignmentsData = parcelsUtils.processAssignments(colis?.assignments || []);
+        const assignmentsData = parcelsUtils.findOngoingAssignment(colis);
+        return assignmentsData ? assignmentsData : 'N/A';
+      },
+      width: 160,
       filter: 'agDateColumnFilter',
-      // pinned: "right",
       onCellClicked: (params) => onColumnClicked(params.data),
-      cellRenderer: ({ value }) => {
-        let formattedValue = value ? value : 'N/A';
-
-        if (formattedValue !== 'N/A') {
-          formattedValue = moment.utc(value).format('DD/MM/YYYY');
-        }
+      cellRenderer: ({ value: assignment }) => {
+        const formattedValue = moment.utc(assignment?.created_at);
 
         return (
-          <div className="grid row-span-2 text-xs">
-            <p>
-              <span className=" text-sm mr-2">{value ? formattedValue : ''}</span>
-            </p>
-            <span className=" text-sm">{value ? moment.utc(value).format('HH:mm') : ''}</span>
-          </div>
-        );
-      }
-    },
-    {
-      field: 'delivery_latitude',
-      valueGetter: ({ data }) => {
-        return data?.delivery_livreur?.first_name
-          ? data?.delivery_livreur?.client?.phone_number +
-              (data?.delivery_livreur?.first_name + ' ' + data?.delivery_livreur?.last_name)
-          : '';
-      },
-      headerName: 'Delivery livreur',
-      width: 150,
-      filterParams: containFilterParams,
-      onCellClicked: (params) => onColumnClicked(params.data),
-      cellRenderer: ({ data }) => {
-        const PHONE_NUMBER = data?.delivery_livreur?.first_name
-          ? data?.delivery_livreur?.client?.phone_number
-          : '';
-        const last_name = data?.delivery_livreur?.first_name;
-        const first_name = data?.delivery_livreur?.last_name;
-        return (
-          <div className="flex items-center cursor-pointer">
-            <div className="ml-4 text-sm">
-              <div className="font-medium text-gray-900">{PHONE_NUMBER}</div>
-              <div className={`text-gray-500`}>
-                {data?.delivery_livreur?.first_name
-                  ? first_name?.toUpperCase() + ' ' + last_name?.toUpperCase()
-                  : ''}
+          <>
+            {formattedValue ? (
+              <div className="grid row-span-2 text-xs">
+                <p>
+                  <span className="text-sm flex items-center justify-center">
+                    {formattedValue?.format('DD-MM-YYYY')}
+                  </span>
+                </p>
+                <span className="text-sm flex items-center justify-center">
+                  {formattedValue?.format('HH:mm')}
+                </span>
               </div>
-            </div>
-          </div>
+            ) : (
+              <div className="flex items-center justify-center">N/A</div>
+            )}
+          </>
         );
       }
     },
@@ -443,9 +421,11 @@ const ReturnColisList = ({ gridOptions }) => {
         return (
           <div className="grid row-span-2 text-xs">
             <p>
-              <span className=" text-sm mr-2">{formattedValue}</span>
+              <span className="text-sm flex items-center justify-center">{formattedValue}</span>
             </p>
-            <span className=" text-sm">{moment.utc(value).format('HH:mm')}</span>
+            <span className="text-sm flex items-center justify-center">
+              {moment.utc(value).format('HH:mm')}
+            </span>
           </div>
         );
       }

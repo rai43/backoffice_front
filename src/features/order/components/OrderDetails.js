@@ -165,7 +165,11 @@ const OrderDetails = ({ extraObject, closeModal }) => {
           </div>
           <div className="mt-4">
             <p className="text-gray-600">Details:</p>
-            <p className="font-semibold">{extraObject?.address?.detail}</p>
+            <p className="font-semibold">
+              {`${extraObject?.address?.detail} ${
+                extraObject?.address?.description ? ' - ' + extraObject?.address?.description : ''
+              }`}
+            </p>
           </div>
         </div>
       </div>
