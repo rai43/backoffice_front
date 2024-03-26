@@ -1,17 +1,18 @@
 import React, { useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AgGridReact } from 'ag-grid-react';
 
-import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
-import { openModal } from '../../common/modalSlice';
+import { AgGridReact } from 'ag-grid-react';
 import moment from 'moment';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { classNames } from '../../../components/Common/UtilsClassNames';
 import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
+import { AG_GRID_DEFAULT_COL_DEF, MODAL_BODY_TYPES } from '../../../utils/globalConstantUtil';
 import {
   setFilters,
   setPaginationCurrentPage,
   setPaginationSize
 } from '../../common/livreursTableSlice';
+import { openModal } from '../../common/modalSlice';
 
 const containFilterParams = {
   filterOptions: ['contains', 'notContains'],
@@ -102,8 +103,7 @@ const Livreurs = ({ onLoadLivreurs }) => {
                   'px-3 py-1 uppercase leading-wide font-bold text-md',
                   personalWallet?.balance >= 0 ? ' text-blue-700' : null,
                   !personalWallet ? 'text-red-700' : null
-                )}
-              >
+                )}>
                 {value}
               </p>
             </div>
@@ -131,8 +131,7 @@ const Livreurs = ({ onLoadLivreurs }) => {
                   'px-3 py-1 uppercase leading-wide font-bold text-md',
                   personalWallet?.bonus >= 0 ? ' text-blue-700' : null,
                   !personalWallet ? 'text-red-700' : null
-                )}
-              >
+                )}>
                 {value}
               </p>
             </div>
@@ -165,20 +164,20 @@ const Livreurs = ({ onLoadLivreurs }) => {
         <>
           <div className="flex justify-between mb-4 mt-2 gap-5">
             <div className={``}>
-              <button
-                className={`btn btn-primary btn-outline w-full btn-sm`}
-                onClick={() => {
-                  dispatch(
-                    openModal({
-                      title: 'Add a new livreur',
-                      bodyType: MODAL_BODY_TYPES.LIVREUR_ADD_OR_EDIT,
-                      size: 'lg'
-                    })
-                  );
-                }}
-              >
-                Add New Livreur
-              </button>
+              {/*<button*/}
+              {/*  className={`btn btn-primary btn-outline w-full btn-sm`}*/}
+              {/*  onClick={() => {*/}
+              {/*    dispatch(*/}
+              {/*      openModal({*/}
+              {/*        title: 'Add a new livreur',*/}
+              {/*        bodyType: MODAL_BODY_TYPES.LIVREUR_ADD_OR_EDIT,*/}
+              {/*        size: 'lg'*/}
+              {/*      })*/}
+              {/*    );*/}
+              {/*  }}*/}
+              {/*>*/}
+              {/*  Add New Livreur*/}
+              {/*</button>*/}
             </div>
 
             <div className="font-semibold">
@@ -190,8 +189,7 @@ const Livreurs = ({ onLoadLivreurs }) => {
                   gridOptions.api.paginationSetPageSize(newSize);
                   dispatch(setPaginationSize({ paginationSize: newSize || 20 }));
                 }}
-                defaultValue={paginationSize}
-              >
+                defaultValue={paginationSize}>
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>

@@ -8,11 +8,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import Datepicker from 'react-tailwindcss-datepicker';
 
 import { BiHide, BiShow } from 'react-icons/bi';
-import { CiShoppingTag } from 'react-icons/ci';
+import { CiSearch, CiShoppingTag } from 'react-icons/ci';
 import { FaAmazonPay } from 'react-icons/fa';
 import { IoCreateOutline } from 'react-icons/io5';
 import { MdOutlineDeliveryDining } from 'react-icons/md';
 import { PiQrCodeThin } from 'react-icons/pi';
+import { TbError404 } from 'react-icons/tb';
 
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon';
 import ArrowPathIcon from '@heroicons/react/24/outline/ArrowPathIcon';
@@ -21,8 +22,10 @@ import EllipsisVerticalIcon from '@heroicons/react/24/outline/EllipsisVerticalIc
 import ColisList from './components/ColisList';
 import { getColis, resetForm } from './parcelsManagementSlice';
 import InfoText from '../../components/Typography/InfoText';
+import NotFoundPage from '../../pages/authenticated/404';
 import { STATUS_ICON_NAMES } from '../../utils/colisUtils';
-import { MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
+import groupColisByDeliveryLivreurPhone from '../../utils/functions/groupColisByDeliveryLivreurPhone';
+import { MODAL_BODY_TYPES, TABS_ENUMERATION_IN_COLIS } from '../../utils/globalConstantUtil';
 import { openModal } from '../common/modalSlice';
 import {
   resetTableParcelsManagementSettings,
@@ -43,6 +46,8 @@ const gridOptions = {
 const ParcelsManagement = () => {
   const dispatch = useDispatch();
   const [showStats, setShowStats] = useState(true);
+  const [activeTab, setActiveTab] = useState(TABS_ENUMERATION_IN_COLIS.active_parcels);
+  const [colisInfo, setColisInfo] = useState();
 
   const { from, to, paginationCurrentPage, filters, paginationSize } = useSelector(
     (state) => state.parcelsManagementTable
@@ -56,9 +61,18 @@ const ParcelsManagement = () => {
     totalCount,
 
     pendingCount,
-    registeredCount,
+    assignedForCollectionCount,
+    collectionInProgressCount,
+    collectedCount,
+
+    assignedForDeliveryCount,
+    deliveryInProgressCount,
+    deliveredCount,
+
     articleToReturnCount,
-    deliveredCount
+    assignedForReturnCount,
+    returnInProgressCount,
+    returnedCount
   } = useSelector((state) => state.parcelsManagement);
 
   const INITIAL_WALLET_FILTER_OBJ = {
@@ -195,116 +209,6 @@ const ParcelsManagement = () => {
     return groupedData;
   };
 
-  function groupColisByDeliveryLivreurPhone(data) {
-    const groupedData = {};
-
-    console.log({ data });
-
-    // Iterate over each colis item in the data
-    data.forEach((colisItem) => {
-      const latestAssignment =
-        colisItem?.colis_assignment?.[colisItem?.colis_assignment?.length - 1];
-
-      const colisStatuses = colisItem?.colis_statuses;
-      const lastStatus = colisStatuses?.[0];
-      const oneBeforeLastStatus = colisStatuses?.[1];
-
-      let groupKey;
-
-      // Determine the group key based on delivery_livreur's client phone number
-      // If delivery_livreur is null, group them under a common key 'no_delivery_livreur'
-      // if (
-      //   colisItem.delivery_livreur &&
-      //   colisItem.delivery_livreur.client &&
-      //   colisItem.delivery_livreur.client.phone_number
-      // ) {
-
-      if (
-        lastStatus?.colis_status?.code !== 'WAITING_FOR_RETURN' &&
-        oneBeforeLastStatus?.colis_status?.code !== 'REFUSED' &&
-        oneBeforeLastStatus?.colis_status?.code !== 'NOT_DELIVERED' &&
-        oneBeforeLastStatus?.colis_status?.code !== 'NOT_RETURNED'
-      ) {
-        if (latestAssignment && latestAssignment?.livreur) {
-          // Concatenate client's phone number, first name, and last name as the group key
-          const delivery_livreur = latestAssignment.livreur;
-          groupKey = `${delivery_livreur.first_name || ''} ${delivery_livreur.last_name || ''} (${
-            delivery_livreur?.client?.phone_number || ''
-          })`
-            ?.trim()
-            ?.toUpperCase();
-        } else {
-          groupKey = 'no_delivery_livreur';
-        }
-
-        // Initialize the group if it doesn't exist
-        if (!groupedData[groupKey]) {
-          groupedData[groupKey] = {
-            colisList: [],
-            totalAmountToBePaid: 0,
-            processingFee: 0,
-            finalAmountDue: 0,
-            totalFee: 0,
-            deliveryStatusCounts: {}
-          };
-        }
-
-        // Add the current colis item to the group
-        groupedData[groupKey].colisList.push(colisItem);
-
-        // Get the last status of the colis
-        // const lastStatus = colisItem.colis_statuses[0];
-        if (lastStatus) {
-          const status = lastStatus.colis_status.code;
-
-          // Update the count of delivery statuses
-          groupedData[groupKey].deliveryStatusCounts[status] =
-            (groupedData[groupKey].deliveryStatusCounts[status] || 0) + 1;
-
-          // Calculate the amount to be paid based on the status and payment conditions
-          if (
-            status === 'DELIVERED' &&
-            parseInt(colisItem.price) > 0
-            // &&
-            // colisItem.payment === 'PENDING'
-          ) {
-            let amountToBePaid = parseInt(colisItem.price);
-            if (colisItem.fee_payment === 'PREPAID' && status !== 'LOST') {
-              amountToBePaid -= parseInt(colisItem.fee || 0);
-            }
-            groupedData[groupKey].totalAmountToBePaid += amountToBePaid;
-          }
-
-          if (status === 'DELIVERED' && colisItem.fee_payment === 'POSTPAID') {
-            // Add fee to totalFee for POSTPAID items
-            groupedData[groupKey].totalFee += parseInt(colisItem.fee || 0);
-          }
-        }
-      }
-    });
-
-    // Final calculations for each group
-    for (const key in groupedData) {
-      const group = groupedData[key];
-      // Calculate processing fee and final amount due
-      group.processingFee = group.totalAmountToBePaid * 0; // 0.01
-      group.finalAmountDue = group.totalAmountToBePaid - group.processingFee;
-      // Add the total count of colis items in the group
-      group.deliveryStatusCounts.total = group.colisList.length;
-    }
-
-    // Apply sorting for each client's colisList
-    for (const phone in groupedData) {
-      groupedData[phone].colisList.sort((a, b) => {
-        const lastStatusA = a.colis_statuses[a.colis_statuses.length - 1].colis_status.code;
-        const lastStatusB = b.colis_statuses[b.colis_statuses.length - 1].colis_status.code;
-        return lastStatusA.localeCompare(lastStatusB);
-      });
-    }
-
-    return groupedData;
-  }
-
   const colisRequiringPayment = (dataList) => {
     const elementsToBePaid = dataList.filter((data) => {
       if (!data?.colis_statuses?.length) {
@@ -356,23 +260,27 @@ const ParcelsManagement = () => {
 
   const handleLoadColis = async (_) => {
     if (!noMoreQuery && !isLoading) {
+      console.log({ activeTab });
       const dispatchParams = {
         from: formik.values.from,
         to: formik.values.to,
-        skip: skip
+        skip: skip,
+        type: activeTab
       };
 
       await applyFilter(dispatchParams);
     }
   };
 
-  const onFetchColis = async () => {
+  const onFetchColis = async (colisInfo) => {
     dispatch(resetForm());
     dispatch(resetTableParcelsManagementSettings());
     const dispatchParams = {
       from: formik.values.from,
       to: formik.values.to,
-      skip: 0
+      skip: 0,
+      type: activeTab,
+      colisInfo
     };
     applyFilter(dispatchParams);
   };
@@ -542,23 +450,58 @@ const ParcelsManagement = () => {
 
   useEffect(() => {
     onFetchColis();
-  }, [formik.values.from, formik.values.to]);
+  }, [formik.values.from, formik.values.to, activeTab]);
 
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="">
-          <Datepicker
-            containerClassName="w-full sm:w-72"
-            value={dateValue}
-            theme={'light'}
-            inputClassName="input input-bordered w-full"
-            popoverDirection={'down'}
-            toggleClassName="invisible"
-            onChange={handleDatePickerValueChange}
-            showShortcuts={true}
-            primaryColor={'white'}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-x-2">
+          {activeTab === TABS_ENUMERATION_IN_COLIS.date_search ? (
+            <Datepicker
+              containerClassName="max-w-lg md:col-span-2"
+              value={dateValue}
+              theme={'light'}
+              inputClassName="input input-bordered w-full input-sm"
+              popoverDirection={'down'}
+              toggleClassName="invisible"
+              onChange={handleDatePickerValueChange}
+              showShortcuts={true}
+              primaryColor={'white'}
+            />
+          ) : (
+            <></>
+          )}
+
+          <form
+            className={`max-w-lg ${
+              activeTab === TABS_ENUMERATION_IN_COLIS.date_search
+                ? 'md:col-span-2'
+                : 'md:col-span-4'
+            }`}
+            onSubmit={async (event) => {
+              event.preventDefault();
+              await onFetchColis(colisInfo);
+              setActiveTab(TABS_ENUMERATION_IN_COLIS.search_result);
+            }}>
+            <label
+              htmlFor="default-search"
+              className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">
+              Search
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                <CiSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              </div>
+              <input
+                type="search"
+                id="default-search"
+                className="input input-sm w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg"
+                placeholder="Search parcel ..."
+                value={colisInfo}
+                onChange={(event) => setColisInfo(event.target.value)}
+              />
+            </div>
+          </form>
         </div>
         <div className="text-right sm:mb-2">
           {colisToPay?.count > 0 ? (
@@ -679,53 +622,56 @@ const ParcelsManagement = () => {
               {/*    QR Code Panel*/}
               {/*  </span>*/}
               {/*</li>*/}
-              <li
-                onClick={() => {
-                  dispatch(
-                    openModal({
-                      title: 'POINT MARCHANT',
-                      size: 'max',
-                      bodyType: MODAL_BODY_TYPES.POINT_MARCHANT,
-                      extraObject: {
-                        from,
-                        to,
-                        pointMarchant: groupColisByClientPhoneForPointMarchant(colis)
-                      }
-                    })
-                  );
-                }}>
-                <span>
-                  <CiShoppingTag className="w-4" />
-                  Point Marchant
-                </span>
-              </li>
-              <li>
-                <span onClick={pointRecuperationDownloader}>
-                  <ArrowDownTrayIcon className="w-4" />
-                  Point Recuperation
-                </span>
-              </li>
-              <li
-                onClick={() => {
-                  dispatch(
-                    openModal({
-                      title: 'POINT LIVREUR',
-                      size: 'max',
-                      bodyType: MODAL_BODY_TYPES.POINT_LIVREUR,
-                      extraObject: {
-                        from,
-                        to,
-                        pointLivreur: groupColisByDeliveryLivreurPhone(colis)
-                      }
-                    })
-                  );
-                }}>
-                <span>
-                  <MdOutlineDeliveryDining className="w-4" />
-                  Point Livraison
-                </span>
-              </li>
-
+              {/*<li*/}
+              {/*  onClick={() => {*/}
+              {/*    dispatch(*/}
+              {/*      openModal({*/}
+              {/*        title: 'POINT MARCHANT',*/}
+              {/*        size: 'max',*/}
+              {/*        bodyType: MODAL_BODY_TYPES.POINT_MARCHANT,*/}
+              {/*        extraObject: {*/}
+              {/*          from,*/}
+              {/*          to,*/}
+              {/*          pointMarchant: groupColisByClientPhoneForPointMarchant(colis)*/}
+              {/*        }*/}
+              {/*      })*/}
+              {/*    );*/}
+              {/*  }}>*/}
+              {/*  <span>*/}
+              {/*    <CiShoppingTag className="w-4" />*/}
+              {/*    Point Marchant*/}
+              {/*  </span>*/}
+              {/*</li>*/}
+              {/*<li>*/}
+              {/*  <span onClick={pointRecuperationDownloader}>*/}
+              {/*    <ArrowDownTrayIcon className="w-4" />*/}
+              {/*    Point Recuperation*/}
+              {/*  </span>*/}
+              {/*</li>*/}
+              {activeTab === TABS_ENUMERATION_IN_COLIS.date_search ? (
+                <li
+                  onClick={() => {
+                    dispatch(
+                      openModal({
+                        title: 'POINT LIVREUR',
+                        size: 'max',
+                        bodyType: MODAL_BODY_TYPES.POINT_LIVREUR,
+                        extraObject: {
+                          from,
+                          to,
+                          pointLivreur: groupColisByDeliveryLivreurPhone(colis)
+                        }
+                      })
+                    );
+                  }}>
+                  <span>
+                    <MdOutlineDeliveryDining className="w-4" />
+                    Point Livraison
+                  </span>
+                </li>
+              ) : (
+                <></>
+              )}
               <li>
                 <span
                   onClick={() => {
@@ -748,7 +694,7 @@ const ParcelsManagement = () => {
                   onClick={() => {
                     dispatch(
                       openModal({
-                        title: 'Download Colis Data',
+                        title: 'Download QR Code',
                         size: '',
                         bodyType: MODAL_BODY_TYPES.GENERATE_COLIS_QR_CODES,
                         extraObject: {}
@@ -776,40 +722,28 @@ const ParcelsManagement = () => {
             <div className="stat">
               <div className={`stat-figure dark:text-slate-300 text-secondary`}>
                 {/*<AiOutlineFileDone className="w-6 h-6" />*/}
-                {STATUS_ICON_NAMES['PENDING']}
+                {STATUS_ICON_NAMES['REGISTERED']}
               </div>
               <div className="stat-title dark:text-slate-300">Pending</div>
               <div className={`stat-value dark:text-slate-300 text-secondary`}>{pendingCount}</div>
               <div className={'stat-desc  '}>
-                {((pendingCount * 100) / totalCount).toFixed(2)} % of total orders
+                Ready for Collection:{' '}
+                <span className="font-bold text-secondary">{assignedForCollectionCount}</span>
               </div>
             </div>
           </div>
           <div className="stats shadow">
             <div className="stat">
               <div className={`stat-figure dark:text-slate-300 text-secondary`}>
-                {STATUS_ICON_NAMES['REGISTERED']}
+                {STATUS_ICON_NAMES['COLLECTED']}
               </div>
-              <div className="stat-title dark:text-slate-300">Registered</div>
+              <div className="stat-title dark:text-slate-300">Collected</div>
               <div className={`stat-value dark:text-slate-300 text-secondary`}>
-                {registeredCount}
+                {collectedCount}
               </div>
               <div className={'stat-desc  '}>
-                {((registeredCount * 100) / totalCount).toFixed(2)} % of total orders
-              </div>
-            </div>
-          </div>
-          <div className="stats shadow">
-            <div className="stat">
-              <div className={`stat-figure dark:text-slate-300 text-secondary`}>
-                {STATUS_ICON_NAMES['ARTICLE_TO_RETURN']}
-              </div>
-              <div className="stat-title dark:text-slate-300">Article To Return</div>
-              <div className={`stat-value dark:text-slate-300 text-secondary`}>
-                {articleToReturnCount}
-              </div>
-              <div className={'stat-desc  '}>
-                {((articleToReturnCount * 100) / totalCount).toFixed(2)} % of total orders
+                Collecting:{' '}
+                <span className="font-bold text-secondary">{collectionInProgressCount}</span>
               </div>
             </div>
           </div>
@@ -822,8 +756,27 @@ const ParcelsManagement = () => {
               <div className={`stat-value dark:text-slate-300 text-secondary`}>
                 {deliveredCount}
               </div>
+              <div className={'stat-desc  '}>
+                In Delivery:{' '}
+                <span className="font-bold text-secondary">
+                  {assignedForDeliveryCount + deliveryInProgressCount}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="stats shadow">
+            <div className="stat">
+              <div className={`stat-figure dark:text-slate-300 text-secondary`}>
+                {STATUS_ICON_NAMES['DELIVERED']}
+              </div>
+              <div className="stat-title dark:text-slate-300">Returned</div>
+              <div className={`stat-value dark:text-slate-300 text-secondary`}>{returnedCount}</div>
+
               <div className={'stat-desc '}>
-                {((deliveredCount * 100) / totalCount).toFixed(2)} % of total orders
+                Returning:{' '}
+                <span className="font-bold text-secondary">
+                  {articleToReturnCount + assignedForReturnCount + returnInProgressCount}
+                </span>
               </div>
             </div>
           </div>
@@ -851,12 +804,52 @@ const ParcelsManagement = () => {
       {/*  </div>*/}
       {/*</div>*/}
 
+      <div className="flex justify-center w-full my-5">
+        <div>
+          <div className="tabs">
+            <a
+              className={`tab tab-lifted ${
+                activeTab === TABS_ENUMERATION_IN_COLIS.active_parcels ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab(TABS_ENUMERATION_IN_COLIS.active_parcels)}>
+              {TABS_ENUMERATION_IN_COLIS.active_parcels}
+            </a>
+            <a
+              className={`tab tab-lifted ${
+                activeTab === TABS_ENUMERATION_IN_COLIS.warehoused ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab(TABS_ENUMERATION_IN_COLIS.warehoused)}>
+              {TABS_ENUMERATION_IN_COLIS.warehoused}
+            </a>
+            <a
+              className={`tab tab-lifted ${
+                activeTab === TABS_ENUMERATION_IN_COLIS.payment_list ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab(TABS_ENUMERATION_IN_COLIS.payment_list)}>
+              {TABS_ENUMERATION_IN_COLIS.payment_list}
+            </a>
+            <a
+              className={`tab tab-lifted ${
+                activeTab === TABS_ENUMERATION_IN_COLIS.date_search ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab(TABS_ENUMERATION_IN_COLIS.date_search)}>
+              {TABS_ENUMERATION_IN_COLIS.date_search}
+            </a>
+            <a
+              className={`tab tab-lifted ${
+                activeTab === TABS_ENUMERATION_IN_COLIS.search_result ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab(TABS_ENUMERATION_IN_COLIS.search_result)}>
+              {TABS_ENUMERATION_IN_COLIS.search_result}
+            </a>
+          </div>
+        </div>
+      </div>
+
       {colis.length ? (
         <ColisList onLoad={handleLoadColis} gridOptions={gridOptions} />
       ) : (
-        <InfoText styleClasses={'md:grid-cols-2'}>
-          No colis found from {from} to {to}
-        </InfoText>
+        <NotFoundPage message="No colis found" />
       )}
     </div>
   );

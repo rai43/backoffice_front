@@ -5,6 +5,8 @@ import codeManagementSlice from '../features/codeManagement/codeManagementSlice'
 import colisZonesSlide from '../features/colis/colisZones/colisZonesSlide';
 import controlPanelSlice from '../features/colis/controlPanel/controlPanelSlice';
 import parcelsManagementSlice from '../features/colis/parcelsManagementSlice';
+import blockRegistrationTableSlice from '../features/common/blockRegistrationTableSlice';
+import blockRegistrationSlice from '../features/colis/blockRegistrations/blockRegistrationsSlide';
 import codeManagementTableSlice from '../features/common/codeManagementTableSlice';
 import colisControlPanelTableSlice from '../features/common/colisControlPanelTableSlice';
 import CustomersTableSlice from '../features/common/CustomersTableSlice';
@@ -47,6 +49,8 @@ const combinedReducer = {
   colisControlPanelTable: colisControlPanelTableSlice,
   parcelsManagementTable: parcelsManagementTableSlice,
   returnParcelsManagementTable: returnParcelsManagementTableSlice,
+  blockRegistrationTable: blockRegistrationTableSlice,
+  blockRegistration: blockRegistrationSlice,
   codeManagementTable: codeManagementTableSlice,
   rightDrawer: rightDrawerSlice,
   modal: modalSlice,

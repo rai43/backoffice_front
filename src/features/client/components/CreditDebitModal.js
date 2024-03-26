@@ -4,10 +4,11 @@ import { useDispatch } from 'react-redux';
 
 import InputText from '../../../components/Input/InputText';
 import { showNotification } from '../../common/headerSlice';
+import { replaceLivreurObjectByUpdatedOne } from '../../livreurs/livreursSlice';
 import { creditAccountToServer, debitAccountToServer } from '../../transaction/transactionSlice';
 import { replaceClientObjectByUpdatedOne } from '../clientSlice';
 
-const CreditDebitModal = ({ modalObj, setModalObj, extraObject, closeModal }) => {
+const CreditDebitModal = ({ modalObj, setModalObj, extraObject, closeModal, isLivreur }) => {
   const dispatch = useDispatch();
 
   const handleCreditOrDebit = async () => {
@@ -24,24 +25,34 @@ const CreditDebitModal = ({ modalObj, setModalObj, extraObject, closeModal }) =>
       console.error(response.error);
       dispatch(
         showNotification({
-          message: `Error while ${modalObj.action}ing the client account`,
+          message: `Error while ${modalObj.action}ing the ${
+            isLivreur ? "livreur's" : "client's"
+          } account`,
           status: 0
         })
       );
     } else {
       dispatch(
         showNotification({
-          message: `Successfully ${modalObj.action}ed the client account`,
+          message: `Successfully ${modalObj.action}ed the ${
+            isLivreur ? "livreur's" : "client's"
+          } account`,
           status: 1
         })
       );
 
       try {
-        await dispatch(
-          replaceClientObjectByUpdatedOne({
-            client: response?.client
-          })
-        );
+        isLivreur
+          ? await dispatch(
+              replaceLivreurObjectByUpdatedOne({
+                livreur: response?.livreur
+              })
+            )
+          : await dispatch(
+              replaceClientObjectByUpdatedOne({
+                client: response?.client
+              })
+            );
       } catch (e) {
         console.error('Could not update the information:', e);
       }

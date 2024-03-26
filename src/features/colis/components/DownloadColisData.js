@@ -7,10 +7,12 @@ import flatpickr from 'flatpickr';
 import moment from 'moment';
 import { useDispatch } from 'react-redux';
 
-import { FaAmazonPay } from 'react-icons/fa';
-
 import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon';
 
+import {
+  TABS_ENUMERATION_IN_COLIS,
+  TABS_ENUMERATION_IN_QR_CODE_PANEL
+} from '../../../utils/globalConstantUtil';
 import { showNotification } from '../../common/headerSlice';
 
 const DownloadColisData = ({ closeModal }) => {
@@ -78,7 +80,7 @@ const DownloadColisData = ({ closeModal }) => {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet(sheetName);
 
-      // Add column headers and define column keys and widths
+      // Update column headers and define column keys and widths
       worksheet.columns = [
         { header: 'Code', key: 'code', width: 10 },
         { header: 'Status', key: 'status', width: 12 },
@@ -89,11 +91,10 @@ const DownloadColisData = ({ closeModal }) => {
         { header: 'Fee Payment', key: 'fee_payment', width: 10 },
         { header: 'Price', key: 'price', width: 10 },
         { header: 'Fee', key: 'fee', width: 10 },
-        { header: 'Amount To Collect', key: 'amount_to_collect', width: 10 },
-        { header: 'Pickup Livreur', key: 'pickup_livreur', width: 30 },
-        { header: 'Delivery Livreur', key: 'delivery_livreur', width: 30 },
-        { header: 'Pickup Date', key: 'pickup_date', width: 12 },
-        { header: 'Creation', key: 'created_at', width: 15 }
+        { header: 'Amount To Collect', key: 'amount_to_collect', width: 15 },
+        { header: 'Livreurs and Statuses', key: 'livreurs', width: 50 }, // New column for all livreurs
+        // { header: 'Pickup Date', key: 'pickup_date', width: 12 },
+        { header: 'Creation', key: 'created_at', width: 20 }
       ];
 
       // Style the headers
@@ -123,32 +124,32 @@ const DownloadColisData = ({ closeModal }) => {
         params: {
           from: startDate,
           to: endDate,
-          skip: 0
+          skip: 0,
+          type: TABS_ENUMERATION_IN_COLIS.date_search
         }
       };
 
       const response = await axios.get('/api/colis/get-colis', config);
 
-      // Transform each colis object into a format suitable for Excel
       const formattedData = response?.data?.colis?.map((colis) => {
-        const pickupLivreur = colis.pickup_livreur
-          ? `${colis?.pickup_livreur?.last_name} ${colis?.pickup_livreur?.first_name} (${colis?.pickup_livreur?.client?.phone_number})`
-          : 'N/A';
-        const deliveryLivreur = colis.delivery_livreur
-          ? `${colis?.delivery_livreur?.last_name} ${colis?.delivery_livreur?.first_name} (${colis?.delivery_livreur?.client?.phone_number})`
-          : 'N/A';
-        const latestStatus =
-          colis.colis_statuses[colis.colis_statuses.length - 1]?.colis_status?.code
-            ?.replaceAll('_', ' ')
-            ?.toUpperCase() || 'N/A';
+        // Concatenate all livreur names and statuses from assignments
+        const livreursInfo = colis?.commande_colis
+          ?.map((assignment) => {
+            const livreurName = `${assignment?.livreur?.last_name} ${assignment?.livreur?.first_name}`;
+            const status =
+              assignment.colis_status?.colis_status?.code?.replaceAll('_', ' ')?.toUpperCase() ||
+              'N/A';
+            return `${livreurName} (${assignment.livreur.client.phone_number}) - Status: ${status}`;
+          })
+          .join('; ');
 
         return {
           code: colis?.code,
-          status: latestStatus,
+          status: colis?.status?.colis_status?.code?.replaceAll('_', ' ')?.toUpperCase() || 'N/A',
           merchant: colis?.client?.phone_number || 'N/A',
           client: colis?.delivery_phone_number || 'N/A',
-          pickup_address: colis?.pickup_address_name?.toUpperCase(),
-          delivery_address: colis?.delivery_address_name?.toUpperCase(),
+          pickup_address: colis?.pickup_address?.description?.toUpperCase() || 'N/A',
+          delivery_address: colis?.delivery_address?.description?.toUpperCase() || 'N/A',
           fee_payment: colis?.fee_payment,
           price: parseInt(colis?.price),
           fee: parseInt(colis?.fee),
@@ -156,9 +157,8 @@ const DownloadColisData = ({ closeModal }) => {
             colis?.fee_payment === 'PREPAID'
               ? parseInt(colis?.price)
               : parseInt(parseFloat(colis?.price) + parseFloat(colis?.fee)),
-          pickup_livreur: pickupLivreur?.toUpperCase(),
-          delivery_livreur: deliveryLivreur?.toUpperCase(),
-          pickup_date: moment.utc(colis?.pickup_date).format('DD-MM-YYYY'),
+          livreurs: livreursInfo.toUpperCase(),
+          // pickup_date: moment.utc(colis?.pickup_date).format('DD-MM-YYYY'),
           created_at: moment.utc(colis?.created_at).format('DD-MM-YYYY HH:mm')
         };
       });

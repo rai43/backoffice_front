@@ -1,14 +1,16 @@
+import React, { useDispatch, useSelector } from 'react-redux';
+
 import XMarkIcon from '@heroicons/react/24/solid/XMarkIcon';
-import { useDispatch, useSelector } from 'react-redux';
+
 // import NotificationBodyRightDrawer from "../features/common/components/NotificationBodyRightDrawer";
+import ClientWalletDetailView from '../features/client/components/ClientWalletDetailView';
 import { closeRightDrawer } from '../features/common/rightDrawerSlice';
+import LivreurWalletDetailView from '../features/livreurs/components/LivreurWalletDetailView';
+import MenuArticleAddOrEdit from '../features/merchantsMenu/components/MenuArticleAddOrEdit';
+import AccompagnementAddOrEdit from '../features/merchantsSettings/components/AccompagnementAddOrEdit';
+import ArticleAddOrEdit from '../features/merchantsSettings/components/ArticleAddOrEdit';
 import UserDetailsBodyRightDrawer from '../features/user/components/UserDetailsBodyRightDrawer';
 import { RIGHT_DRAWER_TYPES } from '../utils/globalConstantUtil';
-import ClientWalletDetailView from '../features/client/components/ClientWalletDetailView';
-import AccompagnementAddOrEdit from '../features/merchantsSettings/components/AccompagnementAddOrEdit';
-import MenuArticleAddOrEdit from '../features/merchantsMenu/components/MenuArticleAddOrEdit';
-import ArticleAddOrEdit from '../features/merchantsSettings/components/ArticleAddOrEdit';
-import LivreurWalletDetailView from '../features/livreurs/components/LivreurWalletDetailView';
 // import CalendarEventsBodyRightDrawer from "../features/calendar/CalendarEventsBodyRightDrawer";
 
 function RightSidebar() {
@@ -26,21 +28,18 @@ function RightSidebar() {
         (isOpen
           ? ' transition-opacity opacity-100 duration-500 translate-x-0  '
           : ' transition-all delay-500 opacity-0 translate-x-full  ')
-      }
-    >
+      }>
       <section
         className={
           'w-80 md:w-1/2  right-0 absolute bg-base-100 h-full shadow-xl delay-400 duration-500 ease-in-out transition-all transform  ' +
           (isOpen ? ' translate-x-0 ' : ' translate-x-full ')
-        }
-      >
+        }>
         <div className="relative pb-5 flex flex-col h-full">
           {/* Header */}
           <div className="navbar   flex pl-4 pr-4   shadow-md ">
             <button
               className="float-left btn btn-circle btn-outline btn-sm"
-              onClick={() => close()}
-            >
+              onClick={() => close()}>
               <XMarkIcon className="h-5 w-5" />
             </button>
             <span className="ml-2 font-bold text-xl">{header}</span>

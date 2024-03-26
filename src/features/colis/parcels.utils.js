@@ -12,12 +12,13 @@ const parcelsUtils = {
    */
   findOngoingAssignment: (colis) => {
     // noinspection JSUnresolvedReference
-    const ongoingAssignment = colis?.colis_assignment?.find(
+    const ongoingAssignment = colis?.commande_colis?.find(
       (assignment) => assignment.colis_status_id === colis.status_id
     );
 
     return ongoingAssignment || null;
   },
+
   /**
    * Finds an assignment of type "PICKUP" with the status "COLLECTED".
    *

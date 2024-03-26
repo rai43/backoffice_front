@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import L, { Icon } from 'leaflet';
 import moment from 'moment';
+import numeral from 'numeral';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, Polyline } from 'react-leaflet';
 import { useDispatch } from 'react-redux';
 
@@ -19,7 +20,6 @@ import { enableScroll } from '../../../utils/functions/preventAndAllowScroll';
 import { showNotification } from '../../common/headerSlice';
 import parcelsUtils from '../parcels.utils';
 import { changeColisStatus, deleteColis } from '../parcelsManagementSlice';
-
 const ACTIONS = {
   DELETE: 'DELETE'
 };
@@ -152,7 +152,9 @@ const DetailsColis = ({ extraObject, closeModal }) => {
             <div className={'divider sm:col-span-2 m-0'}>Amount Information</div>
             <div className="grid grid-cols-3 font-semibold">
               <h4 className="uppercase">Fee</h4>
-              <div className="col-span-2 text-primary">{latestColisObject?.fee}</div>
+              <div className="col-span-2 text-primary">
+                {numeral(parseInt(latestColisObject?.fee || 0)).format('0,0')}
+              </div>
             </div>
             <div className="grid grid-cols-3 font-semibold">
               <h4 className="uppercase">Fee Payment</h4>
@@ -160,15 +162,21 @@ const DetailsColis = ({ extraObject, closeModal }) => {
             </div>
             <div className="grid grid-cols-3 font-semibold">
               <h4 className="uppercase">Amount To Collect</h4>
-              <div className="col-span-2 text-primary">{latestColisObject?.price}</div>
+              <div className="col-span-2 text-primary">
+                {numeral(parseInt(latestColisObject?.price || 0)).format('0,0')}
+              </div>
             </div>
             <div className="grid grid-cols-3 font-semibold">
               <h4 className="uppercase">Total To Collect</h4>
               <div className="col-span-2 text-secondary font-bold">
-                {latestColisObject?.fee_payment === 'PREPAID'
-                  ? latestColisObject?.price
-                  : (latestColisObject?.price ? parseInt(latestColisObject?.price) : 0) +
-                    parseInt(latestColisObject?.fee)}
+                {numeral(
+                  parseInt(
+                    latestColisObject?.fee_payment === 'PREPAID'
+                      ? latestColisObject?.price
+                      : (latestColisObject?.price ? parseInt(latestColisObject?.price) : 0) +
+                          parseInt(latestColisObject?.fee) || 0
+                  )
+                ).format('0,0')}
               </div>
             </div>
             <div className={'divider sm:col-span-2 m-0'}>Sender Information</div>
@@ -209,27 +217,6 @@ const DetailsColis = ({ extraObject, closeModal }) => {
                 {latestColisObject?.pickup_address?.longitude || 'N/A'}
               </div>
             </div>
-            {/*<div className="grid grid-cols-3 font-semibold">*/}
-            {/*  <h4 className="uppercase">Pickup Date</h4>*/}
-            {/*  <div className="col-span-2 text-primary">*/}
-            {/*    {assignments?.PICKUP*/}
-            {/*      ? moment.utc(assignments?.PICKUP?.date).format('DD-MM-YYYY HH:mm')*/}
-            {/*      : 'N/A'}*/}
-            {/*  </div>*/}
-            {/*</div>*/}
-            {/*<div className="col-span-2 grid grid-cols-4 font-semibold">*/}
-            {/*  <h4 className="uppercase">Pickup Livreur</h4>*/}
-            {/*  <div className="col-span-2 text-primary">*/}
-            {/*    /!* deliveryAssignment?.type !== 'DELIVERY' && ?.livreur?. *!/*/}
-            {/*    {assignments?.PICKUP*/}
-            {/*      ? assignments?.PICKUP?.livreur?.last_name +*/}
-            {/*        ' ' +*/}
-            {/*        assignments?.PICKUP?.livreur?.first_name +*/}
-            {/*        ' - ' +*/}
-            {/*        assignments?.PICKUP?.livreur?.client?.phone_number*/}
-            {/*      : 'N/A'}*/}
-            {/*  </div>*/}
-            {/*</div>*/}
             <div className={'divider sm:col-span-2 m-0'}>Delivery Information</div>
             <div className="grid grid-cols-3 font-semibold">
               <h4 className="uppercase">Address</h4>
@@ -243,26 +230,6 @@ const DetailsColis = ({ extraObject, closeModal }) => {
                 {latestColisObject?.delivery_phone_number || 'N/A'}
               </div>
             </div>
-            {/*<div className="grid grid-cols-3 font-semibold">*/}
-            {/*  <h4 className="uppercase">Delivery Date</h4>*/}
-            {/*  <div className="col-span-2 text-primary">*/}
-            {/*    {assignments?.DELIVERY*/}
-            {/*      ? moment.utc(assignments?.DELIVERY?.date).format('DD-MM-YYYY HH:mm')*/}
-            {/*      : 'N/A'}*/}
-            {/*  </div>*/}
-            {/*</div>*/}
-            {/*<div className="grid grid-cols-3 font-semibold">*/}
-            {/*  <h4 className="uppercase">Delivery Livreur</h4>*/}
-            {/*  <div className="col-span-2 text-primary uppercase">*/}
-            {/*    {assignments?.DELIVERY*/}
-            {/*      ? assignments?.DELIVERY?.livreur?.last_name +*/}
-            {/*        ' ' +*/}
-            {/*        assignments?.DELIVERY?.livreur?.first_name +*/}
-            {/*        ' - ' +*/}
-            {/*        assignments?.DELIVERY?.livreur?.client?.phone_number*/}
-            {/*      : 'N/A'}*/}
-            {/*  </div>*/}
-            {/*</div>*/}
             <div className="grid grid-cols-3 font-semibold">
               <h4 className="uppercase">Delivery Latitude</h4>
               <div className="col-span-2 text-primary">
@@ -290,38 +257,6 @@ const DetailsColis = ({ extraObject, closeModal }) => {
             </div>
           </div>
 
-          {latestColisObject?.colis_assignment?.length ? (
-            <div>
-              <div className={'divider mt-4'}>Assignment Information</div>
-              <div className="grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-8 mb-4 mx-auto">
-                {/* assignments.slice().sort((a, b) => new Date(a.date) - new Date(b.date)) */}
-                {(
-                  latestColisObject?.colis_assignment?.slice().sort((a, b) => b.id - a.id) || []
-                ).map((assignment, index) => (
-                  <AssignmentCard
-                    key={assignment.id}
-                    idx={index}
-                    assignment={assignment}
-                    latestColisObject={latestColisObject}
-                    statuses={
-                      (latestColisObject?.colis_statuses || []).reduce((acc, status) => {
-                        (acc[status.colis_assignment_id] =
-                          acc[status.colis_assignment_id] || []).push(status);
-                        return acc;
-                      }, {})[assignment.id] || []
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <></>
-          )}
-          <div>
-            <div className={'divider mt-4'}>Map Information</div>
-            <MapWithMarkersAndLine latestColisObject={latestColisObject} />
-          </div>
-
           {latestColisObject?.colis_statuses?.length ? (
             <div>
               <div className={'divider mt-4'}>Status Information</div>
@@ -335,6 +270,38 @@ const DetailsColis = ({ extraObject, closeModal }) => {
           ) : (
             <></>
           )}
+
+          {latestColisObject?.commande_colis?.length ? (
+            <div>
+              <div className={'divider mt-4'}>Assignment Information</div>
+              <div className="grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-8 mb-4 mx-auto">
+                {/* assignments.slice().sort((a, b) => new Date(a.date) - new Date(b.date)) */}
+                {(latestColisObject?.commande_colis?.slice().sort((a, b) => b.id - a.id) || []).map(
+                  (assignment, index) => (
+                    <AssignmentCard
+                      key={assignment.id}
+                      idx={index}
+                      assignment={assignment}
+                      latestColisObject={latestColisObject}
+                      statuses={
+                        (latestColisObject?.colis_statuses || []).reduce((acc, status) => {
+                          (acc[status.colis_assignment_id] =
+                            acc[status.colis_assignment_id] || []).push(status);
+                          return acc;
+                        }, {})[assignment.id] || []
+                      }
+                    />
+                  )
+                )}
+              </div>
+            </div>
+          ) : (
+            <></>
+          )}
+          <div>
+            <div className={'divider mt-4'}>Map Information</div>
+            <MapWithMarkersAndLine latestColisObject={latestColisObject} />
+          </div>
 
           {latestColisObject?.photo && (
             <div className="mt-4">
@@ -368,11 +335,18 @@ const AssignmentCard = ({ assignment, idx, latestColisObject }) => {
           Colis Assignment #{assignment?.id}
         </h5>
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-sm text-gray-600">Status:</div>
-          <div className="text-sm font-semibold text-gray-900">{assignment?.status}</div>
+          <div className="text-sm text-gray-600">Versement Status:</div>
+          <div
+            className={`text-sm font-semibold text-primary ${
+              assignment?.versement_status === 'PENDING'
+                ? 'badge badge-secondary badge-outline'
+                : 'badge badge-accent badge-outline'
+            }`}>
+            {assignment?.versement_status?.toUpperCase()}
+          </div>
 
           <div className="text-sm text-gray-600">Colis Status:</div>
-          <div className="text-sm font-semibold text-gray-900">
+          <div className="text-sm font-semibold text-primary">
             {assignment?.colis_status?.colis_status?.code?.replaceAll('_', ' ')?.toUpperCase()}
           </div>
 
@@ -392,27 +366,12 @@ const AssignmentCard = ({ assignment, idx, latestColisObject }) => {
 
           <div className="text-sm text-gray-600">Livreur:</div>
           <div className="text-sm font-semibold text-gray-900">
-            {`${assignment?.livreur?.first_name} ${assignment?.livreur?.last_name}`.toUpperCase()}
+            {`${assignment?.livreur?.first_name} ${assignment?.livreur?.last_name}`?.toUpperCase()}
           </div>
 
           <div className="text-sm text-gray-600">Livreur Phone:</div>
           <div className="text-sm font-semibold text-gray-900">
             {`${assignment?.livreur?.client?.phone_number}`}
-          </div>
-
-          <div className="text-sm text-gray-600">Pickup Address:</div>
-          <div className="text-sm font-semibold text-gray-900">
-            {assignment?.pickup_address?.description?.trim()?.toUpperCase()}
-          </div>
-
-          <div className="text-sm text-gray-600">Delivery Address:</div>
-          <div className="text-sm font-semibold text-gray-900">
-            {assignment?.delivery_address?.description?.trim()?.toUpperCase()}
-          </div>
-
-          <div className="text-sm text-gray-600">Assignation Date:</div>
-          <div className="text-sm font-semibold text-gray-900">
-            {moment.utc(assignment?.date)?.format('DD-MM-YYYY')}
           </div>
 
           <div className="text-sm text-gray-600">Created At:</div>
@@ -476,8 +435,11 @@ const MapWithMarkersAndLine = ({ latestColisObject }) => {
   // Create an array of positions for the Polyline if both locations are available
   const positions = areLocationsAvailable
     ? [
-        [latestColisObject.pickup_address.latitude, latestColisObject.pickup_address.longitude],
-        [latestColisObject.delivery_address.latitude, latestColisObject.delivery_address.longitude]
+        [latestColisObject?.pickup_address?.latitude, latestColisObject?.pickup_address?.longitude],
+        [
+          latestColisObject?.delivery_address?.latitude,
+          latestColisObject?.delivery_address?.longitude
+        ]
       ]
     : [];
 
@@ -485,10 +447,10 @@ const MapWithMarkersAndLine = ({ latestColisObject }) => {
   let distance = 0;
   if (areLocationsAvailable) {
     distance = calculateDistance(
-      latestColisObject.pickup_address.latitude,
-      latestColisObject.pickup_address.longitude,
-      latestColisObject.delivery_address.latitude,
-      latestColisObject.delivery_address.longitude
+      latestColisObject?.pickup_address?.latitude,
+      latestColisObject?.pickup_address?.longitude,
+      latestColisObject?.delivery_address?.latitude,
+      latestColisObject?.delivery_address?.longitude
     ).toFixed(2); // Rounds the distance to 2 decimal places
   }
 
@@ -516,12 +478,12 @@ const MapWithMarkersAndLine = ({ latestColisObject }) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {areLocationsAvailable &&
-          [latestColisObject.pickup_address, latestColisObject.delivery_address].map((loc) => (
+          [latestColisObject?.pickup_address, latestColisObject?.delivery_address].map((loc) => (
             <Marker
-              key={loc.place_id}
-              position={[loc.latitude || 0, loc.longitude || 0]}
+              key={loc?.place_id}
+              position={[loc?.latitude || 0, loc?.longitude || 0]}
               icon={icon}>
-              <Popup>{loc.description.toUpperCase().split(',')[0]}</Popup>
+              <Popup>{loc?.description?.toUpperCase()?.split(',')[0]}</Popup>
             </Marker>
           ))}
         {areLocationsAvailable && <Polyline positions={positions} color="red" />}

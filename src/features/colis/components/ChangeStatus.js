@@ -17,6 +17,7 @@ import {
   STATUS_ACTIONS,
   STATUS_ICON_NAMES
 } from '../../../utils/colisUtils';
+import Html5QrcodePlugin from '../../common/components/Html5QrcodeScannerPlugin';
 import { showNotification } from '../../common/headerSlice';
 import { getLivreursBySearch } from '../../livreurs/livreursSlice';
 import parcelsUtils from '../parcels.utils';
@@ -72,8 +73,6 @@ const ChangeStatus = ({ extraObject, closeModal }) => {
   const [confirmAction, setConfirmAction] = useState(''); // Tracks the action to be confirmed
   const [chooseLivreur, setChooseLivreur] = useState(false); // Flag for choosing a delivery person
   const [livreur, setLivreur] = useState(''); // Selected delivery person ID
-  const [statusActions, setStatusActions] = useState(ABSOLUTE_STATUS_ACTIONS['ABSOLUTE']); // Available actions based on current status
-  const [colisAssignmentsVsActions, _] = useState(COLIS_ASSIGNMENTS_VS_ACTIONS); // Available actions based on current status
   // Update form values - mainly for selecting a delivery person
   const updateForm = useCallback(({ key, value }) => {
     if (key === 'livreur') {
@@ -116,7 +115,6 @@ const ChangeStatus = ({ extraObject, closeModal }) => {
       {!confirmAction?.length ? (
         <>
           <ActionButtons
-            colisAssignmentsVsActions={colisAssignmentsVsActions}
             move={move}
             setConfirmAction={setConfirmAction}
             dispatch={dispatch}
@@ -165,7 +163,6 @@ const StatusDisplay = ({ extraObject }) => (
 );
 
 const ActionButtons = ({
-  colisAssignmentsVsActions,
   move,
   colis,
   setConfirmAction,
@@ -174,10 +171,6 @@ const ActionButtons = ({
   ongoingColisAssignment,
   colisCode
 }) => {
-  const tomorrow = moment.utc().add(1, 'days').format('YYYY-MM-DD');
-  const [deliveryDate, setDeliveryDate] = useState(tomorrow);
-  const [returnDate, setReturnDate] = useState(tomorrow);
-
   // Determine the action set based on the status of the ongoing assignment
   let actionSet = [];
 
@@ -197,8 +190,7 @@ const ActionButtons = ({
       const response = await dispatch(
         createParcelAssignment({
           colisId: colis?.id,
-          action,
-          operationDate: moment.utc(deliveryDate).format('YYYY-MM-DD')
+          action
         })
       );
       if (response?.error) {
@@ -234,18 +226,21 @@ const ActionButtons = ({
 
   console.log({ ongoingColisAssignment, colisStatusCode });
 
-  if (['CANCELED', 'COMPLETED'].includes(ongoingColisAssignment?.status)) {
-    // No actions for assignments marked as COMPLETED or CANCELED
-    actionSet = [];
-  } else if (
-    ongoingColisAssignment?.status === 'PENDING' ||
-    ongoingColisAssignment?.status === 'PROCESSING'
-  ) {
-    // Logic for PENDING or PROCESSING assignments
-    // actionSet = ['No further actions are available for this parcel.']
+  // if (['CANCELED', 'COMPLETED'].includes(ongoingColisAssignment?.status)) {
+  //   // No actions for assignments marked as COMPLETED or CANCELED
+  //   actionSet = [];
+  //
+  //   if (colisCode === ALL_STATUSES.NOT_DELIVERED) {
+  //     actionSet = [{ action: ALL_STATUSES.DELIVERED, isActive: true }];
+  //   } else if (colisCode === ALL_STATUSES.NOT_COLLECTED) {
+  //     actionSet = [{ action: ALL_STATUSES.COLLECTED, isActive: true }];
+  //   }
+  // }
+  if (ongoingColisAssignment) {
     const colisStatusCode = ongoingColisAssignment?.colis_status?.colis_status?.code;
+    console.log({ colisStatusCode });
     actionSet = STATUS_ACTIONS?.[colisStatusCode]?.ACTIONS;
-  } else if (!ongoingColisAssignment) {
+  } else {
     if (colisCode === ALL_STATUSES.PENDING) {
       actionSet = STATUS_ACTIONS?.[colisStatusCode]?.ACTIONS;
     }
@@ -287,9 +282,11 @@ const ActionButtons = ({
               MARK AS {action?.replaceAll('_', ' ')}
               {STATUS_ICON_NAMES[action]}{' '}
             </button>
-            {!isActive ? (
+            {!isActive &&
+            colisCode !== ALL_STATUSES.NOT_DELIVERED &&
+            colisCode !== ALL_STATUSES.NOT_RETURNED ? (
               <h4 className="mt-2 text-center text-info font-bold">
-                Please, scan the code on the parcel to change its status
+                Please, scan the code on the parcel to change its status {colisCode}
               </h4>
             ) : (
               <></>
@@ -303,30 +300,30 @@ const ActionButtons = ({
   const notReturnedReassignView = (
     <div className="flex justify-center gap-4 p-5">
       <div className="border border-gray-200 p-6 rounded-lg shadow-sm w-1/2">
-        <h2 className="text-lg font-semibold">Reassign For Delivery</h2>
-        <p className="mb-4">Choose this option if you want to reassign the item for delivery.</p>
-        <input
-          type="date"
-          value={deliveryDate}
-          onChange={(e) => setDeliveryDate(e.target.value)}
-          className="mb-4 p-2 border border-gray-300 rounded w-full"
-        />
+        <h2 className="text-lg font-semibold">Assign For Delivery</h2>
+        <p className="mb-4">Choose this option to assign the item for delivery.</p>
+        {/*<input*/}
+        {/*  type="date"*/}
+        {/*  value={deliveryDate}*/}
+        {/*  onChange={(e) => setDeliveryDate(e.target.value)}*/}
+        {/*  className="mb-4 p-2 border border-gray-300 rounded w-full"*/}
+        {/*/>*/}
         <button
           onClick={async () => await handleReassign('REASSIGN_FOR_DELIVERY')}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-          Reassign for Delivery
+          Assign for Delivery
         </button>
       </div>
 
       <div className="border border-gray-200 p-6 rounded-lg shadow-sm w-1/2">
         <h2 className="text-lg font-semibold">Assign For Return</h2>
         <p className="mb-4">Choose this option if the item needs to be returned.</p>
-        <input
-          type="date"
-          value={returnDate}
-          onChange={(e) => setReturnDate(e.target.value)}
-          className="mb-4 p-2 border border-gray-300 rounded w-full"
-        />
+        {/*<input*/}
+        {/*  type="date"*/}
+        {/*  value={returnDate}*/}
+        {/*  onChange={(e) => setReturnDate(e.target.value)}*/}
+        {/*  className="mb-4 p-2 border border-gray-300 rounded w-full"*/}
+        {/*/>*/}
         <button
           onClick={async () => await handleReassign('REASSIGN_FOR_RETURN')}
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
@@ -380,6 +377,7 @@ const ConfirmationLogic = ({
 }) => {
   // Assuming ConfirmationLogic component starts here
   const [reason, setReason] = useState('');
+  const [isScanning, setIsScanning] = useState(true);
 
   // Determine if the current action requires a reason
   const requiresReason = [
@@ -451,15 +449,6 @@ const ConfirmationLogic = ({
 
   const scanInputRef = useRef(null);
 
-  // useEffect(() => {
-  //   if (scanInputRef.current) {
-  //     scanInputRef.current.focus();
-  //     setTimeout(function () {
-  //       scanInputRef.current.focus();
-  //     }, 100);
-  //   }
-  // });
-
   useEffect(() => {
     // Define a function to focus the input
     if (scanInputRef.current) {
@@ -481,25 +470,15 @@ const ConfirmationLogic = ({
     return () => clearInterval(intervalId);
   }, []); // Empty dependency array means this runs once on mount
 
-  const handleScan = (scannedData) => {
-    const separator = '-#$#-';
-    const equalSign = '=';
-    const slash = '/';
-    const wrongSeparator = '/\\$\\/';
-    const wrongEqualSign = ')';
-    const wrongSlash = '&';
-    const cleanedData = scannedData
-      ?.replaceAll(wrongSeparator, separator)
-      ?.replaceAll(wrongEqualSign, equalSign)
-      ?.replaceAll(wrongSlash, slash);
+  const debouncedChangeStatus = useCallback(_.debounce(handleChangeStatus, 500), []);
 
-    console.log({ cleanedData });
-    setScanResult(cleanedData);
-    debouncedChangeStatus(confirmAction, cleanedData);
-    // You might want to call setConfirmAction or other logic here
+  const onNewScanResult = async (decodedText, decodedResult) => {
+    setIsScanning(false);
+    setScanResult(decodedText);
+
+    await debouncedChangeStatus(confirmAction, decodedText);
+    setIsScanning(true);
   };
-
-  const debouncedChangeStatus = useCallback(_.debounce(handleChangeStatus, 1500), []);
 
   if (confirmAction.length && !chooseLivreur) {
     return (
@@ -536,8 +515,22 @@ const ConfirmationLogic = ({
           <div>
             <div className="flex flex-col items-center justify-center p-4 my-4 text-center bg-gray-200 rounded-lg shadow">
               <MdQrCodeScanner className="w-12 h-12 mb-3 text-blue-500" />
-              <p className="text-lg font-medium">Please use the barcode scanner</p>
+              <p className="text-lg font-medium">
+                Please use the code scanner or{' '}
+                <span className="link link-primary" onClick={handleChangeStatus}>
+                  click here to proceed with no qrcode
+                </span>
+              </p>
               <p className="text-sm text-gray-600">Scan the QR code to proceed</p>
+              <div>
+                <Html5QrcodePlugin
+                  fps={10}
+                  qrbox={250}
+                  disableFlip={false}
+                  rememberLastUsedCamera={true}
+                  qrCodeSuccessCallback={isScanning ? onNewScanResult : () => {}}
+                />
+              </div>
             </div>
             <button
               className="btn btn-outline btn-ghost"
@@ -547,16 +540,6 @@ const ConfirmationLogic = ({
               }}>
               Cancel
             </button>
-
-            {/* Visually hidden but focusable input for catching the scan result */}
-            <input
-              ref={scanInputRef}
-              type="text"
-              value={scanResult}
-              onChange={(e) => handleScan(e.target.value)}
-              className="absolute w-1 h-1 opacity-0 overflow-hidden"
-              tabIndex="-1" // Make it focusable programmatically but not via keyboard navigation
-            />
           </div>
         ) : (
           <div className="flex justify-around mt-4">

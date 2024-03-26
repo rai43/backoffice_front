@@ -23,6 +23,7 @@ import {
   PiShareNetworkThin,
   PiPersonSimpleBikeThin
 } from 'react-icons/pi';
+import { TbLockExclamation } from 'react-icons/tb';
 import { VscSettings } from 'react-icons/vsc';
 
 import ArrowsRightLeftIcon from '@heroicons/react/24/outline/ArrowsRightLeftIcon';
@@ -106,21 +107,21 @@ const routes = [
         icon: <MdOutlineDeliveryDining className={submenuIconClasses} />, // icon component
         name: 'Parcels Management' // name that appear in Sidebar
       },
-      {
-        path: '/app/logistics-center/return-parcels', // url
-        icon: <GiReturnArrow className={submenuIconClasses} />, // icon component
-        name: 'Return Management' // name that appear in Sidebar
-      },
+      // {
+      //   path: '/app/logistics-center/return-parcels', // url
+      //   icon: <GiReturnArrow className={submenuIconClasses} />, // icon component
+      //   name: 'Return Management' // name that appear in Sidebar
+      // },
       {
         path: '/app/logistics-center/colis-zones', // url
         icon: <MdAreaChart className={submenuIconClasses} />, // icon component
         name: 'Colis Zones' // name that appear in Sidebar
+      },
+      {
+        path: '/app/logistics-center/block-registrations', // url
+        icon: <TbLockExclamation className={submenuIconClasses} />, // icon component
+        name: 'Block Registrations' // name that appear in Sidebar
       }
-      // {
-      //   path: '/app/logistics-center/colis-fees', // url
-      //   icon: <GrMoney className={submenuIconClasses} />, // icon component
-      //   name: 'Colis Fees' // name that appear in Sidebar
-      // }
     ]
   },
   {
