@@ -9,7 +9,7 @@ export const getColis = createAsyncThunk('/return-parcels-management/get-colis',
   const to = params.to || moment.utc().format('YYYY-MM-DD');
   const skip = params.skip;
 
-  const response = await axios.get(''/api/colis/get-colis'', {
+  const response = await axios.get('/api/colis/get-colis', {
     params: {
       from,
       to,

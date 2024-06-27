@@ -33,6 +33,7 @@ module.exports = Object.freeze({
     DOWNLOAD_COLIS_DATA: 'DOWNLOAD_COLIS_DATA',
     GENERATE_COLIS_QR_CODES: 'GENERATE_COLIS_QR_CODES',
     COLIS_QR_CODE_PANEL: 'COLIS_QR_CODE_PANEL',
+    COLIS_BLOCK_REGISTRATION: 'COLIS_BLOCK_REGISTRATION',
     DEFAULT: ''
   },
 
@@ -95,5 +96,19 @@ module.exports = Object.freeze({
     DELIVERED: 5,
     UNDELIVERED: 6,
     CANCELED: 7
+  },
+
+  TABS_ENUMERATION_IN_COLIS: {
+    active_parcels: 'Active Parcels',
+    parcels_to_return: 'Parcels To Return',
+    warehoused: 'Warehoused',
+    payment_list: 'Payment List',
+    date_search: 'Date Search',
+    search_result: 'Search Result(s)'
+  },
+
+  TABS_ENUMERATION_IN_QR_CODE_PANEL: {
+    parcels_summary: 'Point des colis',
+    payment_summary: 'Point des versements'
   }
 });

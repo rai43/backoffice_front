@@ -9,8 +9,17 @@ import { useDispatch } from 'react-redux';
 
 import { MdQrCodeScanner } from 'react-icons/md';
 
+import PointLivreurContent from './PointLivreurContent';
+import PointVersementLivreurContent from './PointVersementLivreurContent';
 import InputAsyncSelect from '../../../components/Input/InputAsyncSelect';
+import NotFoundPage from '../../../pages/authenticated/404';
 import { ALL_STATUSES, STATUS_ENGLISH_VS_FRENCH } from '../../../utils/colisUtils';
+import groupColisByDeliveryLivreurPhone from '../../../utils/functions/groupColisByDeliveryLivreurPhone';
+import handleCopyContent from '../../../utils/functions/handleCopyContent';
+import {
+  TABS_ENUMERATION_IN_COLIS,
+  TABS_ENUMERATION_IN_QR_CODE_PANEL
+} from '../../../utils/globalConstantUtil';
 import Html5QrcodePlugin from '../../common/components/Html5QrcodeScannerPlugin';
 import { showNotification } from '../../common/headerSlice';
 import { getLivreursBySearch } from '../../livreurs/livreursSlice';
@@ -19,22 +28,25 @@ import { setQrcodeAction } from '../parcelsManagementSlice';
 
 const QrCodePanel = ({ extraObject, closeModal }) => {
   const dispatch = useDispatch();
+  const [isScanning, setIsScanning] = useState(true);
   const [livreur, setLivreur] = useState(null);
   const [scanResult, setScanResult] = useState('');
   const scanRef = useRef(null);
   const [isScanningMode, setIsScanningMode] = useState(false);
   const [isReadyToRead, setIsReadyToRead] = useState(false);
-  const [colisForToday, setColisForToday] = useState([]);
-  const [colisForYesterday, setColisForYesterday] = useState([]);
+  const [activeParcels, setActiveParcels] = useState([]);
+  const [activeTab, setActiveTab] = useState(TABS_ENUMERATION_IN_QR_CODE_PANEL.parcels_summary);
+  // State to manage whether the QR code scanner or input field should be shown
+  const [showScanner, setShowScanner] = useState(true);
   const [groupedParcels, setGroupedParcels] = useState({
     recuperationPhase: [],
     deliveryPhase: [],
     returnPhase: [],
     notDeliveredReturned: []
   });
+  const [paymentList, setPaymentList] = useState([]);
 
   useEffect(() => {
-    console.log({ 1: 'here', livreur, sc: scanRef.current });
     if (livreur && scanRef.current) {
       scanRef.current.focus();
       setIsReadyToRead(true); // Indicator that input is ready
@@ -46,21 +58,16 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
   useEffect(() => {
     const fetchLivreursParcels = async (id) => {
       try {
-        const responseForYesterday = await axios.get('/api/colis/get-colis', {
+        const responseForActiveParcels = await axios.get('/api/colis/get-colis', {
           params: {
             from: moment.utc(extraObject?.from).subtract(1, 'days')?.format('YYYY-MM-DD'),
             to: moment.utc(extraObject?.to).subtract(1, 'days')?.format('YYYY-MM-DD'),
-            skip: 0
+            skip: 0,
+            type: TABS_ENUMERATION_IN_COLIS.active_parcels
           }
         });
-        const fetchedColisForYesterday = responseForYesterday.data?.colis;
-        setColisForYesterday(() => fetchedColisForYesterday || []);
-
-        const responseForToday = await axios.get('/api/colis/get-colis', {
-          params: { from: extraObject?.from, to: extraObject?.to, skip: 0 }
-        });
-        const fetchedColisForToday = responseForToday.data?.colis;
-        setColisForToday(() => fetchedColisForToday || []);
+        const fetchedActiveParcels = responseForActiveParcels.data?.colis;
+        setActiveParcels(() => fetchedActiveParcels || []);
 
         // Initial empty groups
         const groups = {
@@ -70,11 +77,10 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
           notDeliveredReturned: []
         };
 
-        [...fetchedColisForToday, ...fetchedColisForYesterday].forEach((colis) => {
+        fetchedActiveParcels.forEach((colis) => {
           const ongoingAssignment = parcelsUtils.findOngoingAssignment(colis);
           if (ongoingAssignment && livreur === ongoingAssignment?.livreur_id) {
             const code = colis?.status?.colis_status?.code;
-            // Grouping logic
             if (
               [
                 // ALL_STATUSES.ASSIGNED_FOR_COLLECTION,
@@ -108,14 +114,6 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
           }
         });
 
-        // fetchedColisForYesterday.forEach((colis) => {
-        //   const ongoingAssignment = parcelsUtils.findOngoingAssignment(colis);
-        //
-        //   if (ongoingAssignment && livreur === ongoingAssignment?.livreur_id) {
-        //     const code = colis?.status?.colis_status?.code;
-        //   }
-        // });
-
         // Update state with the grouped parcels
         setGroupedParcels((prevState) => {
           return { ...prevState, ...groups };
@@ -124,53 +122,72 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
         console.error('Failed to fetch parcel data:', error);
       }
     };
+    const fetchLivreurPaymentParcels = async (id) => {
+      try {
+        const responseForPaymentParcels = await axios.get('/api/colis/get-colis', {
+          params: {
+            from: moment.utc(extraObject?.from).subtract(1, 'days')?.format('YYYY-MM-DD'),
+            to: moment.utc(extraObject?.to).subtract(1, 'days')?.format('YYYY-MM-DD'),
+            skip: 0,
+            type: TABS_ENUMERATION_IN_QR_CODE_PANEL.payment_summary
+          }
+        });
+
+        const fetchedActivePaymentParcels = responseForPaymentParcels.data?.colis;
+
+        const newData = fetchedActivePaymentParcels?.filter((colis) => {
+          return colis?.commande_colis?.some((commandeColis) => {
+            return (
+              commandeColis.livreur_id === livreur &&
+              commandeColis.versement_status === 'PENDING' &&
+              ['DELIVERED', 'LOST', 'COLLECTED'].includes(
+                commandeColis?.colis_status?.colis_status?.code
+              )
+            );
+          });
+        });
+
+        setPaymentList(() => [...newData]);
+      } catch (error) {
+        console.error('Failed to fetch parcel data:', error);
+      }
+    };
 
     if (livreur) {
-      fetchLivreursParcels(extraObject?.colis?.id);
-      setIsScanningMode(false);
+      if (activeTab === TABS_ENUMERATION_IN_QR_CODE_PANEL.parcels_summary) {
+        fetchLivreursParcels(extraObject?.colis?.id);
+        setIsScanningMode(false);
+      } else if (TABS_ENUMERATION_IN_QR_CODE_PANEL.payment_summary) {
+        fetchLivreurPaymentParcels(extraObject?.colis?.id);
+      }
     }
-  }, [livreur, extraObject?.from, extraObject?.to]);
+  }, [livreur, activeTab]);
 
-  const handleScan = (scannedData) => {
-    const separator = '-#$#-';
-    const equalSign = '=';
-    const slash = '/';
-    const constY = 'y';
-    const constCapY = 'Y';
-    const constZ = 'z';
-    const constCapZ = 'Z';
-    const wrongSeparator = '/\\$\\/';
-    const wrongEqualSign = ')';
-    const wrongSlash = '&';
-    const wrongConstY = 'z';
-    const wrongConstCapY = 'Z';
-    const wrongConstZ = 'y';
-    const wrongConstCapZ = 'Y';
-    const cleanedData = scannedData
-      ?.replaceAll(wrongConstCapY, constCapY)
-      ?.replaceAll(wrongConstY, constY)
-      ?.replaceAll(wrongConstCapZ, constCapZ)
-      ?.replaceAll(wrongConstZ, constZ)
-      ?.replaceAll(wrongSeparator, separator)
-      ?.replaceAll(wrongEqualSign, equalSign)
-      ?.replaceAll(wrongSlash, slash);
-
-    setScanResult(cleanedData);
-    // console.log({
-    //   cleanedData,
-    //   saturnin: 'STREET-#$#-jQZZLIdmfUmmOslu9Ki5Vg==-#$#-J5',
-    //   isequal: 'STREET-#$#-jQZZLIdmfUmmOslu9Ki5Vg==-#$#-J5' === cleanedData
-    // });
-    debouncedChangeStatus(cleanedData, livreur);
-  };
-
-  const updateGroupedParcelsWithNewColis = (groups, updatedColis) => {
-    const updatedGroups = {};
+  const updateGroupedParcelsWithNewColis = (groups, updatedColis, livreurId) => {
+    const updatedGroups = { ...groups };
 
     Object.keys(groups).forEach((groupKey) => {
-      updatedGroups[groupKey] = groups[groupKey].map((colis) =>
-        colis.id === updatedColis.id ? updatedColis : colis
-      );
+      // Keep only the parcels that belong to the livreur or are the updated parcel
+      updatedGroups[groupKey] = groups[groupKey]
+        .filter((colis) => {
+          // If the parcel is the updated one, check if it belongs to the livreur
+          if (colis.id === updatedColis.id) {
+            // If the updated parcel doesn't belong to the livreur, remove it from the list
+            return updatedColis?.commande_colis?.some(
+              (assignment) => assignment.livreur_id === livreurId
+            );
+          }
+          // Otherwise, keep the parcel if it's not the one being updated
+          return true;
+        })
+        .map((colis) => {
+          // If this parcel is the updated one, return the updated parcel data
+          if (colis.id === updatedColis.id) {
+            return updatedColis;
+          }
+          // Otherwise, return the parcel as is
+          return colis;
+        });
     });
 
     return updatedGroups;
@@ -194,16 +211,15 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
           })
         );
       } else {
-        // Update groupedParcels with the new colis data
-        const updatedGroups = updateGroupedParcelsWithNewColis(
-          groupedParcels,
-          response.payload.colis
-        );
-        console.log({ updatedGroups });
-        // setGroupedParcels(updatedGroups);
-        // setGroupedParcels((prevState) => {
-        //   return { ...prevState, ...updatedGroups };
-        // });
+        setGroupedParcels((prevState) => {
+          // Use a function to update state to ensure you have the most recent state
+          const newParcel = response.payload.colis;
+          // noinspection UnnecessaryLocalVariableJS
+          const updatedGroups = updateGroupedParcelsWithNewColis(prevState, newParcel);
+
+          // This will return the new state which should trigger a re-render
+          return updatedGroups;
+        });
 
         dispatch(
           showNotification({
@@ -229,23 +245,17 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
 
   const allGroupsAreEmpty = Object.values(groupedParcels).every((group) => group.length === 0);
 
-  const onNewScanResult = (decodedText, decodedResult) => {
-    // handle decoded results here
+  const onNewScanResult = async (decodedText, decodedResult) => {
+    setIsScanning(false);
     console.log({ decodedText, decodedResult });
+
+    setScanResult(decodedText);
+    await debouncedChangeStatus(decodedText, livreur);
+    setIsScanning(true);
   };
 
   return (
     <div className="mb-5">
-      {/*<div className="App" className>*/}
-      {/*  <Html5QrcodePlugin*/}
-      {/*    fps={10}*/}
-      {/*    // qrbox={250}*/}
-      {/*    qrbox={{ width: 400, height: 150 }}*/}
-      {/*    disableFlip={false}*/}
-      {/*    qrCodeSuccessCallback={onNewScanResult}*/}
-      {/*  />*/}
-      {/*</div>*/}
-
       <ChooseLivreur
         livreur={livreur}
         dispatch={dispatch}
@@ -254,74 +264,92 @@ const QrCodePanel = ({ extraObject, closeModal }) => {
         }}
       />
 
-      {livreur && !allGroupsAreEmpty ? (
-        <>
-          <input
-            ref={scanRef}
-            type="text"
-            value={scanResult}
-            onChange={(e) => (isScanningMode ? handleScan(e.target.value) : () => {})}
-            className="opacity-0 absolute"
-            tabIndex="-1"
-            onBlur={() => {
-              if (document.activeElement !== scanRef.current) {
-                setIsReadyToRead(false);
-              }
-            }}
-          />
-          {isScanningMode ? (
-            <>
-              <div className="flex flex-col items-center justify-center p-2 my-4 text-center bg-gray-200 rounded-lg shadow">
-                <MdQrCodeScanner className="w-12 h-12 mb-3 text-blue-500" />
-                <p className="text-lg font-medium">Please use the barcode scanner</p>
-                <p className="text-sm text-gray-600">Scan any QR code to take action.</p>
-                <div
-                  style={{ height: '10px', width: '10px', borderRadius: '50%' }}
-                  className={isReadyToRead ? 'bg-green-500' : 'bg-red-500'}></div>
-              </div>
-
-              {/* Hidden but focusable input for catching the scan result */}
-
-              {isReadyToRead ? (
-                <></>
-              ) : (
-                <div className="flex items-center justify-center text-error">
-                  The QR Code reader lost focus.{' '}
-                  <button
-                    className="btn btn-link"
-                    onClick={() => {
-                      console.log({ colisForToday, colisForYesterday });
-                      if (livreur && scanRef.current) {
-                        scanRef.current.focus();
-                        setIsReadyToRead(true); // Indicator that input is ready
-                      } else {
-                        setIsReadyToRead(false); // Not ready since no livreur is chosen
-                      }
-                    }}>
-                    {' '}
-                    Click to start reading
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center justify-center">
-              <button
-                className="btn btn-outline btn-primary"
-                onClick={() => {
-                  setIsScanningMode(true);
-                  scanRef.current.focus();
-                  setIsReadyToRead(true);
-                }}>
-                Start Scanning
-              </button>
+      {livreur && (
+        <div className="flex justify-center w-full my-4">
+          <div>
+            <div className="tabs tabs-boxed">
+              <a
+                className={`tab ${
+                  activeTab === TABS_ENUMERATION_IN_QR_CODE_PANEL.parcels_summary
+                    ? 'tab-active'
+                    : ''
+                }`}
+                onClick={() => setActiveTab(TABS_ENUMERATION_IN_QR_CODE_PANEL.parcels_summary)}>
+                {TABS_ENUMERATION_IN_QR_CODE_PANEL.parcels_summary}
+              </a>
+              <a
+                className={`tab ${
+                  activeTab === TABS_ENUMERATION_IN_QR_CODE_PANEL.payment_summary
+                    ? 'tab-active'
+                    : ''
+                }`}
+                onClick={() => setActiveTab(TABS_ENUMERATION_IN_QR_CODE_PANEL.payment_summary)}>
+                {TABS_ENUMERATION_IN_QR_CODE_PANEL.payment_summary}
+              </a>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          <ParcelSummaryTables groupedParcels={groupedParcels} />
-        </>
+      {livreur && activeTab === TABS_ENUMERATION_IN_QR_CODE_PANEL.parcels_summary ? (
+        !allGroupsAreEmpty ? (
+          <>
+            <div className="flex flex-col items-center justify-center p-2 my-4 text-center bg-gray-200 rounded-lg shadow">
+              <MdQrCodeScanner className="w-12 h-12 mb-3 text-blue-500" />
+              <p className="text-lg font-medium">Please use the barcode scanner</p>
+              <p className="text-sm text-gray-600">Scan any QR code to take action.</p>
+              <button
+                className="btn btn-primary btn-outline btn-sm my-3"
+                onClick={() => setShowScanner(!showScanner)}>
+                {showScanner ? 'Switch to Input' : 'Switch to Scanner'}
+              </button>
+              {showScanner ? (
+                <div>
+                  <Html5QrcodePlugin
+                    fps={10}
+                    qrbox={250}
+                    disableFlip={false}
+                    rememberLastUsedCamera={true}
+                    qrCodeSuccessCallback={isScanning ? onNewScanResult : () => {}}
+                  />
+                </div>
+              ) : (
+                <form
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    const inputText = event.target.elements.inputText.value;
+                    await onNewScanResult(inputText, null);
+                  }}>
+                  <input
+                    type="text"
+                    name="inputText"
+                    placeholder="Enter code"
+                    className="input input-bordered input-sm rounded shadow mx-3"
+                  />
+                  <button type="submit" className="btn btn-primary btn-sm">
+                    Submit
+                  </button>
+                </form>
+              )}
+            </div>
+            <ParcelSummaryTables groupedParcels={groupedParcels} dispatch={dispatch} />
+          </>
+        ) : (
+          <NotFoundPage message="No colis found" />
+        )
+      ) : livreur && activeTab === TABS_ENUMERATION_IN_QR_CODE_PANEL.payment_summary ? (
+        paymentList?.length ? (
+          <PointVersementLivreurContent
+            livreur={livreur}
+            data={paymentList}
+            setPaymentList={setPaymentList}
+            onCopy={() => handleCopyContent(`content-${1}`)}
+          />
+        ) : (
+          <NotFoundPage message="No due payment" />
+        )
       ) : (
-        <div className="flex items-center justify-center">{livreur ? 'No Parcel found.' : ''}</div>
+        livreur && <NotFoundPage message="No colis found" />
       )}
     </div>
   );
@@ -371,7 +399,15 @@ const ChooseLivreur = ({ livreur, dispatch, updateFormValue }) => {
   );
 };
 
-const ParcelSummaryTables = ({ groupedParcels }) => {
+const ParcelSummaryTables = ({ groupedParcels, dispatch }) => {
+  useEffect(() => {
+    // Perform actions that should happen after groupedParcels updates.
+    // For example, if you need to fetch additional data based on the new parcels:
+    // fetchAdditionalParcelData(groupedParcels);
+
+    // Or simply log to the console to verify it's updating:
+    console.log('Updated groupedParcels:', groupedParcels);
+  }, [groupedParcels]);
   const getStatusColor = (status) => {
     switch (status) {
       case 'DELIVERED':
@@ -391,20 +427,28 @@ const ParcelSummaryTables = ({ groupedParcels }) => {
   // Helper function to generate table rows for each parcel in a group
   const renderTableRows = (parcels) => {
     return parcels.map((parcel, index) => {
-      const amount =
-        parcel?.status?.colis_status?.code === 'DELIVERED' && parseInt(parcel.price) > 0
-          ? parcel.fee_payment === 'PREPAID' && parcel?.status?.colis_status?.code !== 'LOST'
-            ? parseInt(parcel.price)
-            : parseInt(parcel.price) - parseInt(parcel.fee || 0)
-          : 0;
+      console.log({ parcel });
+      const amount = parseInt(parcel.price);
 
-      const fee =
-        parcel?.status?.colis_status?.code === 'DELIVERED' && parcel.fee_payment === 'POSTPAID'
-          ? parseInt(parcel.fee || 0)
-          : 0;
+      const fee = parseInt(parcel.fee || 0);
       return (
         <tr key={index}>
-          <td>{parcel?.code}</td>
+          <td
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(parcel?.code);
+                dispatch(
+                  showNotification({
+                    message: 'Text copied to clipboard',
+                    status: 1
+                  })
+                );
+              } catch (err) {
+                console.error('Failed to copy text: ', err);
+              }
+            }}>
+            {parcel?.code}
+          </td>
           <td>
             <span
               className={`px-3 py-1 uppercase text-xs font-bold rounded-full ${getStatusColor(
@@ -415,7 +459,7 @@ const ParcelSummaryTables = ({ groupedParcels }) => {
           </td>
           <td>{amount}</td>
           <td>{fee}</td>
-          <td>{amount + fee}</td>
+          <td>{parcel.fee_payment === 'PREPAID' ? amount : amount + fee}</td>
           <td>{parcel?.client?.phone_number}</td>
           <td>{parcel?.pickup_address?.description}</td>
           <td>{parcel?.delivery_phone_number}</td>

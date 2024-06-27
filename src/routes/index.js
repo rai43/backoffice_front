@@ -21,10 +21,13 @@ const Invitations = lazy(() => import('../pages/authenticated/Invitations'));
 const LiveLocations = lazy(() => import('../pages/authenticated/LiveLocations'));
 const LogisticsControlPanel = lazy(() => import('../pages/authenticated/LogisticsControlPanel'));
 const ParcelsManagement = lazy(() => import('../pages/authenticated/ParcelsManagement'));
-const ReturnParcelsManagement = lazy(() =>
-  import('../pages/authenticated/ReturnParcelsManagement')
+const ReturnParcelsManagement = lazy(
+  () => import('../pages/authenticated/ReturnParcelsManagement')
 );
 const ColisZones = lazy(() => import('../pages/authenticated/ColisZones'));
+const BlockRegistrationsManagement = lazy(
+  () => import('../pages/authenticated/BlockRegistrationsManagement')
+);
 
 const routes = [
   {
@@ -110,6 +113,10 @@ const routes = [
   {
     path: 'logistics-center/colis-zones',
     component: ColisZones
+  },
+  {
+    path: 'logistics-center/block-registrations',
+    component: BlockRegistrationsManagement
   }
 ];
 

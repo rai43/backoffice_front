@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { LoadScript, StandaloneSearchBox } from '@react-google-maps/api';
+import { StandaloneSearchBox } from '@react-google-maps/api';
 import Modal from 'react-modal';
 import { components } from 'react-select';
 import AsyncSelect from 'react-select/async';
@@ -14,15 +14,6 @@ const zonesOptions = [
   { value: 'AbidjanSud', label: 'Grand Abidjan Sud' },
   { value: 'Yopougnon', label: 'Grand Yopougnon' }
 ];
-
-// {
-//     Bingerville: 213, // Maïk Maurel Derou
-//     Abobo: 598, // Kacou Marc Junior
-//     Yopougnon: 538, // Dje Bi Clovis
-//     AbidjanSud: 594, // Moussa Sylla
-//     Angre: 263, // Benoît Sib
-//     Adjame: 492 // Yao Alphonse Kounan
-//   },
 
 const AddOrEditColis = ({
   extraObject,

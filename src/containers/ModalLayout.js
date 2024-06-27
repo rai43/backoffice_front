@@ -35,6 +35,7 @@ import ChangeProvider from '../features/smsPorvider/components/ChangeProvider';
 import TransactionDetails from '../features/transaction/components/TransactionDetails';
 import AddOrModifyUserModalBody from '../features/user/components/AddOrModifyUserModalBody';
 import { MODAL_BODY_TYPES } from '../utils/globalConstantUtil';
+import AddOrEditBlockColisRegistration from '../features/colis/blockRegistrations/components/AddOrEditBlockColisRegistration';
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector((state) => state.modal);
@@ -152,9 +153,9 @@ function ModalLayout() {
               [MODAL_BODY_TYPES.COLIS_QR_CODE_PANEL]: (
                 <QrCodePanel extraObject={extraObject} closeModal={close} />
               ),
-              // [MODAL_BODY_TYPES.COLIS_ADD_OR_EDIT]: (
-              //   <AddOrEditColis extraObject={extraObject} closeModal={close} />
-              // ),
+              [MODAL_BODY_TYPES.COLIS_BLOCK_REGISTRATION]: (
+                <AddOrEditBlockColisRegistration extraObject={extraObject} closeModal={close} />
+              ),
               [MODAL_BODY_TYPES.DEFAULT]: <div></div>
             }[bodyType]
           }

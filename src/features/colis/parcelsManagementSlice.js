@@ -20,12 +20,16 @@ export const getColis = createAsyncThunk('/parcels-management/get-colis', async 
   const from = params.from || moment.utc().format('YYYY-MM-DD');
   const to = params.to || moment.utc().format('YYYY-MM-DD');
   const skip = params.skip;
+  const type = params.type;
+  const colisInfo = params.colisInfo;
 
   const response = await axios.get('/api/colis/get-colis', {
     params: {
       from,
       to,
-      skip
+      skip,
+      type,
+      colisInfo
     }
   });
 
@@ -185,12 +189,10 @@ export const createParcelAssignment = createAsyncThunk(
     const colisId = params?.colisId;
     // const livreurId = params.livreurId ? params.livreurId : 'UNDEFINED';
     const action = params.action;
-    const operationDate = params.operationDate;
 
     let response = await axios.post(`/api/colis/create-parcel-assignment`, {
       colisId,
-      action,
-      operationDate
+      action
     });
 
     return response.data;
@@ -411,27 +413,27 @@ export const parcelsManagementSlice = createSlice({
       if (indexToRemoved !== -1) {
         state.colis[indexToRemoved] = action.payload?.colis;
 
-        const stats = countStatuses(state.colis);
-        state.pendingCount = stats?.pendingCount;
-        state.articleToReturnCount = stats?.articleToReturnCount;
-        state.registeredCount = stats?.registeredCount;
-        state.canceledCount = stats?.canceledCount;
-        state.assignedForCollectionCount = stats?.assignedForCollectionCount;
-        state.collectionInProgressCount = stats?.collectionInProgressCount;
-        state.collectedCount = stats?.collectedCount;
-        state.notCollectedCount = stats?.notCollectedCount;
-        state.warehousedCount = stats?.warehousedCount;
-        state.assignedForDeliveryCount = stats?.assignedForDeliveryCount;
-        state.waitingForDeliveryCount = stats?.waitingForDeliveryCount;
-        state.deliveryInProgressCount = stats?.deliveryInProgressCount;
-        state.deliveredCount = stats?.deliveredCount;
-        state.notDeliveredCount = stats?.notDeliveredCount;
-        state.assignedForReturnCount = stats?.assignedForReturnCount;
-        state.returnInProgressCount = stats?.returnInProgressCount;
-        state.returnedCount = stats?.returnedCount;
-        state.notReturnedCount = stats?.notReturnedCount;
-        state.refusedCount = stats?.refusedCount;
-        state.lostCount = stats?.lostCount;
+        // const stats = countStatuses(state.colis);
+        // state.pendingCount = stats?.pendingCount;
+        // state.articleToReturnCount = stats?.articleToReturnCount;
+        // state.registeredCount = stats?.registeredCount;
+        // state.canceledCount = stats?.canceledCount;
+        // state.assignedForCollectionCount = stats?.assignedForCollectionCount;
+        // state.collectionInProgressCount = stats?.collectionInProgressCount;
+        // state.collectedCount = stats?.collectedCount;
+        // state.notCollectedCount = stats?.notCollectedCount;
+        // state.warehousedCount = stats?.warehousedCount;
+        // state.assignedForDeliveryCount = stats?.assignedForDeliveryCount;
+        // state.waitingForDeliveryCount = stats?.waitingForDeliveryCount;
+        // state.deliveryInProgressCount = stats?.deliveryInProgressCount;
+        // state.deliveredCount = stats?.deliveredCount;
+        // state.notDeliveredCount = stats?.notDeliveredCount;
+        // state.assignedForReturnCount = stats?.assignedForReturnCount;
+        // state.returnInProgressCount = stats?.returnInProgressCount;
+        // state.returnedCount = stats?.returnedCount;
+        // state.notReturnedCount = stats?.notReturnedCount;
+        // state.refusedCount = stats?.refusedCount;
+        // state.lostCount = stats?.lostCount;
       }
       state.isLoading = false;
     },
@@ -462,27 +464,27 @@ export const parcelsManagementSlice = createSlice({
       if (indexToRemoved !== -1) {
         state.colis[indexToRemoved] = action.payload?.colis;
 
-        const stats = countStatuses(state.colis);
-        state.pendingCount = stats?.pendingCount;
-        state.articleToReturnCount = stats?.articleToReturnCount;
-        state.registeredCount = stats?.registeredCount;
-        state.canceledCount = stats?.canceledCount;
-        state.assignedForCollectionCount = stats?.assignedForCollectionCount;
-        state.collectionInProgressCount = stats?.collectionInProgressCount;
-        state.collectedCount = stats?.collectedCount;
-        state.notCollectedCount = stats?.notCollectedCount;
-        state.warehousedCount = stats?.warehousedCount;
-        state.assignedForDeliveryCount = stats?.assignedForDeliveryCount;
-        state.waitingForDeliveryCount = stats?.waitingForDeliveryCount;
-        state.deliveryInProgressCount = stats?.deliveryInProgressCount;
-        state.deliveredCount = stats?.deliveredCount;
-        state.notDeliveredCount = stats?.notDeliveredCount;
-        state.assignedForReturnCount = stats?.assignedForReturnCount;
-        state.returnInProgressCount = stats?.returnInProgressCount;
-        state.returnedCount = stats?.returnedCount;
-        state.notReturnedCount = stats?.notReturnedCount;
-        state.refusedCount = stats?.refusedCount;
-        state.lostCount = stats?.lostCount;
+        // const stats = countStatuses(state.colis);
+        // state.pendingCount = stats?.pendingCount;
+        // state.articleToReturnCount = stats?.articleToReturnCount;
+        // state.registeredCount = stats?.registeredCount;
+        // state.canceledCount = stats?.canceledCount;
+        // state.assignedForCollectionCount = stats?.assignedForCollectionCount;
+        // state.collectionInProgressCount = stats?.collectionInProgressCount;
+        // state.collectedCount = stats?.collectedCount;
+        // state.notCollectedCount = stats?.notCollectedCount;
+        // state.warehousedCount = stats?.warehousedCount;
+        // state.assignedForDeliveryCount = stats?.assignedForDeliveryCount;
+        // state.waitingForDeliveryCount = stats?.waitingForDeliveryCount;
+        // state.deliveryInProgressCount = stats?.deliveryInProgressCount;
+        // state.deliveredCount = stats?.deliveredCount;
+        // state.notDeliveredCount = stats?.notDeliveredCount;
+        // state.assignedForReturnCount = stats?.assignedForReturnCount;
+        // state.returnInProgressCount = stats?.returnInProgressCount;
+        // state.returnedCount = stats?.returnedCount;
+        // state.notReturnedCount = stats?.notReturnedCount;
+        // state.refusedCount = stats?.refusedCount;
+        // state.lostCount = stats?.lostCount;
       }
       state.isLoading = false;
     },
@@ -545,39 +547,16 @@ export const parcelsManagementSlice = createSlice({
       state.isLoading = true;
     },
     [updateColis.fulfilled]: (state, action) => {
-      const indexToReplace = state.colis.findIndex(
-        (order) => order.id === action.payload?.colis?.id
-      );
-
-      // const indexToRemovedInReturnedColis = state.returnedColis.findIndex(
-      //   (rc) => rc.id === action.payload?.colis?.id
-      // );
-
-      // if (
-      //   action.payload?.colis?.status?.colis_status?.code === 'ARTICLE_TO_RETURN' &&
-      //   indexToRemovedInReturnedColis !== -1
-      // ) {
-      //   state.returnedColis[indexToRemovedInReturnedColis] = action.payload?.colis;
-      // }
+      const indexToReplace = state.colis.findIndex((c) => c.id === action.payload?.colis?.[0]?.id);
+      console.log({
+        indexToReplace,
+        action: action.payload?.colis?.[0]?.id,
+        colis: action.payload?.colis?.[0],
+        state: state.colis
+      });
 
       if (indexToReplace !== -1) {
-        const ongoingAssignmentDate = parcelsUtils.findOngoingAssignment(
-          action.payload?.colis
-        )?.date;
-        const oldAssignmentDate = parcelsUtils.findOngoingAssignment(
-          state.colis[indexToReplace]
-        )?.date;
-
-        console.log({
-          ongoingAssignmentDate,
-          check: moment.utc(ongoingAssignmentDate).isSame(moment.utc(oldAssignmentDate))
-        });
-
-        if (moment.utc(ongoingAssignmentDate).isSame(moment.utc(oldAssignmentDate))) {
-          state.colis[indexToReplace] = action.payload?.colis;
-        } else {
-          state.colis.splice(indexToReplace, 1);
-        }
+        state.colis[indexToReplace] = action.payload?.colis?.[0];
 
         const stats = countStatuses(state.colis);
         state.pendingCount = stats?.pendingCount;

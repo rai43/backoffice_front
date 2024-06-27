@@ -9,6 +9,7 @@ import { FaAmazonPay } from 'react-icons/fa';
 import { GiCardExchange } from 'react-icons/gi';
 import { IoIosCheckmarkCircleOutline } from 'react-icons/io';
 
+import { calculateMontantACollecter } from './PointVersementLivreurContent';
 import { classNames } from '../../../components/Common/UtilsClassNames';
 import { STATUS_ACTIONS } from '../../../utils/colisUtils';
 import { adjustGridHeight } from '../../../utils/functions/adjustGridHeight';
@@ -218,22 +219,29 @@ const ColisList = ({ onLoad, gridOptions }) => {
     {
       field: 'delivery_longitude',
       valueGetter: ({ data }) => {
-        const assignment = parcelsUtils.findOngoingAssignment(data);
-        let status = assignment?.colis_status;
-
-        if (!assignment && data?.status?.colis_status?.code === 'PENDING') {
-          status = data.status;
-          console.log({ assignment, status, sta: data?.status?.colis_status });
-        }
-
-        return status
-          ? status?.colis_status?.code?.toUpperCase()?.replaceAll('_', ' ')
-          : data?.colis_assignment?.length
-          ? data?.colis_assignment
-              ?.slice()
-              .sort((a, b) => b.id - a.id)[0]
-              ?.colis_status?.colis_status?.code?.toUpperCase()
-              ?.replaceAll('_', ' ')
+        // const assignment = parcelsUtils.findOngoingAssignment(data);
+        // let status = assignment?.colis_status;
+        //
+        // if (
+        //   !assignment &&
+        //   (data?.status?.colis_status?.code === 'PENDING' ||
+        //     data?.status?.colis_status?.code === 'CANCELED')
+        // ) {
+        //   status = data.status;
+        //   console.log({ assignment, status, sta: data?.status?.colis_status });
+        // }
+        //
+        // return status
+        //   ? status?.colis_status?.code?.toUpperCase()?.replaceAll('_', ' ')
+        //   : data?.colis_assignment?.length
+        //   ? data?.colis_assignment
+        //       ?.slice()
+        //       .sort((a, b) => b.id - a.id)[0]
+        //       ?.colis_status?.colis_status?.code?.toUpperCase()
+        //       ?.replaceAll('_', ' ')
+        //   : 'N/A';
+        return data?.status
+          ? data?.status?.colis_status?.code?.toUpperCase()?.replaceAll('_', ' ')
           : 'N/A';
       },
       headerName: 'Current Status',
@@ -355,6 +363,36 @@ const ColisList = ({ onLoad, gridOptions }) => {
     },
     {
       field: 'fee_paid_by',
+      valueGetter: ({ data: colis }) => {
+        return parseInt(calculateMontantACollecter(colis, 'Collection'));
+      },
+      headerName: 'Pickup Amount',
+      width: 135,
+      filterParams: containFilterParams,
+      onCellClicked: (params) => onColumnClicked(params.data),
+      cellRenderer: ({ value }) => {
+        return (
+          <p className="uppercase font-semibold text-primary break-all overflow-hidden">{value}</p>
+        );
+      }
+    },
+    {
+      field: 'fee_paid_by',
+      valueGetter: ({ data: colis }) => {
+        return parseInt(calculateMontantACollecter(colis, 'Delivery'));
+      },
+      headerName: 'Delivery Amount',
+      width: 135,
+      filterParams: containFilterParams,
+      onCellClicked: (params) => onColumnClicked(params.data),
+      cellRenderer: ({ value }) => {
+        return (
+          <p className="uppercase font-semibold text-primary break-all overflow-hidden">{value}</p>
+        );
+      }
+    },
+    {
+      field: 'fee_paid_by',
       valueGetter: ({ data }) => {
         return (
           parseInt(
@@ -364,8 +402,8 @@ const ColisList = ({ onLoad, gridOptions }) => {
           ) + ''
         );
       },
-      headerName: 'To Collect',
-      width: 120,
+      headerName: 'Tot. To Collect',
+      width: 135,
       filterParams: containFilterParams,
       onCellClicked: (params) => onColumnClicked(params.data),
       cellRenderer: ({ value }) => {

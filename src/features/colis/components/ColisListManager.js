@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 
-import { LoadScript, StandaloneSearchBox } from '@react-google-maps/api';
+import { StandaloneSearchBox } from '@react-google-maps/api';
 import axios from 'axios';
 import flatpickr from 'flatpickr';
 import moment from 'moment/moment';
@@ -31,20 +31,13 @@ const ColisListManager = ({ extraObject, closeModal }) => {
           params: { reference: id }
         });
         const fetchedColis = response.data?.colis;
+        console.log({ fetchedColis });
         setLatestColisObject(fetchedColis);
 
         const assignments = parcelsUtils.findOngoingAssignment(fetchedColis);
 
         // Update colisList and colisGeneralInfo based on the fetched data
-        init(
-          setColisList,
-          fetchedColis,
-          assignments,
-          // pickupAssignment,
-          // deliveryAssignment,
-          // returnAssignment,
-          setColisGeneralInfo
-        );
+        init(setColisList, fetchedColis, assignments, setColisGeneralInfo);
       } catch (error) {
         console.error('Failed to fetch parcel data:', error);
       } finally {
@@ -86,8 +79,6 @@ const ColisListManager = ({ extraObject, closeModal }) => {
   const dispatch = useDispatch();
 
   const pickupDateRef = useRef();
-
-  console.log({ latestColisObject });
 
   // State to track errors for colis general information
   const [generalErrors, setGeneralErrors] = useState({});
@@ -315,9 +306,7 @@ const ColisListManager = ({ extraObject, closeModal }) => {
       const {
         delivery_phone_number,
         delivery_address_name,
-        fee,
         fee_payment,
-        price,
         pickup_livreur_id,
         delivery_livreur_id
       } = colis;
@@ -326,10 +315,8 @@ const ColisListManager = ({ extraObject, closeModal }) => {
       validateField(formPosition, 'fee_payment', fee_payment); // Validate field and update errors
       validateField(formPosition, 'pickup_livreur_id', pickup_livreur_id); // Validate field and update errors
       if (!parcelsUtils.findOngoingAssignment(latestColisObject)) {
-        console.log({ delivery_livreur_id });
         validateField(formPosition, 'delivery_livreur_id', delivery_livreur_id); // Validate field and update errors
       }
-      // validateField(formPosition, 'fee', fee); // Validate field and update errors
 
       if (
         !delivery_phone_number ||
@@ -503,152 +490,147 @@ const ColisListManager = ({ extraObject, closeModal }) => {
     [latestColisObject]
   );
 
-  // The content as a separate component
-  const content = (
-    <div className="space-y-4">
-      <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
-        <h3 className="mb-3 text-lg font-semibold text-gray-700">Sender General Information</h3>
-        <div className="mb-5">
-          <div
-            className={`grid gap-3 ${latestColisObject?.id ? 'md:grid-cols-4' : 'md:grid-cols-4'}`}>
-            {/* Merchant Phone Number */}
-            <div className={`form-control w-full`}>
-              <label className="label">
-                <span className={'label-text text-base-content '}>Merchant Phone Number</span>
-              </label>
-              <input
-                type="text"
-                value={colisGeneralInfo.merchant_phone_number}
-                className={getInputClass('merchant_phone_number')}
-                onChange={(e) => handleGeneralInfoChange('merchant_phone_number', e.target.value)}
-              />
-            </div>
-            {/* Pickup Phone Number */}
-            <div className={`form-control w-full`}>
-              <label className="label">
-                <span className={'label-text text-base-content '}>Pickup Phone Number</span>
-              </label>
-              <input
-                type="text"
-                value={colisGeneralInfo.pickup_phone_number}
-                className={getInputClass('pickup_phone_number')}
-                onChange={(e) => handleGeneralInfoChange('pickup_phone_number', e.target.value)}
-              />
-            </div>
-            {/* Pickup Address Name */}
-            <div className={`form-control col-span-1 w-full`}>
-              <label className="label">
-                <span className={'label-text text-base-content '}>Pickup Address</span>
-              </label>
-
-              <StandaloneSearchBox onPlacesChanged={onPickupPlacesChanged} onLoad={onPickupSBLoad}>
-                <input
-                  type="text"
-                  value={colisGeneralInfo.pickup_address_name}
-                  className={getInputClass('pickup_address_name')}
-                  onChange={(e) => handleGeneralInfoChange('pickup_address_name', e.target.value)}
-                />
-              </StandaloneSearchBox>
-            </div>
-            {/*{!latestColisObject?.id && (*/}
-            <div className={`form-control w-full`}>
-              <label className="label">
-                <span className={'label-text text-base-content '}>Pickup Date</span>
-              </label>
-              <input
-                type="date"
-                className={getInputClass('pickup_date')}
-                ref={inputPickupDateRef}
-              />
-            </div>
-            {/*)}*/}
-          </div>
-        </div>
-      </div>
-      {colisList &&
-        colisList?.map((colis, index) => (
-          <div key={index} className="relative ">
-            {!latestColisObject?.id ? (
-              <button
-                onClick={() => duplicateColis(index)}
-                className="absolute top-2 right-20 flex items-center font-semibold text-gray-600"
-                title="Remove">
-                <FaCopy className="text-lg" />
-                <span className="mx-2">Duplicate</span>
-              </button>
-            ) : (
-              <></>
-            )}
-
-            {colisList?.length > 1 ? (
-              <button
-                onClick={() => removeColis(index)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-600"
-                title="Remove">
-                <IoClose size="1.5em" />
-              </button>
-            ) : (
-              <></>
-            )}
-
-            <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
-              <h3 className="mb-3 text-lg font-semibold text-gray-700">Parcel Form #{index + 1}</h3>
-              <AddOrEditColis
-                index={index}
-                extraObject={colis}
-                onFieldChange={onValueChange}
-                errors={errorsList[index]}
-                livreursPromise={livreursPromiseOptions}
-                closeModal={() => {
-                  /* logic to handle closing a colis */
-                }}
-                onDeliveryPlacesChanged={onDeliveryPlacesChanged}
-                onDeliverySBLoad={onDeliverySBLoad}
-              />
-            </div>
-          </div>
-        ))}
-
-      {!latestColisObject?.id ? (
-        <div className="flex justify-end mt-4">
-          <button
-            className="p-2 rounded-full btn btn-ghost btn-outline btn-sm"
-            onClick={addColis}
-            aria-label="Add Parcel">
-            <IoAddSharp />
-          </button>
-        </div>
-      ) : (
-        <></>
-      )}
-
-      <div className="mt-6">
-        <button
-          className={`w-full py-2 btn ${
-            latestColisObject?.id ? 'btn-primary-content' : 'btn-secondary'
-          } btn-outline`}
-          onClick={handleSubmit}>
-          {latestColisObject?.id ? 'Edit Parcel' : 'Submit Parcel(s)'}
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <>
-      {
-        !isLoading && (
-          // (window.google === undefined ? (
-          <LoadScript
-            googleMapsApiKey="AIzaSyBn8n_poccjk4WVSg31H0rIkU-u7a2lYg8"
-            libraries={['places']}>
-            {content}
-          </LoadScript>
-        )
-        // ) : (
-        //   content
-        // ))
-      }
+      {!isLoading && (
+        <div className="space-y-4">
+          <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
+            <h3 className="mb-3 text-lg font-semibold text-gray-700">Sender General Information</h3>
+            <div className="mb-5">
+              <div
+                className={`grid gap-3 ${
+                  latestColisObject?.id ? 'md:grid-cols-4' : 'md:grid-cols-4'
+                }`}>
+                {/* Merchant Phone Number */}
+                <div className={`form-control w-full`}>
+                  <label className="label">
+                    <span className={'label-text text-base-content '}>Merchant Phone Number</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={colisGeneralInfo.merchant_phone_number}
+                    className={getInputClass('merchant_phone_number')}
+                    onChange={(e) =>
+                      handleGeneralInfoChange('merchant_phone_number', e.target.value)
+                    }
+                  />
+                </div>
+                {/* Pickup Phone Number */}
+                <div className={`form-control w-full`}>
+                  <label className="label">
+                    <span className={'label-text text-base-content '}>Pickup Phone Number</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={colisGeneralInfo.pickup_phone_number}
+                    className={getInputClass('pickup_phone_number')}
+                    onChange={(e) => handleGeneralInfoChange('pickup_phone_number', e.target.value)}
+                  />
+                </div>
+                {/* Pickup Address Name */}
+                <div className={`form-control col-span-1 w-full`}>
+                  <label className="label">
+                    <span className={'label-text text-base-content '}>Pickup Address</span>
+                  </label>
+
+                  <StandaloneSearchBox
+                    onPlacesChanged={onPickupPlacesChanged}
+                    onLoad={onPickupSBLoad}>
+                    <input
+                      type="text"
+                      value={colisGeneralInfo.pickup_address_name}
+                      className={getInputClass('pickup_address_name')}
+                      onChange={(e) =>
+                        handleGeneralInfoChange('pickup_address_name', e.target.value)
+                      }
+                    />
+                  </StandaloneSearchBox>
+                </div>
+                {/*{!latestColisObject?.id && (*/}
+                <div className={`form-control w-full`}>
+                  <label className="label">
+                    <span className={'label-text text-base-content '}>Pickup Date</span>
+                  </label>
+                  <input
+                    type="date"
+                    className={getInputClass('pickup_date')}
+                    ref={inputPickupDateRef}
+                  />
+                </div>
+                {/*)}*/}
+              </div>
+            </div>
+          </div>
+          {colisList &&
+            colisList?.map((colis, index) => (
+              <div key={index} className="relative ">
+                {!latestColisObject?.id ? (
+                  <button
+                    onClick={() => duplicateColis(index)}
+                    className="absolute top-2 right-20 flex items-center font-semibold text-gray-600"
+                    title="Remove">
+                    <FaCopy className="text-lg" />
+                    <span className="mx-2">Duplicate</span>
+                  </button>
+                ) : (
+                  <></>
+                )}
+
+                {colisList?.length > 1 ? (
+                  <button
+                    onClick={() => removeColis(index)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-600"
+                    title="Remove">
+                    <IoClose size="1.5em" />
+                  </button>
+                ) : (
+                  <></>
+                )}
+
+                <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
+                  <h3 className="mb-3 text-lg font-semibold text-gray-700">
+                    Parcel Form #{index + 1}
+                  </h3>
+                  <AddOrEditColis
+                    index={index}
+                    extraObject={colis}
+                    onFieldChange={onValueChange}
+                    errors={errorsList[index]}
+                    livreursPromise={livreursPromiseOptions}
+                    closeModal={() => {
+                      /* logic to handle closing a colis */
+                    }}
+                    onDeliveryPlacesChanged={onDeliveryPlacesChanged}
+                    onDeliverySBLoad={onDeliverySBLoad}
+                  />
+                </div>
+              </div>
+            ))}
+
+          {!latestColisObject?.id ? (
+            <div className="flex justify-end mt-4">
+              <button
+                className="p-2 rounded-full btn btn-ghost btn-outline btn-sm"
+                onClick={addColis}
+                aria-label="Add Parcel">
+                <IoAddSharp />
+              </button>
+            </div>
+          ) : (
+            <></>
+          )}
+
+          <div className="mt-6">
+            <button
+              className={`w-full py-2 btn ${
+                latestColisObject?.id ? 'btn-primary-content' : 'btn-secondary'
+              } btn-outline`}
+              onClick={handleSubmit}>
+              {latestColisObject?.id ? 'Edit Parcel' : 'Submit Parcel(s)'}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -404,7 +404,7 @@ const ModalSection = ({
  * @param {Function} props.openCardDetails - Function to open the card details view.
  * @returns {React.ReactElement} - A section displaying the client's wallets.
  */
-const WalletsSection = ({ client, openCardDetails }) => {
+export const WalletsSection = ({ client, openCardDetails }) => {
   return (
     <div className="w-full my-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

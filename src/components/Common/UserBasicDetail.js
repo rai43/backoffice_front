@@ -37,11 +37,15 @@ const UserBasicDetail = ({
         <div className="text-lg font-semibold">
           {country?.prefix ? country.prefix + ' ' : '+225 '} {phone_number}
         </div>
-        <div className="text-sm text-gray-500">Mobile Number</div>
-        {!isLivreur && (
+        <div className="text-sm text-gray-500">
+          Mobile Number {isLivreur ? ' / WhatsApp / Emergency' : ''}
+        </div>
+        {!isLivreur ? (
           <div className="mt-2 text-primary font-medium">
             {merchants[0]?.name?.toLocaleUpperCase() || client_type?.libelle?.toLocaleUpperCase()}
           </div>
+        ) : (
+          <div className="mt-2 text-primary font-medium">{merchants}</div>
         )}
         <div
           className={`mt-1 h-2 w-2 rounded-full ${is_deleted ? 'bg-error' : 'bg-success'}`}></div>

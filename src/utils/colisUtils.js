@@ -114,9 +114,10 @@ export const ABSOLUTE_STATUS_ACTIONS = {
 export const COLIS_ASSIGNMENTS_VS_ACTIONS = {
   INIT: ['PENDING'],
   PICKUP: [
+    'CANCEL',
     'REGISTERED',
     'ASSIGNED_FOR_COLLECTION',
-    // 'COLLECTION_IN_PROGRESS',
+    'COLLECTION_IN_PROGRESS',
     'COLLECTED',
     'NOT_COLLECTED'
     // 'WAREHOUSED'
@@ -196,6 +197,7 @@ export const STATUS_ACTIONS = {
   },
   [ALL_STATUSES.COLLECTION_IN_PROGRESS]: {
     ACTIONS: [
+      { action: ALL_STATUSES.ASSIGNED_FOR_COLLECTION, isActive: true },
       { action: ALL_STATUSES.COLLECTED, isActive: true },
       { action: ALL_STATUSES.NOT_COLLECTED, isActive: true }
     ]
@@ -208,22 +210,15 @@ export const STATUS_ACTIONS = {
   },
   [ALL_STATUSES.NOT_COLLECTED]: {
     ACTIONS: [
-      // Assuming NOT_COLLECTED leads to CANCELED or COLLECTION_POSTPONED as per your description
-      // { action: ALL_STATUSES.CANCELED, isActive: true },
-      // { action: ALL_STATUSES.COLLECTION_POSTPONED, isActive: true }
+      { action: ALL_STATUSES.CANCELED, isActive: true },
+      { action: ALL_STATUSES.COLLECTION_IN_PROGRESS, isActive: true }
     ]
   },
-  // [ALL_STATUSES.COLLECTION_POSTPONED]: {
-  //   ACTIONS: [
-  //     // Assuming the postponed collection can be reassigned for collection
-  //     { action: ALL_STATUSES.ASSIGNED_FOR_COLLECTION, isActive: true },
-  //   ],
-  // },
   [ALL_STATUSES.WAREHOUSED]: {
     ACTIONS: [{ action: ALL_STATUSES.ASSIGNED_FOR_DELIVERY, isActive: false }]
   },
   [ALL_STATUSES.ASSIGNED_FOR_DELIVERY]: {
-    ACTIONS: [{ action: ALL_STATUSES.WAITING_FOR_DELIVERY, isActive: true }]
+    ACTIONS: [{ action: ALL_STATUSES.WAITING_FOR_DELIVERY, isActive: false }]
   },
   [ALL_STATUSES.WAITING_FOR_DELIVERY]: {
     ACTIONS: [{ action: ALL_STATUSES.DELIVERY_IN_PROGRESS, isActive: true }]
@@ -236,17 +231,12 @@ export const STATUS_ACTIONS = {
   },
   [ALL_STATUSES.NOT_DELIVERED]: {
     ACTIONS: [
-      { action: ALL_STATUSES.WAREHOUSED, isActive: false }
-      // { action: ALL_STATUSES.DELIVERY_POSTPONED, isActive: false }
+      { action: ALL_STATUSES.WAREHOUSED, isActive: false },
+      { action: ALL_STATUSES.DELIVERED, isActive: true }
     ]
   },
   [ALL_STATUSES.DELIVERED]: {
-    ACTIONS: [
-      // No actions are available after successful delivery
-    ]
-  },
-  [ALL_STATUSES.NOT_DELIVERED]: {
-    ACTIONS: [{ action: ALL_STATUSES.WAREHOUSED, isActive: false }]
+    ACTIONS: [{ action: ALL_STATUSES.NOT_DELIVERED, isActive: true }]
   },
   // [ALL_STATUSES.REFUSED]: {
   //   ACTIONS: [{ action: ALL_STATUSES.WAREHOUSED, isActive: false }]
@@ -272,11 +262,9 @@ export const STATUS_ACTIONS = {
     ]
   },
   [ALL_STATUSES.NOT_RETURNED]: {
-    ACTIONS: [{ action: ALL_STATUSES.WAREHOUSED, isActive: false }]
-  },
-  [ALL_STATUSES.LOST]: {
     ACTIONS: [
-      // No actions are available after successful delivery
+      { action: ALL_STATUSES.WAREHOUSED, isActive: false },
+      { action: ALL_STATUSES.RETURNED, isActive: true }
     ]
   },
   [ALL_STATUSES.LOST]: {

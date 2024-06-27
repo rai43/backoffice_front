@@ -104,7 +104,7 @@ const ColisQrCode = () => {
     //   }
     // }
     // doc.addPage();
-    // doc.save(`qr-codes-${timestamp}.pdf`);
+    doc.save(`qr-codes-${timestamp}.pdf`);
   };
 
   return (
