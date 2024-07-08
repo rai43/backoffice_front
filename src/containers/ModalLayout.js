@@ -6,10 +6,12 @@ import AddOrModifyClients from '../features/client/components/AddOrModifyClients
 import ClientDetailView from '../features/client/components/ClientDetailView';
 import ConfirmationModalForClientCreation from '../features/client/components/ConfirmationModalForClientCreation';
 import AddOrEditCode from '../features/codeManagement/components/AddOrEditCode';
+import AddOrEditBlockColisRegistration from '../features/colis/blockRegistrations/components/AddOrEditBlockColisRegistration';
 import ChangeZoneLivreur from '../features/colis/colisZones/components/ChangeZoneLivreur';
 import AddOrEditColis from '../features/colis/components/AddOrEditColis';
 import ChangeStatus from '../features/colis/components/ChangeStatus';
 import ColisListManager from '../features/colis/components/ColisListManager';
+import { ColisManager } from '../features/colis/components/ColisManager';
 import ColisQrCode from '../features/colis/components/ColisQRCode';
 import DetailsColis from '../features/colis/components/DetailsColis';
 import DownloadColisData from '../features/colis/components/DownloadColisData';
@@ -35,7 +37,6 @@ import ChangeProvider from '../features/smsPorvider/components/ChangeProvider';
 import TransactionDetails from '../features/transaction/components/TransactionDetails';
 import AddOrModifyUserModalBody from '../features/user/components/AddOrModifyUserModalBody';
 import { MODAL_BODY_TYPES } from '../utils/globalConstantUtil';
-import AddOrEditBlockColisRegistration from '../features/colis/blockRegistrations/components/AddOrEditBlockColisRegistration';
 
 function ModalLayout() {
   const { isOpen, bodyType, size, extraObject, title } = useSelector((state) => state.modal);
@@ -118,7 +119,8 @@ function ModalLayout() {
                 <AddOrEditCode extraObject={extraObject} closeModal={close} />
               ),
               [MODAL_BODY_TYPES.COLIS_ADD_OR_EDIT]: (
-                <ColisListManager extraObject={extraObject} closeModal={close} />
+                // <ColisListManager extraObject={extraObject} closeModal={close} />
+                <ColisManager extraObject={extraObject} closeModal={close} />
               ),
               [MODAL_BODY_TYPES.COLIS_DETAILS]: (
                 <DetailsColis extraObject={extraObject} closeModal={close} />

@@ -6,8 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { CiEdit, CiNoWaitingSign } from 'react-icons/ci';
 import { FaAmazonPay } from 'react-icons/fa';
-import { GiCardExchange } from 'react-icons/gi';
-import { IoIosCheckmarkCircleOutline } from 'react-icons/io';
+import { GiCardExchange, GiAirplaneDeparture } from 'react-icons/gi';
 
 import { calculateMontantACollecter } from './PointVersementLivreurContent';
 import { classNames } from '../../../components/Common/UtilsClassNames';
@@ -211,6 +210,23 @@ const ColisList = ({ onLoad, gridOptions }) => {
           <div className="flex items-center justify-center ">
             <span className="text-gray-600 mt-2">
               <CiEdit className={'h-6 w-6 text-error'} />
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      field: 'expedition_fee',
+      headerName: 'Expedition',
+      width: 80,
+      // filter: containFilterParams,
+      pinned: 'left',
+      cellRenderer: ({ value }) => {
+        if (!value || parseInt(value) === 0) return;
+        return (
+          <div className="flex items-center justify-center ">
+            <span className="text-gray-600 mt-2">
+              <GiAirplaneDeparture className={'h-6 w-6 text-neutral'} />
             </span>
           </div>
         );
@@ -438,6 +454,20 @@ const ColisList = ({ onLoad, gridOptions }) => {
       cellRenderer: ({ value }) => {
         return (
           <p className="uppercase font-semibold break-all overflow-hidden">{parseInt(value)}</p>
+        );
+      }
+    },
+    {
+      field: 'expedition_fee',
+      headerName: 'Exp. fee',
+      width: 100,
+      onCellClicked: (params) => onColumnClicked(params.data),
+      cellRenderer: ({ value }) => {
+        if (!value || parseInt(value) === 0) return;
+        return (
+          <p className="uppercase font-semibold break-all overflow-hidden text-info">
+            {parseInt(value)}
+          </p>
         );
       }
     },
