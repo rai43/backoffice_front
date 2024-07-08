@@ -107,6 +107,11 @@ module.exports = Object.freeze({
     search_result: 'Search Result(s)'
   },
 
+  TABS_ENUMERATION_IN_COLIS_DETAILS: {
+    general: 'General',
+    expedition: 'Expedition'
+  },
+
   TABS_ENUMERATION_IN_QR_CODE_PANEL: {
     parcels_summary: 'Point des colis',
     payment_summary: 'Point des versements'

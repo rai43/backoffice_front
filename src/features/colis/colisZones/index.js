@@ -14,10 +14,41 @@ const gridOptions = {
     resizable: true
   }
 };
+
+const colisData = [
+  { value: '', label: 'Select a Zone' },
+  { value: 'zone_a', label: 'Abobo & Anyama & Angre' },
+  { value: 'zone_b', label: 'II plateaux & Cocody Centre & Plateau & Adjame ' },
+  { value: 'zone_c', label: 'Yopougon' },
+  { value: 'zone_d', label: 'Abidjan Sud' },
+  { value: 'zone_e', label: 'Riviera & Bingerville' },
+  { value: 'zone_f', label: 'Gonzagville & Modeste & Bassam' }
+];
+
+const filterZones = (data) => {
+  const result = {};
+
+  for (const group in data) {
+    result[group] = {};
+    for (const zone in data[group]) {
+      if (zone.toLowerCase().startsWith('zone')) {
+        result[group][zone] = data[group][zone];
+      }
+    }
+    // Remove group if it has no zones
+    if (Object.keys(result[group]).length === 0) {
+      delete result[group];
+    }
+  }
+
+  return result;
+};
+
 const ColisZones = () => {
   const dispatch = useDispatch();
 
   const { colisZones, isLoading } = useSelector((state) => state.colisZones);
+  console.log(colisZones);
 
   const changeFirstZoneLivreur = (data) => {
     dispatch(
@@ -39,6 +70,16 @@ const ColisZones = () => {
     );
   };
 
+  const changeThirdZoneLivreur = (data) => {
+    dispatch(
+      openModal({
+        title: `Change ${data.zone} third round livreur`,
+        bodyType: MODAL_BODY_TYPES.CHANGE_ZONE_LIVREUR,
+        extraObject: { ...data, group: 3 }
+      })
+    );
+  };
+
   const columnDefs = useMemo(() => [
     {
       field: 'zone',
@@ -48,18 +89,17 @@ const ColisZones = () => {
       // pinned: 'right',
       filter: 'agDateColumnFilter',
       cellRenderer: ({ value }) => {
-        return (
-          <span className="font-semibold text-md">
-            {(value === 'AbidjanSud' ? 'Abidjan Sud' : value)?.toUpperCase()}
-          </span>
+        console.log({ value });
+        const zone = colisData?.find(
+          (z) => z?.value?.toLocaleLowerCase() === value?.toLocaleLowerCase()
         );
+        return <span className="font-semibold text-md">{zone?.label?.toUpperCase()}</span>;
       }
     },
     {
       field: 'group1',
       headerName: 'Group 1',
       valueGetter: ({ data }) => {
-        console.log(data);
         return data?.group1
           ? `${data?.group1?.first_name} ${data?.group1?.last_name}`?.toUpperCase()
           : 'N/A';
@@ -73,10 +113,9 @@ const ColisZones = () => {
       }
     },
     {
-      field: 'group1',
+      field: 'group2',
       headerName: 'Group 2',
       valueGetter: ({ data }) => {
-        console.log(data);
         return data?.group2
           ? `${data?.group2?.first_name} ${data?.group2?.last_name}`?.toUpperCase()
           : 'N/A';
@@ -84,6 +123,26 @@ const ColisZones = () => {
       flex: 1,
       filter: 'agDateColumnFilter',
       onCellClicked: (params) => changeSecondZoneLivreur(params.data),
+      cellRenderer: ({ value }) => {
+        return <span className="font-semibold text-md">{value}</span>;
+      }
+    },
+    {
+      field: 'group3',
+      headerName: 'Group 3',
+      valueGetter: ({ data }) => {
+        return data?.group3
+          ? `${data?.group3?.first_name} ${data?.group3?.last_name}`?.toUpperCase()
+          : 'N/A';
+      },
+      flex: 1,
+      filter: 'agDateColumnFilter',
+      onCellClicked: (params) => {
+        if (!params?.data?.group3?.id) {
+          return;
+        }
+        changeThirdZoneLivreur(params.data);
+      },
       cellRenderer: ({ value }) => {
         return <span className="font-semibold text-md">{value}</span>;
       }
@@ -107,7 +166,7 @@ const ColisZones = () => {
           <div className="ag-theme-alpine h-[40rem]">
             <AgGridReact
               columnDefs={columnDefs}
-              rowData={colisZones}
+              rowData={colisZones?.filter((z) => z?.zone?.includes('zone'))}
               defaultColDef={AG_GRID_DEFAULT_COL_DEF}
               pagination={true}
               paginationPageSize={20}
