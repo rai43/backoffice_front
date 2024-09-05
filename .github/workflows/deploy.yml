@@ -1,7 +1,7 @@
 on: 
   push:
     branches:
-      - main
+      - master
 
 jobs:
   run_pull:
@@ -21,7 +21,7 @@ jobs:
     - name: cleanup
       run: rm -rf ~/.ssh
 
-
+# 
 # name: Deploy React App
 
 # on:
