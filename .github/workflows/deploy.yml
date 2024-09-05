@@ -1,27 +1,80 @@
-on: 
+name: Deploy Node.js Project
+
+on:
   push:
-    branches:
+    tags:
       - master
+      # - 'dev*'
 
 jobs:
-  run_pull:
-    name: run pull
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # - name: successfully 
-    #     echo "successfully connected to the server"
-    # - name: install ssh keys
-    #   # check this thread to understand why its needed:
-    #   # https://stackoverflow.com/a/70447517
-    #   run: |
-    #     install -m 600 -D /dev/null ~/.ssh/id_rsa
-    #     echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
-    #     ssh-keyscan -H ${{ secrets.SERVER_HOST }} > ~/.ssh/known_hosts
-    - name: connect and pull
-      run: ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SSH_KNOWN_HOSTS }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull && exit"
-    - name: cleanup
-      run: rm -rf ~/.ssh
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18' # Specify your Node.js version
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Copy Files to Server
+        uses: i3h/deploy-with-scp@v1
+        with:
+          server-ip: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          ssh-key: ${{ secrets.SERVER_SSH_KEY }}
+          src: ./ # Copy all files and folders
+          dest: /home/${{ secrets.SERVER_USERNAME }}
+          # dest: /home/${{ secrets.SERVER_USERNAME }}/node-deployments/project-${{ github.ref_name }} # Adjust the destination path
+
+# on: 
+#   push:
+#     branches:
+#       - master
+
+# jobs:
+#   run_pull:
+#     name: run pull
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout Code
+#       uses: actions/checkout@v2
+
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v2
+#       with:
+#         node-version: '18' # Set this to your node version
+
+#     - name: Deploy to Server
+#       uses: i3h/deploy-with-scp@v1
+#       with:
+#         server-ip: ${{ secrets.SERVER_HOST }}
+#         username: ${{ secrets.SERVER_USERNAME }}
+#         ssh-key: ${{ secrets.SERVER_SSH_KEY }}
+#         src: target/street-v3-api.war
+#         dest: /home/${{ secrets.SERVER_USERNAME }}/git-deployments/street-v3-api/street-v3-api-${{ github.ref_name }}.war
+
+
+    # steps:
+    # # - name: successfully 
+    # #     echo "successfully connected to the server"
+    # # - name: install ssh keys
+    # #   # check this thread to understand why its needed:
+    # #   # https://stackoverflow.com/a/70447517
+    # #   run: |
+    # #     install -m 600 -D /dev/null ~/.ssh/id_rsa
+    # #     echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+    # #     ssh-keyscan -H ${{ secrets.SERVER_HOST }} > ~/.ssh/known_hosts
+    # - name: connect and pull
+    #   run: ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull && exit"
+    # - name: cleanup
+    #   run: rm -rf ~/.ssh
 
 # 
 # name: Deploy React App
