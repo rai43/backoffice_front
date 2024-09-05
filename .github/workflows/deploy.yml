@@ -10,12 +10,12 @@ jobs:
 
     steps:
     - name: install ssh keys
-    # check this thread to understand shy its needed:
-    # https://stackoverflow.com/a/70447517
+      # check this thread to understand why its needed:
+      # https://stackoverflow.com/a/70447517
       run: |
         install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo "${{ secrets.SERVER_SSH_KEY }} > ~/.ssh/knows_hosts
-        ssh-keygen -H ${{ secrets.SERVER_HOST }} > ~/.ssh/knows_hosts
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} > ~/.ssh/known_hosts
     - name: connect and pull
       run: ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SSH_KNOWN_HOSTS }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull && exit"
     - name: cleanup
