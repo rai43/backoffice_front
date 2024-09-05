@@ -24,16 +24,19 @@ jobs:
         with:
           node-version: '18' # Specify your Node.js version
 
-      # - name: Install Dependencies
-      #   run: npm install
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
 
       - name: Copy Files to Server
         uses: i3h/deploy-with-scp@v1
         with:
-          server-ip: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
+          server-ip: 192.168.60.11
+          username: soro
           ssh-key: ${{ secrets.SERVER_SSH_KEY }}
-          src: ./ # Copy all files and folders
+          src: ./build # Copy all files and folders
           dest: /home/${{ secrets.SERVER_USERNAME }}
           # dest: /home/${{ secrets.SERVER_USERNAME }}/node-deployments/project-${{ github.ref_name }} # Adjust the destination path
 
