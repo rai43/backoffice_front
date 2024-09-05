@@ -1,10 +1,15 @@
 name: Deploy Node.js Project
 
-on:
+on: 
   push:
-    tags:
+    branches:
       - master
-      # - 'dev*'
+
+# on:
+#   push:
+#     tags:
+#       - master
+#       # - 'dev*'
 
 jobs:
   deploy:
