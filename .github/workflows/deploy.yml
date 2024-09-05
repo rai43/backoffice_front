@@ -8,9 +8,9 @@ jobs:
     name: run pull
     runs-on: ubuntu-latest
 
-    steps:
-    - name: successfully 
-        echo "successfully connected to the server"
+    # steps:
+    # - name: successfully 
+    #     echo "successfully connected to the server"
     # - name: install ssh keys
     #   # check this thread to understand why its needed:
     #   # https://stackoverflow.com/a/70447517
